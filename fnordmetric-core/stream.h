@@ -19,7 +19,6 @@
 #include "database/streamref.h"
 
 namespace fnordmetric {
-class StreamKey;
 
 class StreamKey {
 public:
@@ -79,11 +78,6 @@ public:
   TypedStream& operator=(const TypedStream& copy) = delete;
 
   void appendRecord(const typename T::ValueType&... values) const;
-};
-
-class IStreamRepository {
-  virtual std::shared_ptr<Stream> findStreamByName(
-      const std::string& stream_name) const = 0;
 };
 
 }

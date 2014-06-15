@@ -11,28 +11,27 @@ namespace fnordmetric {
 
 Agent::Agent(
     const std::string& name,
-    std::unique_ptr<database::Database>&& database) :
+    std::unique_ptr<IStorageBackend>&& storage_backend) :
     name_(name),
-    database_(std::move(database)) {}
+    storage_backend_(std::move(storage_backend)) {}
 
 template <typename... T>
-std::shared_ptr<const TypedStream<T...>> Agent::openStream(
+std::shared_ptr<const Stream<T...>> Agent::newStream(
     const std::string& name,
     //const StreamDescription& description,
     const T... fields) {
-  TypedSchema<T...> schema(fields...);
-  TypedStreamKey<T...> key(name, fields...);
-
   streams_mutex_.lock();
-  auto stream_ref = database_->openStream(key.getKeyString());
-  auto stream = std::make_shared<const TypedStream<T...>>(
+  StreamKey<T...> key(name, fields...);
+  Schema<T...> schema(fields...);
+
+  auto cursor = storage_backend_->getCursor(key.getKeyString());
+  auto stream = std::make_shared<const Stream<T...>>(
       key,
       schema,
-      std::move(stream_ref));
+      std::move(cursor));
 
   streams_.push_back(stream);
   streams_mutex_.unlock();
-
   return stream;
 }
 
