@@ -10,14 +10,13 @@
 #include <assert.h>
 #include <sys/fcntl.h>
 #include <unistd.h>
-#include "database.h"
+#include "collection.h"
 #include "pagemanager.h"
-#include "cursor.h"
-#include "../clock.h"
-#include "../query/query.h"
+#include "transaction.h"
+//#include "cursor.h"
+//#include "clock.h"
 
 namespace fnordmetric {
-namespace database {
 
 // TODO test freelist serialization / after file reloads
 // TODO test in memory db
@@ -31,9 +30,10 @@ public:
     //testStreamRefCreation();
     testPageManager();
     testMmapPageManager();
-    testOpenFile();
+    testAOCollection();
   }
 
+/*
   void testStreamIdAssignment() {
     auto backend = fnordmetric::database::Database::openFile(
         "/tmp/__fnordmetric_testStreamIdAssignment",
@@ -68,6 +68,7 @@ public:
     assert(ref2.get() != ref4.get());
     assert(ref3.get() == ref4.get());
   }
+*/
 
   void testPageManager() {
     class ConcreteTestPageManager : public PageManager {
@@ -76,6 +77,7 @@ public:
       std::unique_ptr<PageRef> getPage(const PageManager::Page& page) override {
         return std::unique_ptr<PageRef>(nullptr);
       }
+      void fsync() const {}
     };
     ConcreteTestPageManager page_manager;
 
@@ -122,7 +124,21 @@ public:
     close(fd);
   }
 
-  void testOpenFile() {
+  void testAOCollection() {
+    auto collection = Collection::createPersistentCollection(
+        "/tmp/__fnordmetric_testAOCollection",
+        Collection::FILE_TRUNCATE);
+
+    //auto tx = collection->startTransaction();
+    //auto docref = tx->createDocument();
+    //auto docref1 = tx->createDocument();
+    //auto docref2 = tx->createDocument();
+    //auto docref3 = tx->createDocument();
+    //tx->commit();
+    //printf("committed...\n");
+    //collection->sync();
+    //printf("synced...\n");
+/*
     //printf("TEST: File backed database insert, reopen, read\n");
     uint32_t stream_id;
     std::vector<fnordmetric::database::StreamPosition> insert_times;
@@ -196,15 +212,15 @@ public:
       query::Query query("SELECT count(*) FROM mystream");
       database->executeQuery(&query);
     }
+*/
   }
 
 };
 
 }
-}
 
 int main() {
-  fnordmetric::database::DatabaseTest test;
+  fnordmetric::DatabaseTest test;
   test.run();
   printf("all tests passed! :)\n");
 }

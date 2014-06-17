@@ -17,9 +17,6 @@
 #include <atomic>
 
 namespace fnordmetric {
-namespace database {
-
-struct LogSnapshot;
 
 /**
  * This is an internal class. For usage instructions and extended documentation
@@ -30,10 +27,9 @@ class PageManager {
 public:
 
   struct Page {
-    union {
-      uint64_t offset;
-      void* ptr;
-    };
+    Page(uint64_t offset_, uint64_t size_);
+    Page();
+    uint64_t offset;
     uint64_t size;
   };
 
@@ -50,7 +46,7 @@ public:
   };
 
   PageManager(size_t block_size);
-  PageManager(size_t block_size, const LogSnapshot& log_snapshot);
+  //PageManager(size_t block_size, const LogSnapshot& log_snapshot);
   PageManager(const PageManager& copy) = delete;
   PageManager& operator=(const PageManager& copy) = delete;
   PageManager(const PageManager&& move);
@@ -69,6 +65,11 @@ public:
    * Request a page to be mapped into memory. Returns a smart pointer.
    */
   virtual std::unique_ptr<PageRef> getPage(const PageManager::Page& page) = 0;
+
+  /**
+   * Fsync() the page contents if this is a file backed page manager
+   */
+  virtual void fsync() const = 0;
 
 protected:
 
@@ -146,11 +147,11 @@ public:
    * Create a new mmap page manager for a file where some pages are already
    * allocaed
    */
-  explicit MmapPageManager(
-      int fd,
-      size_t len,
-      size_t block_size,
-      const LogSnapshot& log_snapshot);
+  //explicit MmapPageManager(
+  //    int fd,
+  //    size_t len,
+  //    size_t block_size);
+      //const LogSnapshot& log_snapshot);
 
   MmapPageManager(MmapPageManager&& move);
   MmapPageManager(const MmapPageManager& copy) = delete;
@@ -162,6 +163,11 @@ public:
    */
   std::unique_ptr<PageManager::PageRef> getPage(
       const PageManager::Page& page) override;
+
+  /**
+   * Msync() the whole managed file
+   */
+  void fsync() const override;
 
 protected:
 
@@ -188,6 +194,5 @@ T* PageManager::PageRef::structAt(size_t position) const {
 }
 
 
-}
 }
 #endif

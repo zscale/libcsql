@@ -9,18 +9,16 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include "pagemanager.h"
-#include "log.h"
 
 namespace fnordmetric {
-namespace database {
 
 PageManager::PageManager(size_t block_size) :
   end_pos_(0),
   block_size_(block_size) {}
 
-PageManager::PageManager(size_t block_size, const LogSnapshot& log_snapshot) :
-  block_size_(block_size),
-  end_pos_(log_snapshot.last_used_byte) {}
+//PageManager::PageManager(size_t block_size, const LogSnapshot& log_snapshot) :
+//  block_size_(block_size),
+//  end_pos_(log_snapshot.last_used_byte) {}
 
 PageManager::PageManager(const PageManager&& move) :
   end_pos_(move.end_pos_),
@@ -67,6 +65,12 @@ bool PageManager::findFreePage(size_t min_size, Page* destination) {
   return false;
 }
 
+PageManager::Page::Page(uint64_t offset_, uint64_t size_) :
+    offset(offset_),
+    size(size_) {}
+
+PageManager::Page::Page() : offset(0), size(0) {}
+
 PageManager::PageRef::PageRef(const PageManager::Page& page) :
     page_(page) {}
 
@@ -82,15 +86,15 @@ MmapPageManager::MmapPageManager(int fd, size_t len, size_t block_size) :
     file_size_(len),
     current_mapping_(nullptr) {}
 
-MmapPageManager::MmapPageManager(
-    int fd,
-    size_t len,
-    size_t block_size,
-    const LogSnapshot& log_snapshot) :
-    PageManager(block_size, log_snapshot),
-    fd_(fd),
-    file_size_(len),
-    current_mapping_(nullptr) {}
+//MmapPageManager::MmapPageManager(
+//    int fd,
+//    size_t len,
+//    size_t block_size,
+//    const LogSnapshot& log_snapshot) :
+//    PageManager(block_size, log_snapshot),
+//    fd_(fd),
+//    file_size_(len),
+//    current_mapping_(nullptr) {}
 
 MmapPageManager::MmapPageManager(MmapPageManager&& move) :
     PageManager(std::move(move)),
@@ -108,6 +112,12 @@ MmapPageManager::~MmapPageManager() {
   }
 
   close(fd_);
+}
+
+void MmapPageManager::fsync() const {
+  if (current_mapping_ != nullptr) {
+    msync(current_mapping_, file_size_, MS_SYNC);
+  }
 }
 
 std::unique_ptr<PageManager::PageRef> MmapPageManager::getPage(
@@ -209,5 +219,4 @@ MmapPageManager::MmappedPageRef::~MmappedPageRef() {
   file_->decrRefs();
 }
 
-}
 }
