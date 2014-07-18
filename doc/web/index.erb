@@ -1,0 +1,52 @@
+<div class="jumbotron">
+   <h1>Custom real-time dashboards</h1>
+   <br>
+   <p class="lead">FnordMetric powers highly customizable real-time analytics dashboards</p>
+ </div>
+
+<div style="height:530px;">
+  <div style="box-shadow:0 -5px 190px 15px rgba(255,255,255,0.24); width:798px; margin-left:24px; height:495px;"></div>
+  <a href="/documentation"><img src="/img/screenshot_1.png" style="width:850px; position:relative; top:-512px;" /></a>
+</div>
+
+<p class="biglink"><a href="http://railscasts.com/episodes/378-fnordmetric" target="_blank">Watch the Screencast on Railscasts.com</a></p>
+<hr style="margin-bottom:55px;" />
+
+<div class="code_snippets" style="margin-right:50px;">
+  <div class="title">Render a Timeseries Chart with the HTML5 API</div>
+  <pre class="dark">
+    <code style="overflow:hidden">
+  <span style="color:#d33682;">&lt;div</span>
+    <span style="color:#fff;">data-fnordmetric=</span><span style="color:#dc332f;">"timeseries"</span>
+    <span style="color:#fff;">data-since=</span><span style="color:#dc332f;">"-10minutes"</span>
+    <span style="color:#fff;">data-until=</span><span style="color:#dc332f;">"now"</span>
+    <span style="color:#fff;">data-gauges=</span><span style="color:#dc332f;">"sales_in_euro"</span>
+    <span style="color:#fff;">data-autoupdate=</span><span style="color:#dc332f;">"1"</span>
+    <span style="color:#d33682;">&gt;&lt;/div&gt;</span>
+    </code>
+  </pre>
+  <a href="/documentation/ui_index" class="link">Getting Started with the HTML 5 API &rarr;</a>
+</div>
+<div class="code_snippets">
+
+  <div class="title">Render a Timeseries Chart with the Ruby DSL</div>
+  <pre class="dark">
+    <code>
+  widget 'Sales',
+    <span style="color:#d33682;">:title</span> =&gt; <span style="color:#dc332f;">"Sales in Euro</span>,
+    <span style="color:#d33682;">:gauges</span> =&gt; [<span style="color:#d33682;">:sales_in_euro</span>],
+    <span style="color:#d33682;">:type</span> =&gt; <span style="color:#d33682;">:timeline</span>,
+    <span style="color:#d33682;">:width</span> =&gt; <span style="color:#b58900;">100</span>,
+    <span style="color:#d33682;">:autoupdate</span> =&gt; <span style="color:#b58900;">1</span>
+    </code>
+  </pre>
+  <a href="/documentation/classic_index" class="link">Getting Started with the Ruby DSL &rarr;</a>
+</div>
+
+<br style="clear:both;" />
+
+<div class="biglink" style="margin-top:70px;">
+  <a href="http://github.com/paulasmuth/fnordmetric" target="_blank">
+    Watch FnordMetric on Github &rarr;
+  </a>
+</div>
