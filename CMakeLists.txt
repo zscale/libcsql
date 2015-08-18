@@ -12,4 +12,6 @@ set(CHARTSQL_INCLUDE ${MODULE_INCLUDE} PARENT_SCOPE)
 
 # DEPENDENCIES
 find_package(Threads)
+
+include(src/stx/cmake/libstx.cmake)
 add_subdirectory(src/chartsql)
