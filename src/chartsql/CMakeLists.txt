@@ -90,16 +90,8 @@ add_library(chartsql STATIC
     runtime/charts/seriesadapter.cc
     defaults.cc)
 
-add_executable(test-chartsql-runtime
-    $<TARGET_OBJECTS:dproc>
-    $<TARGET_OBJECTS:tsdb-client>
-    runtime/Runtime_test.cc)
-
+add_executable(test-chartsql-runtime runtime/Runtime_test.cc)
 target_link_libraries(test-chartsql-runtime chartsql cplot stx-http stx-protobuf stx-json stx-base)
 
-add_executable(test-chartsql-parser
-    $<TARGET_OBJECTS:dproc>
-    $<TARGET_OBJECTS:tsdb-client>
-    parser/Parser_test.cc)
-
+add_executable(test-chartsql-parser parser/Parser_test.cc)
 target_link_libraries(test-chartsql-parser chartsql cplot stx-http stx-protobuf stx-json stx-base)
