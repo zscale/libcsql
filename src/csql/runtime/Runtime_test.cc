@@ -16,6 +16,7 @@
 #include "csql/qtree/ColumnReferenceNode.h"
 #include "csql/qtree/CallExpressionNode.h"
 #include "csql/qtree/LiteralExpressionNode.h"
+#include "csql/CSTableScanProvider.h"
 
 using namespace stx;
 using namespace csql;
@@ -77,3 +78,24 @@ TEST_CASE(RuntimeTest, TestExecuteIfStatement, [] () {
     EXPECT_EQ(v.toString(), "2");
   }
 });
+
+TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new CSTableScanProvider(
+          "tesstable",
+          "src/csql/testdata/testtbl.cst"));
+
+  {
+    ResultList result;
+    auto query = R"(select count(1) from testtable;)";
+    auto qplan = runtime->buildQueryPlan(query, estrat.get());
+    runtime->executeStatement(qplan->buildStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 1);
+    EXPECT_EQ(result.getNumRows(), 1);
+    EXPECT_EQ(result.getRow(0)[0], "213");
+  }
+});
+
