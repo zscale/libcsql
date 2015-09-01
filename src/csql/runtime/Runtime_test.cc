@@ -119,6 +119,16 @@ TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
 
   {
     ResultList result;
+    auto query = R"(select sum(count(event.search_query.result_items.position) WITHIN RECORD) from testtable;)";
+    auto qplan = runtime->buildQueryPlan(query, estrat.get());
+    runtime->executeStatement(qplan->buildStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 1);
+    EXPECT_EQ(result.getNumRows(), 1);
+    EXPECT_EQ(result.getRow(0)[0], "23318");
+  }
+
+  {
+    ResultList result;
     auto query = R"(
         select
           sum(event.search_query.num_result_items) WITHIN RECORD,
@@ -144,12 +154,12 @@ TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
           count(1),
           count(event.search_query.time),
           sum(event.search_query.num_result_items),
-          sum(count(event.search_query.result_items.position)) WITHIN RECORD,
+          sum(count(event.search_query.result_items.position) WITHIN RECORD),
           (
             count(1) +
             count(event.search_query.time) +
             sum(event.search_query.num_result_items) +
-            sum(count(event.search_query.result_items.position)) WITHIN RECORD
+            sum(count(event.search_query.result_items.position) WITHIN RECORD)
           )
         from testtable;)";
     auto qplan = runtime->buildQueryPlan(query, estrat.get());
