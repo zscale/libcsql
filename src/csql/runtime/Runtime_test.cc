@@ -112,15 +112,17 @@ TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
     auto query = R"(
         select
           count(1),
-          sum(event.search_query.num_result_items)
+          sum(event.search_query.num_result_items),
+          sum(count(event.search_query.result_items.position)) WITHIN RECORD
         from testtable;)";
     auto qplan = runtime->buildQueryPlan(query, estrat.get());
     runtime->executeStatement(qplan->buildStatement(0), &result);
     result.debugPrint();
-    EXPECT_EQ(result.getNumColumns(), 2);
+    EXPECT_EQ(result.getNumColumns(), 3);
     EXPECT_EQ(result.getNumRows(), 1);
     EXPECT_EQ(result.getRow(0)[0], "213");
     EXPECT_EQ(result.getRow(0)[1], "23318");
+    EXPECT_EQ(result.getRow(0)[2], "23318");
   }
 });
 
