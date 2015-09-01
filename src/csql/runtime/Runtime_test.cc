@@ -99,6 +99,16 @@ TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
 
   {
     ResultList result;
+    auto query = R"(select count(event.search_query.time) from testtable;)";
+    auto qplan = runtime->buildQueryPlan(query, estrat.get());
+    runtime->executeStatement(qplan->buildStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 1);
+    EXPECT_EQ(result.getNumRows(), 1);
+    EXPECT_EQ(result.getRow(0)[0], "665");
+  }
+
+  {
+    ResultList result;
     auto query = R"(select sum(event.search_query.num_result_items) from testtable;)";
     auto qplan = runtime->buildQueryPlan(query, estrat.get());
     runtime->executeStatement(qplan->buildStatement(0), &result);
@@ -111,9 +121,36 @@ TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
     ResultList result;
     auto query = R"(
         select
+          sum(event.search_query.num_result_items) WITHIN RECORD,
+          count(event.search_query.result_items.position) WITHIN RECORD
+        from testtable
+        limit 5;)";
+    auto qplan = runtime->buildQueryPlan(query, estrat.get());
+    runtime->executeStatement(qplan->buildStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 2);
+    EXPECT_EQ(result.getNumRows(), 5);
+    EXPECT_EQ(result.getRow(1)[0], "40");
+    EXPECT_EQ(result.getRow(1)[1], result.getRow(1)[0]);
+    EXPECT_EQ(result.getRow(3)[0], "36");
+    EXPECT_EQ(result.getRow(3)[1], result.getRow(3)[0]);
+    EXPECT_EQ(result.getRow(4)[0], "94");
+    EXPECT_EQ(result.getRow(4)[1], result.getRow(4)[0]);
+  }
+
+  {
+    ResultList result;
+    auto query = R"(
+        select
           count(1),
+          count(event.search_query.time),
           sum(event.search_query.num_result_items),
-          sum(count(event.search_query.result_items.position)) WITHIN RECORD
+          sum(count(event.search_query.result_items.position)) WITHIN RECORD,
+          (
+            count(1) +
+            count(event.search_query.time) +
+            sum(event.search_query.num_result_items) +
+            sum(count(event.search_query.result_items.position)) WITHIN RECORD
+          )
         from testtable;)";
     auto qplan = runtime->buildQueryPlan(query, estrat.get());
     runtime->executeStatement(qplan->buildStatement(0), &result);
@@ -121,8 +158,10 @@ TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
     EXPECT_EQ(result.getNumColumns(), 3);
     EXPECT_EQ(result.getNumRows(), 1);
     EXPECT_EQ(result.getRow(0)[0], "213");
-    EXPECT_EQ(result.getRow(0)[1], "23318");
+    EXPECT_EQ(result.getRow(0)[1], "665");
     EXPECT_EQ(result.getRow(0)[2], "23318");
+    EXPECT_EQ(result.getRow(0)[3], "23318");
+    EXPECT_EQ(result.getRow(0)[4], "47514");
   }
 });
 
