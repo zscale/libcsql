@@ -87,7 +87,6 @@ TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
       new CSTableScanProvider(
           "tesstable",
           "src/csql/testdata/testtbl.cst"));
-
   {
     ResultList result;
     auto query = R"(select count(1) from testtable;)";
@@ -96,6 +95,32 @@ TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
     EXPECT_EQ(result.getNumColumns(), 1);
     EXPECT_EQ(result.getNumRows(), 1);
     EXPECT_EQ(result.getRow(0)[0], "213");
+  }
+
+  {
+    ResultList result;
+    auto query = R"(select sum(event.search_query.num_result_items) from testtable;)";
+    auto qplan = runtime->buildQueryPlan(query, estrat.get());
+    runtime->executeStatement(qplan->buildStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 1);
+    EXPECT_EQ(result.getNumRows(), 1);
+    EXPECT_EQ(result.getRow(0)[0], "23318");
+  }
+
+  {
+    ResultList result;
+    auto query = R"(
+        select
+          count(1),
+          sum(event.search_query.num_result_items)
+        from testtable;)";
+    auto qplan = runtime->buildQueryPlan(query, estrat.get());
+    runtime->executeStatement(qplan->buildStatement(0), &result);
+    result.debugPrint();
+    EXPECT_EQ(result.getNumColumns(), 2);
+    EXPECT_EQ(result.getNumRows(), 1);
+    EXPECT_EQ(result.getRow(0)[0], "213");
+    EXPECT_EQ(result.getRow(0)[1], "23318");
   }
 });
 
