@@ -87,25 +87,42 @@ TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
       new CSTableScanProvider(
           "tesstable",
           "src/csql/testdata/testtbl.cst"));
-  {
-    ResultList result;
-    auto query = R"(select count(1) from testtable;)";
-    auto qplan = runtime->buildQueryPlan(query, estrat.get());
-    runtime->executeStatement(qplan->buildStatement(0), &result);
-    EXPECT_EQ(result.getNumColumns(), 1);
-    EXPECT_EQ(result.getNumRows(), 1);
-    EXPECT_EQ(result.getRow(0)[0], "213");
-  }
 
-  {
-    ResultList result;
-    auto query = R"(select count(event.search_query.time) from testtable;)";
-    auto qplan = runtime->buildQueryPlan(query, estrat.get());
-    runtime->executeStatement(qplan->buildStatement(0), &result);
-    EXPECT_EQ(result.getNumColumns(), 1);
-    EXPECT_EQ(result.getNumRows(), 1);
-    EXPECT_EQ(result.getRow(0)[0], "665");
-  }
+  ResultList result;
+  auto query = R"(select count(1) from testtable;)";
+  auto qplan = runtime->buildQueryPlan(query, estrat.get());
+  runtime->executeStatement(qplan->buildStatement(0), &result);
+  EXPECT_EQ(result.getNumColumns(), 1);
+  EXPECT_EQ(result.getNumRows(), 1);
+  EXPECT_EQ(result.getRow(0)[0], "213");
+});
+
+TEST_CASE(RuntimeTest, TestNestedCSTableAggregate, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new CSTableScanProvider(
+          "tesstable",
+          "src/csql/testdata/testtbl.cst"));
+
+  ResultList result;
+  auto query = R"(select count(event.search_query.time) from testtable;)";
+  auto qplan = runtime->buildQueryPlan(query, estrat.get());
+  runtime->executeStatement(qplan->buildStatement(0), &result);
+  EXPECT_EQ(result.getNumColumns(), 1);
+  EXPECT_EQ(result.getNumRows(), 1);
+  EXPECT_EQ(result.getRow(0)[0], "704");
+});
+
+TEST_CASE(RuntimeTest, TestWithinRecordCSTableAggregate, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new CSTableScanProvider(
+          "tesstable",
+          "src/csql/testdata/testtbl.cst"));
 
   {
     ResultList result;
@@ -114,7 +131,7 @@ TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
     runtime->executeStatement(qplan->buildStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 1);
     EXPECT_EQ(result.getNumRows(), 1);
-    EXPECT_EQ(result.getRow(0)[0], "23318");
+    EXPECT_EQ(result.getRow(0)[0], "24793");
   }
 
   {
@@ -124,28 +141,47 @@ TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
     runtime->executeStatement(qplan->buildStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 1);
     EXPECT_EQ(result.getNumRows(), 1);
-    EXPECT_EQ(result.getRow(0)[0], "23318");
+    EXPECT_EQ(result.getRow(0)[0], "24793");
   }
 
-  {
-    ResultList result;
-    auto query = R"(
-        select
-          sum(event.search_query.num_result_items) WITHIN RECORD,
-          count(event.search_query.result_items.position) WITHIN RECORD
-        from testtable
-        limit 5;)";
-    auto qplan = runtime->buildQueryPlan(query, estrat.get());
-    runtime->executeStatement(qplan->buildStatement(0), &result);
-    EXPECT_EQ(result.getNumColumns(), 2);
-    EXPECT_EQ(result.getNumRows(), 5);
-    EXPECT_EQ(result.getRow(1)[0], "40");
-    EXPECT_EQ(result.getRow(1)[1], result.getRow(1)[0]);
-    EXPECT_EQ(result.getRow(3)[0], "36");
-    EXPECT_EQ(result.getRow(3)[1], result.getRow(3)[0]);
-    EXPECT_EQ(result.getRow(4)[0], "94");
-    EXPECT_EQ(result.getRow(4)[1], result.getRow(4)[0]);
+  ResultList result;
+  auto query = R"(
+      select
+        sum(event.search_query.num_result_items) WITHIN RECORD,
+        count(event.search_query.result_items.position) WITHIN RECORD
+      from testtable;)";
+  auto qplan = runtime->buildQueryPlan(query, estrat.get());
+  runtime->executeStatement(qplan->buildStatement(0), &result);
+  EXPECT_EQ(result.getNumColumns(), 2);
+  EXPECT_EQ(result.getNumRows(), 213);
+
+  size_t s = 0;
+  for (size_t i = 0; i < result.getNumRows(); ++i) {
+    auto r1 = result.getRow(i)[0];
+    if (r1 == "NULL") {
+      r1 = "0";
+    }
+
+    auto r2 = result.getRow(i)[1];
+    if (r2 == "NULL") {
+      r2 = "0";
+    }
+
+    EXPECT_EQ(r1, r2);
+    s += std::stoull(r1);
   }
+
+  EXPECT_EQ(s, 24793);
+});
+
+TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggregate, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new CSTableScanProvider(
+          "tesstable",
+          "src/csql/testdata/testtbl.cst"));
 
   {
     ResultList result;
@@ -165,7 +201,7 @@ TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
     auto qplan = runtime->buildQueryPlan(query, estrat.get());
     runtime->executeStatement(qplan->buildStatement(0), &result);
     result.debugPrint();
-    EXPECT_EQ(result.getNumColumns(), 3);
+    EXPECT_EQ(result.getNumColumns(), 5);
     EXPECT_EQ(result.getNumRows(), 1);
     EXPECT_EQ(result.getRow(0)[0], "213");
     EXPECT_EQ(result.getRow(0)[1], "665");
@@ -193,7 +229,7 @@ TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
     auto qplan = runtime->buildQueryPlan(query, estrat.get());
     runtime->executeStatement(qplan->buildStatement(0), &result);
     result.debugPrint();
-    EXPECT_EQ(result.getNumColumns(), 3);
+    EXPECT_EQ(result.getNumColumns(), 5);
     EXPECT_EQ(result.getNumRows(), 1);
     EXPECT_EQ(result.getRow(0)[0], "213");
     EXPECT_EQ(result.getRow(0)[1], "665");
