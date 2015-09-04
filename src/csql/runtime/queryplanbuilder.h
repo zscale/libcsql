@@ -132,6 +132,11 @@ protected:
   void expandColumns(ASTNode* ast, RefPtr<TableProvider> tables);
 
   /**
+   * assign explicit column names to all output columns
+   */
+  void assignExplicitColumnNames(ASTNode* ast, RefPtr<TableProvider> tables);
+
+  /**
    * Recursively walk the provided ast and search for column references. For
    * each found column reference, add the column reference to the provided
    * select list and replace the original column reference with an index into
