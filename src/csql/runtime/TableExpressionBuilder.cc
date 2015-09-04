@@ -127,7 +127,10 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildSequentialScan(
     }
 
     if (!cols.empty()) {
-      RAISEF(kRuntimeError, "column(s) not found: $0", inspect(cols));
+      RAISEF(
+          kRuntimeError,
+          "column(s) not found: $0",
+          StringUtil::join(cols, ", "));
     }
   }
 
