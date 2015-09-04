@@ -42,6 +42,12 @@ protected:
   bool hasUnexpandedColumns(ASTNode* ast) const;
 
   /**
+   * Returns true if the ast is a SELECT statement that has columns in its
+   * select list that are not explicitly named (expr AS name).
+   */
+  bool hasImplicitlyNamedColumns(ASTNode* ast) const;
+
+  /**
    * Returns true if the ast is a SELECT statement that has a join
    */
   bool hasJoin(ASTNode* ast) const;

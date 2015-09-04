@@ -211,6 +211,31 @@ bool QueryPlanBuilder::hasUnexpandedColumns(ASTNode* ast) const {
   return false;
 }
 
+bool QueryPlanBuilder::hasImplicitlyNamedColumns(ASTNode* ast) const {
+  if (ast->getType() != ASTNode::T_SELECT &&
+      ast->getType() != ASTNode::T_SELECT_DEEP) {
+    return false;
+  }
+
+  if (ast->getChildren().size() < 1 ||
+      ast->getChildren()[0]->getType() != ASTNode::T_SELECT_LIST) {
+    RAISE(kRuntimeError, "corrupt AST");
+  }
+
+  if (ast->getChildren().size() == 1) {
+    return false;
+  }
+
+  for (const auto& col : ast->getChildren()[0]->getChildren()) {
+    if (col->getType() == ASTNode::T_DERIVED_COLUMN &&
+        col->getChildren().size() == 1) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 bool QueryPlanBuilder::hasGroupByClause(ASTNode* ast) const {
   if (!(*ast == ASTNode::T_SELECT) || ast->getChildren().size() < 2) {
     return false;
