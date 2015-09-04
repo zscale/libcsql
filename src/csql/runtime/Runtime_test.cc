@@ -208,7 +208,14 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggregate, [] () {
         from testtable;)";
     auto qplan = runtime->buildQueryPlan(query, estrat.get());
     runtime->executeStatement(qplan->buildStatement(0), &result);
+
     EXPECT_EQ(result.getNumColumns(), 4);
+    auto cols = result.getColumns();
+    EXPECT_EQ(cols[0], "count(time)");
+    EXPECT_EQ(cols[1], "count(event.search_query.time)");
+    EXPECT_EQ(cols[2], "sum(event.search_query.num_result_items)");
+    EXPECT_EQ(cols[3], "sum(count(event.search_query.result_items.position)");
+
     EXPECT_EQ(result.getNumRows(), 1);
     EXPECT_EQ(result.getRow(0)[0], "213");
     EXPECT_EQ(result.getRow(0)[1], "704");
