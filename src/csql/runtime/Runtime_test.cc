@@ -214,7 +214,9 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggregate, [] () {
     EXPECT_EQ(cols[0], "count(time)");
     EXPECT_EQ(cols[1], "count(event.search_query.time)");
     EXPECT_EQ(cols[2], "sum(event.search_query.num_result_items)");
-    EXPECT_EQ(cols[3], "sum(count(event.search_query.result_items.position)");
+    EXPECT_EQ(
+        cols[3],
+        "sum(count(event.search_query.result_items.position) WITHIN RECORD)");
 
     EXPECT_EQ(result.getNumRows(), 1);
     EXPECT_EQ(result.getRow(0)[0], "213");
@@ -306,7 +308,13 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithGroup, [] () {
         LIMIT 10;)";
     auto qplan = runtime->buildQueryPlan(query, estrat.get());
     runtime->executeStatement(qplan->buildStatement(0), &result);
+
     EXPECT_EQ(result.getNumColumns(), 3);
+    auto cols = result.getColumns();
+    EXPECT_EQ(cols[0], "event.search_query.result_items.position");
+    EXPECT_EQ(cols[1], "sum(count(event.search_query.result_items.position) WITHIN RECORD)");
+    EXPECT_EQ(cols[2], "sum(sum(if(event.search_query.result_items.clicked, 1, 0)) WITHIN RECORD)");
+
     EXPECT_EQ(result.getNumRows(), 10);
     EXPECT_EQ(result.getRow(6)[0], "6");
     EXPECT_EQ(result.getRow(6)[1], "688");
