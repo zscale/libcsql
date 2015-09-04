@@ -429,7 +429,7 @@ TEST_CASE(RuntimeTest, SelectFloatIntegerSubtraction, [] () {
 });
 
 TEST_CASE(RuntimeTest, TestSelectInvalidColumn, [] () {
-  EXPECT_EXCEPTION("no such column: 'fnord'", [] () {
+  EXPECT_EXCEPTION("column(s) not found: fnord", [] () {
     auto runtime = Runtime::getDefaultRuntime();
 
     auto estrat = mkRef(new DefaultExecutionStrategy());
