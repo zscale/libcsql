@@ -7,7 +7,7 @@ build:
 	make
 
 test: build
-	/bin/bash -c 'ls -1 build/devel/test-* | while read l; do ./$$l || exit 1; done'
+	/bin/bash -c 'ls -1 build/devel/test-chartsql-* | while read l; do ./$$l || exit 1; done'
 
 clean:
 	rm -rf build
