@@ -84,6 +84,10 @@ public:
   ASTNode(kASTNodeType type);
   bool operator==(kASTNodeType type) const;
   bool operator==(const ASTNode& other) const;
+
+  // compare asts recursively. returns true if both ast trees are equal
+  bool compare(const ASTNode* other);
+
   ASTNode* appendChild(ASTNode::kASTNodeType type);
   void appendChild(ASTNode* node);
   void appendChild(ASTNode* node, size_t index);
