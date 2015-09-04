@@ -83,6 +83,10 @@ void ASTNode::setToken(const Token* token) {
   token_ = token;
 }
 
+void ASTNode::clearToken() {
+  token_ = nullptr;
+}
+
 const Token* ASTNode::getToken() const {
   return token_;
 }
