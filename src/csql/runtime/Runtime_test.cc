@@ -363,4 +363,12 @@ TEST_CASE(RuntimeTest, TestTableNamesWithDots, [] () {
 
 });
 
+TEST_CASE(RuntimeTest, SelectFloatIntegerDivision, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+
+  {
+    auto v = runtime->evaluateStaticExpression("1 / 5");
+    EXPECT_EQ(v.toString(), "0.200000");
+  }
+});
 
