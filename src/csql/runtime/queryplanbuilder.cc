@@ -591,9 +591,7 @@ bool QueryPlanBuilder::buildInternalSelectList(
         if (candidates[i]->getType() == ASTNode::T_DERIVED_COLUMN) {
           if (candidates[i]->getChildren().size() == 1) {
             auto colname = candidates[i]->getChildren()[0];
-            if (colname->getType() == ASTNode::T_COLUMN_NAME &&
-                node->getToken()->getString() ==
-                    colname->getToken()->getString()) {
+            if (node->compare(colname)) {
               col_index = i;
               break;
             }
