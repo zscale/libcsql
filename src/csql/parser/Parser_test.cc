@@ -611,8 +611,8 @@ TEST_CASE(ParserTest, TestCompareASTs, [] () {
 
   EXPECT(parser.getStatements().size() == 3);
   const auto a = parser.getStatements()[0];
-  const auto b = parser.getStatements()[0];
-  const auto c = parser.getStatements()[0];
+  const auto b = parser.getStatements()[1];
+  const auto c = parser.getStatements()[2];
 
   EXPECT_FALSE(a->compare(b));
   EXPECT_FALSE(b->compare(a));
