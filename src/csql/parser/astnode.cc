@@ -241,6 +241,11 @@ void ASTNode::debugPrint(int indent /* = 0 */) const {
         Token::getTypeName(token_->getType()),
         token_->getString().c_str());
   }
+
+  if (id_ != -1) {
+    printf(" <%lli>", id_);
+  }
+
   printf("\n");
 
   for (const auto child : children_) {
