@@ -86,8 +86,17 @@ template <>
 std::string StringUtil::toString(double value) {
   char buf[128]; // FIXPAUL
   *buf = 0;
-  snprintf(buf, sizeof(buf), "%f", value);
-  return buf;
+
+  auto len = snprintf(buf, sizeof(buf), "%f", value);
+  if (len < 0) {
+    RAISE(kRuntimeError, "snprintf() failed");
+  }
+
+  while (len > 2 && buf[len - 1] == '0' && buf[len - 2] != '.') {
+    buf[len--] = 0;
+  }
+
+  return String(buf, len);
 }
 
 template <>
@@ -146,6 +155,21 @@ String StringUtil::join(const Vector<String>& list, const String& join) {
     }
 
     out += list[i];
+  }
+
+  return out;
+}
+
+String StringUtil::join(const Set<String>& list, const String& join) {
+  String out;
+
+  size_t i = 0;
+  for (const auto& item : list) {
+    if (++i > 1) {
+      out += join;
+    }
+
+    out += item;
   }
 
   return out;
