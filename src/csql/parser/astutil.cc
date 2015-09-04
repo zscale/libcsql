@@ -61,4 +61,8 @@ std::vector<std::string> ASTUtil::columnNamesFromSelectList(
   return column_names;
 }
 
+String ASTUtil::columnNameForExpression(ASTNode* expr) {
+  return "<expr>";
+}
+
 }
