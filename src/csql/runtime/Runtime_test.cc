@@ -328,12 +328,12 @@ TEST_CASE(RuntimeTest, TestTableNamesWithDots, [] () {
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
       new CSTableScanProvider(
-          "test.table",
+          "test.tbl",
           "src/csql/testdata/testtbl.cst"));
 
   {
     ResultList result;
-    auto query = R"(select count(1) from 'test.table';)";
+    auto query = R"(select count(1) from 'test.tbl';)";
     auto qplan = runtime->buildQueryPlan(query, estrat.get());
     runtime->executeStatement(qplan->buildStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 1);
@@ -343,7 +343,7 @@ TEST_CASE(RuntimeTest, TestTableNamesWithDots, [] () {
 
   {
     ResultList result;
-    auto query = R"(select count(1) from `test.table`;)";
+    auto query = R"(select count(1) from `test.tbl`;)";
     auto qplan = runtime->buildQueryPlan(query, estrat.get());
     runtime->executeStatement(qplan->buildStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 1);
@@ -353,7 +353,7 @@ TEST_CASE(RuntimeTest, TestTableNamesWithDots, [] () {
 
   {
     ResultList result;
-    auto query = R"(select count(1) from test.table;)";
+    auto query = R"(select count(1) from test.tbl;)";
     auto qplan = runtime->buildQueryPlan(query, estrat.get());
     runtime->executeStatement(qplan->buildStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 1);
