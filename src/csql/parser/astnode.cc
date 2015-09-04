@@ -36,6 +36,10 @@ bool ASTNode::operator==(const ASTNode& other) const {
   }
 }
 
+bool ASTNode::compare(const ASTNode* other) {
+  return false;
+}
+
 ASTNode* ASTNode::appendChild(ASTNode::kASTNodeType type) {
   auto child = new ASTNode(type);
   children_.push_back(child);
