@@ -93,6 +93,7 @@ public:
   void clearChildren();
   const std::vector<ASTNode*>& getChildren() const;
   void setToken(const Token* token);
+  void clearToken();
   const Token* getToken() const;
   kASTNodeType getType() const;
   void setType(kASTNodeType type);
