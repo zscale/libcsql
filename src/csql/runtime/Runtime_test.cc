@@ -244,3 +244,65 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggregate, [] () {
   }
 });
 
+
+TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithGroup, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new CSTableScanProvider(
+          "tesstable",
+          "src/csql/testdata/testtbl.cst"));
+
+  {
+    ResultList result;
+    auto query = R"(
+        select
+          sum(count(event.search_query.result_items.position) WITHIN RECORD),
+          sum(sum(if(event.search_query.result_items.clicked, 1, 0)) WITHIN RECORD)
+        from testtable
+        where event.search_query.result_items.position = 6;)";
+    auto qplan = runtime->buildQueryPlan(query, estrat.get());
+    runtime->executeStatement(qplan->buildStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 2);
+    EXPECT_EQ(result.getNumRows(), 1);
+    EXPECT_EQ(result.getRow(0)[0], "688");
+    EXPECT_EQ(result.getRow(0)[1], "2");
+  }
+
+  {
+    ResultList result;
+    auto query = R"(
+        select
+          sum(count(event.search_query.result_items.position) WITHIN RECORD),
+          sum(sum(if(event.search_query.result_items.clicked, 1, 0)) WITHIN RECORD)
+        from testtable
+        where event.search_query.result_items.position = 9;)";
+    auto qplan = runtime->buildQueryPlan(query, estrat.get());
+    runtime->executeStatement(qplan->buildStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 2);
+    EXPECT_EQ(result.getNumRows(), 1);
+    EXPECT_EQ(result.getRow(0)[0], "679");
+    EXPECT_EQ(result.getRow(0)[1], "4");
+  }
+
+  {
+    ResultList result;
+    auto query = R"(
+        select
+          event.search_query.result_items.position,
+          sum(count(event.search_query.result_items.position) WITHIN RECORD),
+          sum(sum(if(event.search_query.result_items.clicked, 1, 0)) WITHIN RECORD)
+        from testtable
+        group by event.search_query.result_items.position
+        order by event.search_query.result_items.position ASC
+        LIMIT 10;)";
+    auto qplan = runtime->buildQueryPlan(query, estrat.get());
+    runtime->executeStatement(qplan->buildStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 3);
+    EXPECT_EQ(result.getNumRows(), 10);
+    EXPECT_EQ(result.getRow(6)[0], "6");
+    EXPECT_EQ(result.getRow(6)[1], "688");
+    EXPECT_EQ(result.getRow(6)[2], "2");
+  }
+});
