@@ -37,6 +37,7 @@ public:
     T_VOID,
 
     T_SELECT,
+    T_SELECT_DEEP,
     T_SELECT_LIST,
     T_ALL,
     T_FROM,
