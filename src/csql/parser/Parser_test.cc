@@ -265,6 +265,32 @@ TEST_CASE(ParserTest, TestSelectTableWildcard, [] () {
   EXPECT(*from == ASTNode::T_FROM);
 });
 
+TEST_CASE(ParserTest, TestQuotedTableName, [] () {
+  auto parser = parseTestQuery("SELECT * FROM `some.table`;");
+  EXPECT(parser.getStatements().size() == 1);
+  const auto& stmt = parser.getStatements()[0];
+  EXPECT(*stmt == ASTNode::T_SELECT);
+  EXPECT(stmt->getChildren().size() == 2);
+  const auto& from = stmt->getChildren()[1];
+  EXPECT(*from == ASTNode::T_FROM);
+  EXPECT(from->getChildren().size() == 1);
+  const auto& tlbname = from->getChildren()[0];
+  EXPECT_EQ(tlbname->getToken()->getString(), "some.table");
+});
+
+TEST_CASE(ParserTest, TestNestedTableName, [] () {
+  auto parser = parseTestQuery("SELECT * FROM some.tbl;");
+  EXPECT(parser.getStatements().size() == 1);
+  const auto& stmt = parser.getStatements()[0];
+  EXPECT(*stmt == ASTNode::T_SELECT);
+  EXPECT(stmt->getChildren().size() == 2);
+  const auto& from = stmt->getChildren()[1];
+  EXPECT(*from == ASTNode::T_FROM);
+  EXPECT(from->getChildren().size() == 1);
+  const auto& tlbname = from->getChildren()[0];
+  EXPECT_EQ(tlbname->getToken()->getString(), "some.tbl");
+});
+
 TEST_CASE(ParserTest, TestSelectDerivedColumn, [] () {
   auto parser = parseTestQuery("SELECT somecol AS another FROM sometable;");
   EXPECT(parser.getStatements().size() == 1);
