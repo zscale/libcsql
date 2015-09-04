@@ -601,3 +601,23 @@ TEST_CASE(ParserTest, TestParseIfStatement, [] () {
   const auto& from = stmt->getChildren()[1];
   EXPECT(*from == ASTNode::T_FROM);
 });
+
+TEST_CASE(ParserTest, TestCompareASTs, [] () {
+  auto parser = parseTestQuery(R"(
+      SELECT if(1, 2, 3) from asd;
+      SELECT if(2, 3, 4) from asd;
+      SELECT if(1, 2, 3) from asd;
+  )");
+
+  EXPECT(parser.getStatements().size() == 3);
+  const auto a = parser.getStatements()[0];
+  const auto b = parser.getStatements()[0];
+  const auto c = parser.getStatements()[0];
+
+  EXPECT_FALSE(a->compare(b));
+  EXPECT_FALSE(b->compare(a));
+  EXPECT_FALSE(b->compare(c));
+  EXPECT_FALSE(c->compare(b));
+  EXPECT_TRUE(a->compare(c));
+  EXPECT_TRUE(c->compare(c));
+});
