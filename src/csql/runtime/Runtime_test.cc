@@ -372,3 +372,59 @@ TEST_CASE(RuntimeTest, SelectFloatIntegerDivision, [] () {
   }
 });
 
+TEST_CASE(RuntimeTest, SelectFloatIntegerMultiplication, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+
+  {
+    auto v = runtime->evaluateStaticExpression("10 * 5");
+    EXPECT_EQ(v.toString(), "50");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression("10 * 5.0");
+    EXPECT_EQ(v.toString(), "50.000000");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression("10.0 * 5");
+    EXPECT_EQ(v.toString(), "50.000000");
+  }
+});
+
+TEST_CASE(RuntimeTest, SelectFloatIntegerAddition, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+
+  {
+    auto v = runtime->evaluateStaticExpression("10 + 5");
+    EXPECT_EQ(v.toString(), "15");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression("10 + 5.0");
+    EXPECT_EQ(v.toString(), "15.000000");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression("10.0 + 5");
+    EXPECT_EQ(v.toString(), "15.000000");
+  }
+});
+
+TEST_CASE(RuntimeTest, SelectFloatIntegerSubtraction, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+
+  {
+    auto v = runtime->evaluateStaticExpression("10 - 5");
+    EXPECT_EQ(v.toString(), "5");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression("10 - 5.0");
+    EXPECT_EQ(v.toString(), "5.000000");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression("10.0 - 5");
+    EXPECT_EQ(v.toString(), "5.000000");
+  }
+});
