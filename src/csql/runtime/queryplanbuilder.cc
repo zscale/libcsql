@@ -477,7 +477,7 @@ QueryTreeNode* QueryPlanBuilder::buildGroupBy(
     /* copy all group expressions and add required field to child select list */
     for (const auto& group_expr : child->getChildren()) {
       auto e = group_expr->deepCopy();
-      buildInternalSelectList(e, child_sl);
+      pushDownGroupList(e, child_sl);
 
       if (hasAggregationExpression(e)) {
         RAISE(kRuntimeError, "GROUP clause can only contain pure functions");
@@ -665,6 +665,53 @@ bool QueryPlanBuilder::buildInternalSelectList(
       if (col_index < 0) {
         auto derived = new ASTNode(ASTNode::T_DERIVED_COLUMN);
         derived->appendChild(node->deepCopy());
+        target_select_list->appendChild(derived);
+        col_index = target_select_list->getChildren().size() - 1;
+      }
+
+      node->setType(ASTNode::T_RESOLVED_COLUMN);
+      node->setID(col_index);
+      node->clearChildren();
+      node->clearToken();
+      return true;
+    }
+
+    default: {
+      for (const auto& child : node->getChildren()) {
+        if (!buildInternalSelectList(child, target_select_list)) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+  }
+}
+
+bool QueryPlanBuilder::pushDownGroupList(
+    ASTNode* node,
+    ASTNode* target_select_list) {
+  /* search recursively */
+  switch (node->getType()) {
+
+    /* push down referenced columns into the child select list */
+    case ASTNode::T_COLUMN_NAME: {
+      auto derived = new ASTNode(ASTNode::T_DERIVED_COLUMN);
+      derived->appendChild(node->deepCopy());
+
+      /* check if this column already exists in the select list */
+      auto col_index = -1;
+      const auto& candidates = target_select_list->getChildren();
+      for (int i = 0; i < candidates.size(); ++i) {
+        if (candidates[i]->compare(derived)) {
+          col_index = i;
+          break;
+        }
+      }
+
+      /* otherwise add this column to the select list */
+      if (col_index < 0) {
         target_select_list->appendChild(derived);
         col_index = target_select_list->getChildren().size() - 1;
       }

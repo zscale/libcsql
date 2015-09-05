@@ -145,6 +145,7 @@ protected:
    * This is used to create child select lists for nested query plan nodes.
    */
   bool buildInternalSelectList(ASTNode* ast, ASTNode* select_list);
+  bool pushDownGroupList(ASTNode* ast, ASTNode* select_list);
 
   SelectListNode* buildSelectList(ASTNode* select_list);
 
