@@ -698,7 +698,9 @@ bool QueryPlanBuilder::pushDownGroupList(
     /* push down referenced columns into the child select list */
     case ASTNode::T_COLUMN_NAME: {
       auto derived = new ASTNode(ASTNode::T_DERIVED_COLUMN);
-      derived->appendChild(node->deepCopy());
+      auto mcall = derived->appendChild(ASTNode::T_METHOD_CALL);
+      mcall->setToken(new Token(Token::T_IDENTIFIER, "__lastval"));
+      mcall->appendChild(node->deepCopy());
 
       /* check if this column already exists in the select list */
       auto col_index = -1;
