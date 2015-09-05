@@ -453,7 +453,7 @@ QueryTreeNode* QueryPlanBuilder::buildGroupBy(
 
   /* generate select list for child */
   auto child_sl = new ASTNode(ASTNode::T_SELECT_LIST);
-  buildInternalSelectList(select_list, child_sl);
+  buildInternalSelectList(select_list, child_sl, false);
 
   /* copy ast for child and swap out select lists*/
   auto child_ast = ast->deepCopy();
@@ -477,7 +477,7 @@ QueryTreeNode* QueryPlanBuilder::buildGroupBy(
     /* copy all group expressions and add required field to child select list */
     for (const auto& group_expr : child->getChildren()) {
       auto e = group_expr->deepCopy();
-      pushDownGroupList(e, child_sl);
+      buildInternalSelectList(e, child_sl, false);
 
       if (hasAggregationExpression(e)) {
         RAISE(kRuntimeError, "GROUP clause can only contain pure functions");
@@ -626,7 +626,8 @@ QueryTreeNode* QueryPlanBuilder::buildGroupBy(
 //
 bool QueryPlanBuilder::buildInternalSelectList(
     ASTNode* node,
-    ASTNode* target_select_list) {
+    ASTNode* target_select_list,
+    bool in_aggregation) {
   /* search recursively */
   switch (node->getType()) {
 
@@ -645,68 +646,20 @@ bool QueryPlanBuilder::buildInternalSelectList(
 
     /* push down referenced columns into the child select list */
     case ASTNode::T_COLUMN_NAME: {
-      auto col_index = -1;
-
-      /* check if this column already exists in the select list */
-      const auto& candidates = target_select_list->getChildren();
-      for (int i = 0; i < candidates.size(); ++i) {
-        if (candidates[i]->getType() == ASTNode::T_DERIVED_COLUMN) {
-          if (candidates[i]->getChildren().size() == 1) {
-            auto colname = candidates[i]->getChildren()[0];
-            if (node->compare(colname)) {
-              col_index = i;
-              break;
-            }
-          }
-        }
-      }
-
-      /* otherwise add this column to the select list */
-      if (col_index < 0) {
-        auto derived = new ASTNode(ASTNode::T_DERIVED_COLUMN);
-        derived->appendChild(node->deepCopy());
-        target_select_list->appendChild(derived);
-        col_index = target_select_list->getChildren().size() - 1;
-      }
-
-      node->setType(ASTNode::T_RESOLVED_COLUMN);
-      node->setID(col_index);
-      node->clearChildren();
-      node->clearToken();
-      return true;
-    }
-
-    default: {
-      for (const auto& child : node->getChildren()) {
-        if (!buildInternalSelectList(child, target_select_list)) {
-          return false;
-        }
-      }
-
-      return true;
-    }
-
-  }
-}
-
-bool QueryPlanBuilder::pushDownGroupList(
-    ASTNode* node,
-    ASTNode* target_select_list) {
-  /* search recursively */
-  switch (node->getType()) {
-
-    /* push down referenced columns into the child select list */
-    case ASTNode::T_COLUMN_NAME: {
       auto derived = new ASTNode(ASTNode::T_DERIVED_COLUMN);
-      auto mcall = derived->appendChild(ASTNode::T_METHOD_CALL);
-      mcall->setToken(new Token(Token::T_IDENTIFIER, "__lastval"));
-      mcall->appendChild(node->deepCopy());
+      if (in_aggregation) {
+        derived->appendChild(node->deepCopy());
+      } else {
+        auto mcall = derived->appendChild(ASTNode::T_METHOD_CALL_WITHIN_RECORD);
+        mcall->setToken(new Token(Token::T_IDENTIFIER, "repeat_value"));
+        mcall->appendChild(node->deepCopy());
+      }
 
       /* check if this column already exists in the select list */
       auto col_index = -1;
       const auto& candidates = target_select_list->getChildren();
       for (int i = 0; i < candidates.size(); ++i) {
-        if (candidates[i]->compare(derived)) {
+        if (derived->compare(candidates[i])) {
           col_index = i;
           break;
         }
@@ -725,9 +678,20 @@ bool QueryPlanBuilder::pushDownGroupList(
       return true;
     }
 
+    case ASTNode::T_METHOD_CALL:
+      if (node->getToken() == nullptr) {
+        RAISE(kRuntimeError, "corrupt AST");
+      }
+
+      if (symbol_table_->isAggregateFunction(node->getToken()->getString())) {
+        in_aggregation = true;
+      }
+
+      /* fallthrough */
+
     default: {
       for (const auto& child : node->getChildren()) {
-        if (!buildInternalSelectList(child, target_select_list)) {
+        if (!buildInternalSelectList(child, target_select_list, in_aggregation)) {
           return false;
         }
       }

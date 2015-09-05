@@ -233,8 +233,6 @@ void CSTableScan::scan(
                 &select_list_[i].instance);
           }
 
-          iputs("push tow: $0", out_row);
-
           if (!fn(out_row.size(), out_row.data())) {
             return;
           }
