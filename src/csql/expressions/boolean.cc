@@ -103,28 +103,12 @@ void andExpr(int argc, SValue* argv, SValue* out) {
   if (argc != 2) {
     RAISE(
         kRuntimeError,
-        "wrong number of arguments for and. expected: 2, got: %i", argc);
+        "wrong number of arguments for AND. expected: 2, got: %i", argc);
   }
 
   SValue* lhs = argv;
   SValue* rhs = argv + 1;
-
-  switch(lhs->getType()) {
-    case SValue::T_BOOL:
-      switch(rhs->getType()) {
-        case SValue::T_BOOL:
-          *out = SValue(lhs->getBool() && rhs->getBool());
-          return;
-        default:
-          break;
-      }
-    default:
-      break;
-  }
-
-  RAISE(kRuntimeError, "can't AND %s with %s",
-      lhs->getTypeName(),
-      rhs->getTypeName());
+  *out = SValue(lhs->toBool() && rhs->toBool());
 }
 
 void orExpr(int argc, SValue* argv, SValue* out) {
@@ -136,23 +120,7 @@ void orExpr(int argc, SValue* argv, SValue* out) {
 
   SValue* lhs = argv;
   SValue* rhs = argv + 1;
-
-  switch(lhs->getType()) {
-    case SValue::T_BOOL:
-      switch(rhs->getType()) {
-        case SValue::T_BOOL:
-          *out = SValue(lhs->getBool() || rhs->getBool());
-          return;
-        default:
-          break;
-      }
-    default:
-      break;
-  }
-
-  RAISE(kRuntimeError, "can't OR %s with %s",
-      lhs->getTypeName(),
-      rhs->getTypeName());
+  *out = SValue(lhs->toBool() || rhs->toBool());
 }
 
 void negExpr(int argc, SValue* argv, SValue* out) {
