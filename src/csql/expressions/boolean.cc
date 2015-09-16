@@ -63,9 +63,18 @@ void eqExpr(int argc, SValue* argv, SValue* out) {
       switch(rhs->getType()) {
         case SValue::T_NULL:
           *out = SValue(SValue::BoolType(true));
-          break;
+          return;
         default:
           *out = SValue(SValue::BoolType(false));
+          return;
+      }
+      return;
+    case SValue::T_BOOL:
+      switch(rhs->getType()) {
+        case SValue::T_BOOL:
+          *out = SValue(SValue::BoolType(lhs->getBool() == rhs->getBool()));
+          return;
+        default:
           break;
       }
       return;
