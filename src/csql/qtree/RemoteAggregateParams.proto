@@ -8,12 +8,12 @@
  */
 package csql;
 
-message SelectListItem {
-  required string expression = 1;
-  optional string alias = 2;
-};
-
 message RemoteAggregateParams {
+  message SelectListItem {
+    required string expression = 1;
+    optional string alias = 2;
+  };
+
   required string table_name = 1;
   repeated SelectListItem aggregate_expression_list = 2;
   repeated SelectListItem select_expression_list = 3;
