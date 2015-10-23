@@ -15,7 +15,7 @@ namespace csql {
 namespace expressions {
 
 void fromTimestamp(int argc, SValue* argv, SValue* out);
-
+void dateTruncExpr(int argc, SValue* argv, SValue* out);
 }
 }
 #endif
