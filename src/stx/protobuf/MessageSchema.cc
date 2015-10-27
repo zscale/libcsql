@@ -368,6 +368,22 @@ void MessageSchema::addField(const MessageSchemaField& field) {
   fields_.emplace_back(field);
 }
 
+void MessageSchema::removeField(uint32_t id) {
+  for (auto f = fields_.begin(); f != fields_.end(); ++f) {
+    if (f->id != id) {
+      continue;
+    }
+
+    field_ids_.erase(f->name);
+    field_types_.erase(f->id);
+    field_names_.erase(f->id);
+    fields_.erase(f);
+    return;
+  }
+
+  RAISEF(kNotFoundError, "field not found: $0", id);
+}
+
 Buffer MessageSchema::encode() const {
   util::BinaryMessageWriter writer;
   encode(&writer);
@@ -509,7 +525,7 @@ void MessageSchema::fromJSON(
 
   auto ncols = json::arrayLength(cols, end);
   for (size_t i = 0; i < ncols; ++i) {
-    auto col = json::arrayLookup(cols, end, i);
+    auto col = json::arrayLookup(cols, end, i); // O(N^2) but who cares...
 
     auto id = json::objectGetUInt64(col, end, "id");
     if (id.isEmpty()) {
@@ -527,28 +543,17 @@ void MessageSchema::fromJSON(
     }
 
     auto type_size = json::objectGetUInt64(col, end, "type_size");
-    if (type_size.isEmpty()) {
-      RAISE(kRuntimeError, "missing field: type_size");
-    }
-
     auto optional = json::objectGetBool(col, end, "optional");
-    if (optional.isEmpty()) {
-      RAISE(kRuntimeError, "missing field: optional");
-    }
-
     auto repeated = json::objectGetBool(col, end, "repeated");
-    if (repeated.isEmpty()) {
-      RAISE(kRuntimeError, "missing field: repeated");
-    }
 
     addField(
         MessageSchemaField(
             id.get(),
             name.get(),
             fieldTypeFromString(type.get()),
-            type_size.get(),
-            repeated.get(),
-            optional.get()));
+            type_size.isEmpty() ? 0 : type_size.get(),
+            repeated.isEmpty() ? false : repeated.get(),
+            optional.isEmpty() ? false : optional.get()));
   }
 }
 
