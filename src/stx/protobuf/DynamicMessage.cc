@@ -11,6 +11,7 @@
 #include <stx/human.h>
 #include <stx/protobuf/DynamicMessage.h>
 #include <stx/protobuf/JSONEncoder.h>
+#include <stx/protobuf/MessagePrinter.h>
 
 namespace stx {
 namespace msg {
@@ -201,6 +202,45 @@ bool DynamicMessage::addObject(
   return true;
 }
 
+Option<String> DynamicMessage::getField(const String& name) const {
+  if (!schema_->hasField(name)) {
+    return None<String>();
+  }
+
+  return getField(schema_->fieldId(name));
+}
+
+Option<String> DynamicMessage::getField(uint32_t field_id) const {
+  if (!schema_->hasField(field_id)) {
+    return None<String>();
+  }
+
+  switch (schema_->fieldType(field_id)) {
+
+    case msg::FieldType::BOOLEAN:
+      return Some(StringUtil::toString(data_.getBool(field_id)));
+
+    case msg::FieldType::UINT32:
+      return Some(StringUtil::toString(data_.getUInt32(field_id)));
+
+    case msg::FieldType::UINT64:
+      return Some(StringUtil::toString(data_.getUInt64(field_id)));
+
+    case msg::FieldType::DOUBLE:
+      return Some(StringUtil::toString(data_.getDouble(field_id)));
+
+    case msg::FieldType::DATETIME:
+      return Some(StringUtil::toString((uint64_t) data_.getUnixTime(field_id)));
+
+    case msg::FieldType::STRING:
+      return Some(data_.getString(field_id));
+
+    case msg::FieldType::OBJECT:
+      return None<String>();
+
+  }
+}
+
 void DynamicMessage::toJSON(json::JSONOutputStream* json) const {
   msg::JSONEncoder::encode(data_, *schema_, json);
 }
@@ -209,14 +249,78 @@ void DynamicMessage::fromJSON(
     json::JSONObject::const_iterator begin,
     json::JSONObject::const_iterator end) {
 
+  for (const auto& field : schema_->fields()) {
+    auto field_data = json::objectLookup(begin, end, field.name);
+    if (field_data == end) {
+      continue;
+    }
+
+    switch (field_data->type) {
+
+      case json::JSON_ARRAY_BEGIN: {
+        auto aend = std::min(end, field_data + field_data->size);
+        for (field_data++; field_data < aend; field_data += field_data->size) {
+          switch (field_data->type) {
+
+            case json::JSON_OBJECT_BEGIN: {
+              auto oend = std::min(end, field_data + field_data->size);
+              addObject(
+                  field.name,
+                  [field_data, oend] (msg::DynamicMessage* cld) {
+                cld->fromJSON(field_data, oend);
+              });
+            }
+
+            case json::JSON_STRING:
+            case json::JSON_NUMBER:
+            case json::JSON_TRUE:
+            case json::JSON_FALSE:
+              addField(field.name, field_data->data);
+
+            default:
+              break;
+
+          }
+        }
+        break;
+      }
+
+      case json::JSON_OBJECT_BEGIN: {
+        auto oend = std::min(end, field_data + field_data->size);
+        addObject(
+            field.name,
+            [field_data, oend] (msg::DynamicMessage* cld) {
+          cld->fromJSON(field_data, oend);
+        });
+      }
+
+      case json::JSON_STRING:
+      case json::JSON_NUMBER:
+      case json::JSON_TRUE:
+      case json::JSON_FALSE:
+        addField(field.name, field_data->data);
+
+      default:
+        continue;
+
+    }
+  }
 }
 
 const msg::MessageObject& DynamicMessage::data() const {
   return data_;
 }
 
+void DynamicMessage::setData(msg::MessageObject data) {
+  data_ = data;
+}
+
 RefPtr<msg::MessageSchema> DynamicMessage::schema() const {
   return schema_;
+}
+
+String DynamicMessage::debugPrint() const {
+  return msg::MessagePrinter::print(data_, *schema_);
 }
 
 } // namespace msg
