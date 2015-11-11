@@ -16,6 +16,10 @@
 #include <csql/runtime/LikePattern.h>
 #include <csql/svalue.h>
 
+#ifndef HAVE_PCRE
+#error "PCRE is required"
+#endif
+
 namespace csql {
 
 ScopedPtr<VM::Program> Compiler::compile(
