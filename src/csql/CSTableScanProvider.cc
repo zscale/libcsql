@@ -48,18 +48,18 @@ Option<csql::TableInfo> CSTableScanProvider::describe(
 }
 
 csql::TableInfo CSTableScanProvider::tableInfo() const {
-  cstable::CSTableReader cstable(cstable_file_);
+  auto cstable = cstable::CSTableReader::openFile(cstable_file_);
 
   csql::TableInfo ti;
   ti.table_name = table_name_;
 
-  for (const auto& col : cstable.columns()) {
+  for (const auto& col : cstable->columns()) {
     csql::ColumnInfo ci;
     ci.column_name = col;
     ci.type_size = 0;
     ci.is_nullable = true;
 
-    switch (cstable.getColumnType(col)) {
+    switch (cstable->getColumnType(col)) {
       case cstable::ColumnType::BOOLEAN:
         ci.type = "bool";
         break;

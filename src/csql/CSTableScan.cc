@@ -52,13 +52,13 @@ void CSTableScan::execute(
     findColumns(where_expr.get(), &column_names);
   }
 
-  cstable::CSTableReader cstable(cstable_filename_);
+  auto cstable = cstable::CSTableReader::openFile(cstable_filename_);
 
   for (const auto& col : column_names) {
-    if (cstable.hasColumn(col)) {
+    if (cstable->hasColumn(col)) {
       columns_.emplace(
           col,
-          ColumnRef(cstable.getColumnReader(col), colindex_++));
+          ColumnRef(cstable->getColumnReader(col), colindex_++));
     }
   }
 
@@ -79,9 +79,9 @@ void CSTableScan::execute(
   }
 
   if (columns_.empty()) {
-    scanWithoutColumns(&cstable, fn);
+    scanWithoutColumns(cstable.get(), fn);
   } else {
-    scan(&cstable, fn);
+    scan(cstable.get(), fn);
   }
 
   context->incrNumSubtasksCompleted(1);
