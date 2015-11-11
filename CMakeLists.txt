@@ -38,8 +38,4 @@ if(NOT HAVE_CSTABLE)
   SET(HAVE_CSTABLE true)
 endif()
 
-if(NOT HAVE_PCRE)
-  message(FATAL_ERROR "PCRE is required")
-endif()
-
 add_subdirectory(src/csql)
