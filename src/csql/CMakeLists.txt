@@ -7,7 +7,6 @@
 # <http://www.gnu.org/licenses/>.
 file(GLOB PROTO_FILES **/*.proto)
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 add_library(chartsql STATIC
     svalue.cc
@@ -101,10 +100,7 @@ add_library(chartsql STATIC
     ${PROTO_SRCS}
     defaults.cc)
 
-set(CSQL_LIBS chartsql cplot cstable stx-http stx-protobuf stx-json stx-base)
-if(HAVE_PCRE)
-  set(CSQL_LIBS ${CSQL_LIBS} ${PCRE_LIBRARIES})
-endif()
+set(CSQL_LIBS chartsql cplot cstable stx-http stx-protobuf stx-json stx-base pcre)
 
 add_executable(test-chartsql-runtime runtime/Runtime_test.cc)
 target_link_libraries(test-chartsql-runtime ${CSQL_LIBS})
