@@ -57,7 +57,6 @@ void JSONSSEStreamFormat::formatResults(
     JSONResultFormat format(&json);
     format.formatResults(query, context);
     output_->sendEvent(result, Some(String("result")));
-    output_->sendEvent("", Some(String("job_finished")));
   } catch (const StandardException& e) {
     stx::logError("sql", e, "SQL execution failed");
 
