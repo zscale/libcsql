@@ -58,6 +58,7 @@ add_library(chartsql STATIC
     qtree/RemoteAggregateNode.cc
     runtime/ASCIITableFormat.cc
     runtime/JSONSSEStreamFormat.cc
+    runtime/BinaryStreamFormat.cc
     runtime/JSONResultFormat.cc
     runtime/ValueExpression.cc
     runtime/ScratchMemory.cc
