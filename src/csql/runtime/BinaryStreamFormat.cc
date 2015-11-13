@@ -33,8 +33,9 @@ void BinaryStreamFormat::formatResults(
       }
 
       //FIXME check event id type
-      writer.appendUInt16(2);
+      writer.appendUInt8(2);
       writer.appendDouble(progress);
+      output_->writeBodyChunk(writer.data(), writer.size());
     });
 
     for (int i = 0; i < query->numStatements(); ++i) {
@@ -45,7 +46,8 @@ void BinaryStreamFormat::formatResults(
       auto table_expr = dynamic_cast<TableExpression*>(stmt);
       if (table_expr) {
         renderTable(table_expr, context, &writer);
-        return;
+        output_->writeBodyChunk(writer.data(), writer.size());
+        continue;
       }
 
       RAISE(kRuntimeError, "can't render statement in BinaryFormat")
@@ -55,8 +57,9 @@ void BinaryStreamFormat::formatResults(
     stx::logError("sql", e, "SQL execution failed");
 
     //FIXME check event id type
-    writer.appendUInt16(3);
+    writer.appendUInt8(3);
     writer.appendLenencString(e.what());
+    output_->writeBodyChunk(writer.data(), writer.size());
   }
 }
 
@@ -79,7 +82,7 @@ void BinaryStreamFormat::renderTable(
       [this, writer] (int argc, const csql::SValue* argv) -> bool {
 
     //check me (row event id)
-    writer->appendUInt16(1);
+    writer->appendUInt8(1);
     writer->appendUInt32(argc);
 
     for (int n = 0; n < argc; ++n) {
