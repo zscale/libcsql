@@ -12,6 +12,7 @@
 #include <stx/stdtypes.h>
 #include <csql/runtime/ResultFormat.h>
 #include <stx/http/HTTPResponseStream.h>
+#include <stx/util/binarymessagewriter.h>
 
 namespace csql {
 
@@ -25,6 +26,12 @@ public:
       ExecutionContext* context) override;
 
 protected:
+
+  void renderTable(
+      TableExpression* stmt,
+      ExecutionContext* context,
+      stx::util::BinaryMessageWriter* writer);
+
   RefPtr<http::HTTPResponseStream> output_;
 };
 

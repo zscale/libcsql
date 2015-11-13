@@ -20,8 +20,10 @@ BinaryStreamFormat::BinaryStreamFormat(
 void BinaryStreamFormat::formatResults(
     RefPtr<QueryPlan> query,
     ExecutionContext* context) {
-  /*try {
-    context->onStatusChange([this, context] (const csql::ExecutionStatus& status) {
+
+  auto writer = stx::util::BinaryMessageWriter();
+  try {
+    context->onStatusChange([this, &writer, context] (const csql::ExecutionStatus& status) {
       auto progress = status.progress();
 
       if (output_->isClosed()) {
@@ -30,45 +32,82 @@ void BinaryStreamFormat::formatResults(
         return;
       }
 
-      Buffer buf;
-      json::JSONOutputStream json(BufferOutputStream::fromBuffer(&buf));
-      json.beginObject();
-      json.addObjectEntry("status");
-      json.addString("running");
-      json.addComma();
-      json.addObjectEntry("progress");
-      json.addFloat(progress);
-      json.addComma();
-      json.addObjectEntry("message");
-      if (progress == 0.0f) {
-        json.addString("Waiting...");
-      } else if (progress == 1.0f) {
-        json.addString("Downloading...");
-      } else {
-        json.addString("Running...");
-      }
-      json.endObject();
-
-      output_->sendEvent(buf, Some(String("status")));
+      //FIXME check event id type
+      writer.appendUInt16(2);
+      writer.appendDouble(progress);
     });
 
-    Buffer result;
-    json::JSONOutputStream json(BufferOutputStream::fromBuffer(&result));
-    JSONResultFormat format(&json);
-    format.formatResults(query, context);
-    output_->sendEvent(result, Some(String("result")));
+    for (int i = 0; i < query->numStatements(); ++i) {
+      auto stmt = query->getStatement(i);
+
+      //FIXME handle multiple statements / add table identifier
+
+      auto table_expr = dynamic_cast<TableExpression*>(stmt);
+      if (table_expr) {
+        renderTable(table_expr, context, &writer);
+        return;
+      }
+
+      RAISE(kRuntimeError, "can't render statement in BinaryFormat")
+    }
+
   } catch (const StandardException& e) {
     stx::logError("sql", e, "SQL execution failed");
 
-    Buffer buf;
-    json::JSONOutputStream json(BufferOutputStream::fromBuffer(&buf));
-    json.beginObject();
-    json.addObjectEntry("error");
-    json.addString(e.what());
-    json.endObject();
+    //FIXME check event id type
+    writer.appendUInt16(3);
+    writer.appendLenencString(e.what());
+  }
+}
 
-    output_->sendEvent(buf, Some(String("query_error")));
-  }*/
+void BinaryStreamFormat::renderTable(
+    TableExpression* stmt,
+    ExecutionContext* context,
+    stx::util::BinaryMessageWriter* writer) {
+
+  auto columns = stmt->columnNames();
+  writer->appendUInt32(columns.size());
+  for (int n = 0; n < columns.size(); ++n) {
+    writer->appendUInt16(columns[n].size());
+    writer->appendString(columns[n]);
+  }
+
+  //rows
+  size_t j = 0;
+  stmt->execute(
+      context,
+      [this, writer] (int argc, const csql::SValue* argv) -> bool {
+
+    //check me (row event id)
+    writer->appendUInt16(1);
+    writer->appendUInt32(argc);
+
+    for (int n = 0; n < argc; ++n) {
+      switch (argv[n].getType()) {
+        case SValue::T_STRING:
+          writer->appendLenencString(argv[n].getString());
+          break;
+        case SValue::T_FLOAT:
+          writer->appendDouble(argv[n].getFloat());
+          break;
+        case SValue::T_INTEGER:
+          writer->appendUInt64(argv[n].getInteger());
+          break;
+        case SValue::T_BOOL:
+          writer->appendUInt8(argv[n].getBool() ? 1 : 0);
+          break;
+        case SValue::T_TIMESTAMP:
+          writer->appendUInt64(argv[n].getInteger());
+          break;
+        case SValue::T_NULL:
+          break;
+      }
+    }
+
+    return true;
+  });
+
+
 }
 
 }
