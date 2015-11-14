@@ -41,8 +41,6 @@ void BinaryStreamFormat::formatResults(
     for (int i = 0; i < query->numStatements(); ++i) {
       auto stmt = query->getStatement(i);
 
-      //FIXME handle multiple statements / add table identifier
-
       auto table_expr = dynamic_cast<TableExpression*>(stmt);
       if (table_expr) {
         renderTable(table_expr, context, &writer);
@@ -67,6 +65,8 @@ void BinaryStreamFormat::renderTable(
     TableExpression* stmt,
     ExecutionContext* context,
     stx::util::BinaryMessageWriter* writer) {
+
+  writer->appendUInt8(1);
 
   auto columns = stmt->columnNames();
   writer->appendUInt32(columns.size());
