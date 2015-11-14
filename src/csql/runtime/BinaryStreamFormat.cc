@@ -32,7 +32,6 @@ void BinaryStreamFormat::formatResults(
         return;
       }
 
-      //FIXME check event id type
       writer.appendUInt8(2);
       writer.appendDouble(progress);
       output_->writeBodyChunk(writer.data(), writer.size());
@@ -54,7 +53,6 @@ void BinaryStreamFormat::formatResults(
   } catch (const StandardException& e) {
     stx::logError("sql", e, "SQL execution failed");
 
-    //FIXME check event id type
     writer.appendUInt8(3);
     writer.appendLenencString(e.what());
     output_->writeBodyChunk(writer.data(), writer.size());
@@ -81,7 +79,6 @@ void BinaryStreamFormat::renderTable(
       context,
       [this, writer] (int argc, const csql::SValue* argv) -> bool {
 
-    //check me (row event id)
     writer->appendUInt8(1);
     writer->appendUInt32(argc);
 
