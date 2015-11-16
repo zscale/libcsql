@@ -147,11 +147,11 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
       return;
     }
 
-    RAISE(
+    RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %s for unit %s",
-        expr.c_str(),
-        argv[2].toString().c_str());
+        "DATE_ADD: invalid expression %0 for unit %1",
+        expr,
+        argv[2].toString());
   }
 
   if (unit == "minute") {
@@ -161,11 +161,11 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
       return;
     }
 
-    RAISE(
+    RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %s for unit %s",
-        expr.c_str(),
-        argv[2].toString().c_str());
+        "DATE_ADD: invalid expression %0 for unit %1",
+        expr,
+        argv[2].toString());
   }
 
   if (unit == "hour") {
@@ -175,11 +175,11 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
       return;
     }
 
-    RAISE(
+    RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %s for unit %s",
-        expr.c_str(),
-        argv[2].toString().c_str());
+        "DATE_ADD: invalid expression %0 for unit %1",
+        expr,
+        argv[2].toString());
   }
 
   if (unit == "day") {
@@ -189,11 +189,11 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
       return;
     }
 
-    RAISE(
+    RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %s for unit %s",
-        expr.c_str(),
-        argv[2].toString().c_str());
+        "DATE_ADD: invalid expression %0 for unit %1",
+        expr,
+        argv[2].toString());
   }
 
   if (unit == "week") {
@@ -203,11 +203,11 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
       return;
     }
 
-    RAISE(
+    RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %s for unit %s",
-        expr.c_str(),
-        argv[2].toString().c_str());
+        "DATE_ADD: invalid expression %0 for unit %1",
+        expr,
+        argv[2].toString());
   }
 
   if (unit == "month") {
@@ -218,11 +218,12 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
       return;
     }
 
-    RAISE(
+    RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %s for unit %s",
-        expr.c_str(),
-        argv[2].toString().c_str());  }
+        "DATE_ADD: invalid expression %0 for unit %1",
+        expr,
+        argv[2].toString());
+  }
 
   if (unit == "year") {
     if (StringUtil::isNumber(expr)) {
@@ -231,11 +232,11 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
       return;
     }
 
-    RAISE(
+    RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %s for unit %s",
-        expr.c_str(),
-        argv[2].toString().c_str());
+        "DATE_ADD: invalid expression %0 for unit %1",
+        expr,
+        argv[2].toString());
   }
 
   if (unit == "minute_second") {
@@ -251,11 +252,11 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
       return;
     }
 
-    RAISE(
+    RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %s for unit %s",
-        expr.c_str(),
-        argv[2].toString().c_str());
+        "DATE_ADD: invalid expression %0 for unit %1",
+        expr,
+        argv[2].toString());
   }
 
   if (unit == "hour_second") {
@@ -274,11 +275,11 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
       return;
     }
 
-    RAISE(
+    RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %s for unit %s",
-        expr.c_str(),
-        argv[2].toString().c_str());
+        "DATE_ADD: invalid expression %0 for unit %1",
+        expr,
+        argv[2].toString());
   }
 
   if (unit == "hour_minute") {
@@ -295,11 +296,11 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
       return;
     }
 
-    RAISE(
+    RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %s for unit %s",
-        expr.c_str(),
-        argv[2].toString().c_str());
+        "DATE_ADD: invalid expression %0 for unit %1",
+        expr,
+        argv[2].toString());
   }
 
   if (unit == "day_second") {
@@ -322,11 +323,11 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
       }
     }
 
-    RAISE(
+    RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %s for unit %s",
-        expr.c_str(),
-        argv[2].toString().c_str());
+        "DATE_ADD: invalid expression %0 for unit %1",
+        expr,
+        argv[2].toString());
   }
 
   if (unit == "day_minute") {
@@ -347,11 +348,11 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
       }
     }
 
-    RAISE(
+    RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %s for unit %s",
-        expr.c_str(),
-        argv[2].toString().c_str());
+        "DATE_ADD: invalid expression %0 for unit %1",
+        expr,
+        argv[2].toString());
   }
 
   if (unit == "day_hour") {
@@ -367,11 +368,11 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
       return;
     }
 
-    RAISE(
+    RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %s for unit %s",
-        expr.c_str(),
-        argv[2].toString().c_str());
+        "DATE_ADD: invalid expression %0 for unit %1",
+        expr,
+        argv[2].toString());
   }
 
   if (unit == "year_month") {
@@ -387,17 +388,17 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
       return;
     }
 
-    RAISE(
+    RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %s for unit %s",
-        expr.c_str(),
-        argv[2].toString().c_str());
+        "DATE_ADD: invalid expression %0 for unit %1",
+        expr,
+        argv[2].toString());
   }
 
-  RAISE(
+  RAISEF(
       kRuntimeError,
       "DATE_ADD: invalid unit %s",
-      argv[2].toString().c_str());
+      argv[2].toString());
 }
 
 }
