@@ -149,7 +149,7 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
 
     RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %0 for unit %1",
+        "DATE_ADD: invalid expression $0 for unit $1",
         expr,
         argv[2].toString());
   }
@@ -163,7 +163,7 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
 
     RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %0 for unit %1",
+        "DATE_ADD: invalid expression $0 for unit $1",
         expr,
         argv[2].toString());
   }
@@ -177,7 +177,7 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
 
     RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %0 for unit %1",
+        "DATE_ADD: invalid expression $0 for unit $1",
         expr,
         argv[2].toString());
   }
@@ -191,7 +191,7 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
 
     RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %0 for unit %1",
+        "DATE_ADD: invalid expression $0 for unit $1",
         expr,
         argv[2].toString());
   }
@@ -205,7 +205,7 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
 
     RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %0 for unit %1",
+        "DATE_ADD: invalid expression $0 for unit $1",
         expr,
         argv[2].toString());
   }
@@ -220,7 +220,7 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
 
     RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %0 for unit %1",
+        "DATE_ADD: invalid expression $0 for unit $1",
         expr,
         argv[2].toString());
   }
@@ -234,7 +234,7 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
 
     RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %0 for unit %1",
+        "DATE_ADD: invalid expression $0 for unit $1",
         expr,
         argv[2].toString());
   }
@@ -254,7 +254,7 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
 
     RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %0 for unit %1",
+        "DATE_ADD: invalid expression $0 for unit $1",
         expr,
         argv[2].toString());
   }
@@ -277,7 +277,7 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
 
     RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %0 for unit %1",
+        "DATE_ADD: invalid expression $0 for unit $1",
         expr,
         argv[2].toString());
   }
@@ -298,7 +298,7 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
 
     RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %0 for unit %1",
+        "DATE_ADD: invalid expression $0 for unit $1",
         expr,
         argv[2].toString());
   }
@@ -325,7 +325,7 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
 
     RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %0 for unit %1",
+        "DATE_ADD: invalid expression $0 for unit $1",
         expr,
         argv[2].toString());
   }
@@ -350,7 +350,7 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
 
     RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %0 for unit %1",
+        "DATE_ADD: invalid expression $0 for unit $1",
         expr,
         argv[2].toString());
   }
@@ -370,7 +370,7 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
 
     RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %0 for unit %1",
+        "DATE_ADD: invalid expression $0 for unit $1",
         expr,
         argv[2].toString());
   }
@@ -390,14 +390,14 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
 
     RAISEF(
         kRuntimeError,
-        "DATE_ADD: invalid expression %0 for unit %1",
+        "DATE_ADD: invalid expression $0 for unit $1",
         expr,
         argv[2].toString());
   }
 
   RAISEF(
       kRuntimeError,
-      "DATE_ADD: invalid unit %s",
+      "DATE_ADD: invalid unit $0",
       argv[2].toString());
 }
 
