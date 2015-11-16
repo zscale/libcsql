@@ -902,3 +902,14 @@ TEST_CASE(RuntimeTest, TestDateTimeDateTruncExpression, [] () {
   //  EXPECT_EQ(v.toString(), "false");
   //}
 });
+
+TEST_CASE(RuntimeTest, TestDateTimeDateAddExpression, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('1447671624', '1', 'SECONDs')"));
+    //EXPECT_EQ(double(v.getTimestamp()), 1444229262000000.000000);
+  }
+
+});
