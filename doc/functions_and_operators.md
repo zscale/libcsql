@@ -41,6 +41,7 @@ Users can also define their own functions and operators.
 [||](#or),
 [AND](#and),
 [OR](#or)
+[ISNULL](#isnull)
 
 ###### DateTime Functions
 [from_timestamp](#from_timestamp),
@@ -314,6 +315,13 @@ Returns true if one or both of the values `a` and `b` are true.
 
     a OR b
 
+
+---
+### ISNULL
+
+Returns true iff the value `a` is NULL and false otherwise
+
+  ISNULL(a)
 
 
 <br /><br />
