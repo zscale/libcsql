@@ -961,5 +961,11 @@ TEST_CASE(RuntimeTest, TestDateTimeDateAddExpression, [] () {
     EXPECT_EQ(v.toString(), "2015-11-16 13:15:24");
   }
 
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('1447671624', '2:15', 'HOUR_MINUTE')"));
+    EXPECT_EQ(v.toString(), "2015-11-16 13:15:24");
+  }
+
 
 });
