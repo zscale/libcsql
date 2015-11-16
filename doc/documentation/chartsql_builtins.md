@@ -58,6 +58,30 @@ DateTime Functions
 #### FROM_TIMESTAMP(timestamp)
 Convert a numeric unix timestamp into a DateTime value.
 
+### DATE_ADD(date, expr, unit)
+Add an interval to a date and return a DateTime value.
+The date argument indicates the starting DateTime or Timestamp value.
+Expr is a string specifying the interval value to be added.
+Unit is a string specifying the expression's unit.
+
+| Unit           | Expr Format            |
+| -------------- | ---------------------- |
+| SECOND         | SECONDS                |
+| MINUTE         | MINUTES                |
+| HOUR           | HOURS                  |
+| DAY            | DAYS                   |
+| WEEK           | WEEKS                  |
+| MONTH          | MONTHS                 |
+| YEAR           | YEARS                  |
+| MINUTE_SECOND  | MINUTES:SECONDS        |
+| HOUR_SECOND    | HOURS:MINUTES:SECONDS  |
+| HOUR_MINUTE    | HOURS:MINUTES          |
+
+```
+SELECT DATE_ADD('1447671624', '1', 'SECOND')
+-> '2015-11-16 11:00:25'
+```
+
 
 Math Functions
 --------------
