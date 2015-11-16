@@ -319,6 +319,15 @@ Returns true if one or both of the values `a` and `b` are true.
 ---
 ### ISNULL
 
+Returns true iff the value `a` is NULL and false otherwise.
+
+    a OR b
+
+
+
+---
+### ISNULL
+
 Returns true iff the value `a` is NULL and false otherwise
 
   ISNULL(a)
