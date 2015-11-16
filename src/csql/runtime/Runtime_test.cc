@@ -756,8 +756,24 @@ TEST_CASE(RuntimeTest, TestIsNull, [] () {
   auto runtime = Runtime::getDefaultRuntime();
 
   {
-    auto v = runtime->evaluateStaticExpression("isnull(1)");
+    auto v = runtime->evaluateStaticExpression("isnull('NULL')");
+    EXPECT_EQ(v.toString(), "false");
   }
+
+  {
+    auto v = runtime->evaluateStaticExpression("isnull(0)");
+    EXPECT_EQ(v.toString(), "false");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression("isnull(NULL)");
+    EXPECT_EQ(v.toString(), "true");
+  }
+
+  /*{
+    auto v = runtime->evaluateStaticExpression("isnull(1/0)");
+    EXPECT_EQ(v.toString(), "true");
+  }*/
 });
 
 TEST_CASE(RuntimeTest, TestStringUppercaseExpression, [] () {
