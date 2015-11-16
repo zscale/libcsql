@@ -323,6 +323,22 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
     RAISE(kRuntimeError, "unknown expression %s for unit", expr.c_str());
   }
 
+  if (unit == "year_month") {
+    auto values = StringUtil::split(expr, "-");
+    if (values.size() == 2 &&
+        StringUtil::isNumber(values[0]) &&
+        StringUtil::isNumber(values[1])) {
+
+      *out = SValue(SValue::TimeType(
+          uint64_t(date) +
+          (std::stoull(values[0]) * kMicrosPerYear) +
+          (std::stoull(values[1]) * kMicrosPerDay * 31)));
+      return;
+    }
+
+    RAISE(kRuntimeError, "unknown expression %s for unit", expr.c_str());
+  }
+
   RAISE(
       kRuntimeError,
       "unknown unit %s",
