@@ -756,7 +756,7 @@ TEST_CASE(RuntimeTest, TestIsNull, [] () {
   auto runtime = Runtime::getDefaultRuntime();
 
   {
-    auto v = runtime->evalutateStaticExpression("isnull(1)");
+    auto v = runtime->evaluateStaticExpression("isnull(1)");
   }
 });
 
