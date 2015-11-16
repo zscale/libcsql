@@ -213,11 +213,32 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
 
   if (unit == "minute_second") {
     auto values = StringUtil::split(expr, ":");
-    if (StringUtil::isNumber(values[0]) && StringUtil::isNumber(values[1])) {
+    if (values.size() == 2 && 
+        StringUtil::isNumber(values[0]) &&
+        StringUtil::isNumber(values[1])) {
+
       *out = SValue(SValue::TimeType(
           uint64_t(date) +
           (std::stoull(values[0]) * kMicrosPerMinute) +
           (std::stoull(values[1]) * kMicrosPerSecond)));
+      return;
+    }
+
+    RAISE(kRuntimeError, "unknown expression %s for unit", expr.c_str());
+  }
+
+  if (unit == "hour_second") {
+    auto values = StringUtil::split(expr, ":");
+    if (values.size() == 3 &&
+        StringUtil::isNumber(values[0]) &&
+        StringUtil::isNumber(values[1])) {
+
+
+      *out = SValue(SValue::TimeType(
+          uint64_t(date) +
+          (std::stoull(values[0]) * kMicrosPerHour) +
+          (std::stoull(values[1]) * kMicrosPerMinute) +
+          (std::stoull(values[2]) * kMicrosPerSecond)));
       return;
     }
 
