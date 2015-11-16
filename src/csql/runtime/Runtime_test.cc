@@ -908,8 +908,38 @@ TEST_CASE(RuntimeTest, TestDateTimeDateAddExpression, [] () {
 
   {
     auto v = runtime->evaluateStaticExpression(
-        String("date_add('1447671624', '1', 'SECONDs')"));
-    //EXPECT_EQ(double(v.getTimestamp()), 1444229262000000.000000);
+        String("date_add('1447671624', '1', 'SECOND')"));
+    EXPECT_EQ(v.toString(), "2015-11-16 11:00:25");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('1447671624', '2', 'MINUTE')"));
+    EXPECT_EQ(v.toString(), "2015-11-16 11:02:24");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('1447671624', '4', 'HOUR')"));
+    EXPECT_EQ(v.toString(), "2015-11-16 15:00:24");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('1447671624', '30', 'DAY')"));
+    EXPECT_EQ(v.toString(), "2015-12-16 11:00:24");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('1447671624', '1', 'MONTH')"));
+    EXPECT_EQ(v.toString(), "2015-12-17 11:00:24");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('1447671624', '2', 'YEAR')"));
+    EXPECT_EQ(v.toString(), "2017-11-15 11:00:24");
   }
 
 });
