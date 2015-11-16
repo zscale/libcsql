@@ -325,8 +325,6 @@ Returns true iff the value `a` is NULL and false otherwise.
 
 
 
----
-
 
 <br /><br />
 DateTime Functions
