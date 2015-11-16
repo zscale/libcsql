@@ -316,15 +316,19 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
   auto expr = argv[1].toString();
   if (unit == "minute_second") {
     auto values = StringUtil::split(expr, ":");
-    if (values.size() == 2 && 
+    if (values.size() == 2 &&
         StringUtil::isNumber(values[0]) &&
         StringUtil::isNumber(values[1])) {
 
-      *out = SValue(SValue::TimeType(
-          uint64_t(date) +
-          (std::stoull(values[0]) * kMicrosPerMinute) +
-          (std::stoull(values[1]) * kMicrosPerSecond)));
-      return;
+      try {
+        *out = SValue(SValue::TimeType(
+            uint64_t(date) +
+            (std::stoull(values[0]) * kMicrosPerMinute) +
+            (std::stoull(values[1]) * kMicrosPerSecond)));
+        return;
+      } catch (std::invalid_argument e) {
+        /* fallthrough */
+      }
     }
 
     RAISEF(
@@ -341,13 +345,16 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
         StringUtil::isNumber(values[1]) &&
         StringUtil::isNumber(values[2])) {
 
-
-      *out = SValue(SValue::TimeType(
-          uint64_t(date) +
-          (std::stoull(values[0]) * kMicrosPerHour) +
-          (std::stoull(values[1]) * kMicrosPerMinute) +
-          (std::stoull(values[2]) * kMicrosPerSecond)));
-      return;
+      try {
+        *out = SValue(SValue::TimeType(
+            uint64_t(date) +
+            (std::stoull(values[0]) * kMicrosPerHour) +
+            (std::stoull(values[1]) * kMicrosPerMinute) +
+            (std::stoull(values[2]) * kMicrosPerSecond)));
+        return;
+      } catch (std::invalid_argument e) {
+        /* fallthrough */
+      }
     }
 
     RAISEF(
@@ -363,12 +370,15 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
         StringUtil::isNumber(values[0]) &&
         StringUtil::isNumber(values[1])) {
 
-
-      *out = SValue(SValue::TimeType(
-          uint64_t(date) +
-          (std::stoull(values[0]) * kMicrosPerHour) +
-          (std::stoull(values[1]) * kMicrosPerMinute)));
-      return;
+      try {
+        *out = SValue(SValue::TimeType(
+            uint64_t(date) +
+            (std::stoull(values[0]) * kMicrosPerHour) +
+            (std::stoull(values[1]) * kMicrosPerMinute)));
+        return;
+      } catch (std::invalid_argument e) {
+        /* fallthrough */
+      }
     }
 
     RAISEF(
@@ -388,13 +398,17 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
           StringUtil::isNumber(time_values[1]) &&
           StringUtil::isNumber(time_values[2])) {
 
-        *out = SValue(SValue::TimeType(
-            uint64_t(date) +
-            (std::stoull(values[0]) * kMicrosPerDay) +
-            (std::stoull(time_values[0]) * kMicrosPerHour) +
-            (std::stoull(time_values[1]) * kMicrosPerMinute) +
-            (std::stoull(time_values[2]) * kMicrosPerSecond)));
-        return;
+        try {
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) +
+              (std::stoull(values[0]) * kMicrosPerDay) +
+              (std::stoull(time_values[0]) * kMicrosPerHour) +
+              (std::stoull(time_values[1]) * kMicrosPerMinute) +
+              (std::stoull(time_values[2]) * kMicrosPerSecond)));
+          return;
+        } catch (std::invalid_argument e) {
+          /* fallthrough */
+        }
       }
     }
 
@@ -414,12 +428,16 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
           StringUtil::isNumber(time_values[0]) &&
           StringUtil::isNumber(time_values[1])) {
 
-        *out = SValue(SValue::TimeType(
-            uint64_t(date) +
-            (std::stoull(values[0]) * kMicrosPerDay) +
-            (std::stoull(time_values[0]) * kMicrosPerHour) +
-            (std::stoull(time_values[1]) * kMicrosPerMinute)));
-        return;
+        try {
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) +
+              (std::stoull(values[0]) * kMicrosPerDay) +
+              (std::stoull(time_values[0]) * kMicrosPerHour) +
+              (std::stoull(time_values[1]) * kMicrosPerMinute)));
+          return;
+        } catch (std::invalid_argument e) {
+          /* fallthrough */
+        }
       }
     }
 
@@ -436,11 +454,15 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
         StringUtil::isNumber(values[0]) &&
         StringUtil::isNumber(values[1])) {
 
-      *out = SValue(SValue::TimeType(
-          uint64_t(date) +
-          (std::stoull(values[0]) * kMicrosPerDay) +
-          (std::stoull(values[1]) * kMicrosPerHour)));
-      return;
+      try {
+        *out = SValue(SValue::TimeType(
+            uint64_t(date) +
+            (std::stoull(values[0]) * kMicrosPerDay) +
+            (std::stoull(values[1]) * kMicrosPerHour)));
+        return;
+      } catch (std::invalid_argument e) {
+        /* fallthrough */
+      }
     }
 
     RAISEF(
@@ -456,11 +478,15 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
         StringUtil::isNumber(values[0]) &&
         StringUtil::isNumber(values[1])) {
 
-      *out = SValue(SValue::TimeType(
-          uint64_t(date) +
-          (std::stoull(values[0]) * kMicrosPerYear) +
-          (std::stoull(values[1]) * kMicrosPerDay * 31)));
-      return;
+      try {
+        *out = SValue(SValue::TimeType(
+            uint64_t(date) +
+            (std::stoull(values[0]) * kMicrosPerYear) +
+            (std::stoull(values[1]) * kMicrosPerDay * 31)));
+        return;
+      } catch (std::invalid_argument e) {
+        /* fallthrough */
+      }
     }
 
     RAISEF(
