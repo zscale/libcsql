@@ -136,15 +136,26 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
   val.tryTimeConversion();
 
   auto date = val.getTimestamp();
-  auto expr = argv[1].toString();
+  
   auto unit = argv[2].toString();
   StringUtil::toLower(&unit);
 
   if (unit == "second") {
-    if (StringUtil::isNumber(expr)) {
-      auto num = std::stoull(expr);
-      *out = SValue(SValue::TimeType(uint64_t(date) + (num * kMicrosPerSecond)));
-      return;
+    if (argv[1].tryNumericConversion()) {
+      switch (argv[1].getType()) {
+        case SValue::T_INTEGER:
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) + (argv[1].getInteger() * kMicrosPerSecond)));
+          return;
+
+        case SValue::T_FLOAT:
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) + (argv[1].getFloat() * kMicrosPerSecond)));
+          return;
+
+        default:
+          break;
+      }
     }
 
     RAISEF(
@@ -153,6 +164,8 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
         expr,
         argv[2].toString());
   }
+
+  auto expr = argv[1].toString();
 
   if (unit == "minute") {
     if (StringUtil::isNumber(expr)) {
