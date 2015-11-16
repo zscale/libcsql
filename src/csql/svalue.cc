@@ -14,6 +14,7 @@
 #include <ctime>
 #include <stdint.h>
 #include <stx/inspect.h>
+#include <stx/human.h>
 #include <csql/svalue.h>
 #include <csql/format.h>
 #include <csql/parser/token.h>
@@ -518,10 +519,6 @@ bool SValue::tryNumericConversion() {
 }
 
 bool SValue::tryTimeConversion() {
-  if (!tryNumericConversion()) {
-    return false;
-  }
-
   uint64_t ts;
   switch (data_.type) {
     case SValue::T_INTEGER:
@@ -530,6 +527,15 @@ bool SValue::tryTimeConversion() {
     case SValue::T_FLOAT:
       ts = getFloat();
       break;
+    case SValue::T_STRING:
+    {
+      auto time_opt = stx::Human::parseTime(getString());
+      if (!time_opt.isEmpty()) {
+        //FIX allow micro timestamps
+        ts = time_opt.get().unixMicros() / 1000000;
+        break;
+      }
+    }
     default:
       RAISE(
          kTypeError,
