@@ -61,7 +61,7 @@ Convert a numeric unix timestamp into a DateTime value.
 ### DATE_ADD(date, expr, unit)
 Add an interval to a date and return a DateTime value.
 The date argument indicates the starting DateTime or Timestamp value.
-Expr is a string specifying the interval value to be added.
+Expr is a string specifying the interval value to be added, it may start with a '-' for negative values.
 Unit is a string specifying the expression's unit.
 
 | Unit           | Expr Format            |
@@ -81,7 +81,6 @@ Unit is a string specifying the expression's unit.
 SELECT DATE_ADD('1447671624', '1', 'SECOND')
 -> '2015-11-16 11:00:25'
 ```
-
 
 Math Functions
 --------------
