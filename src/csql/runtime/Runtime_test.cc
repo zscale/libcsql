@@ -977,4 +977,10 @@ TEST_CASE(RuntimeTest, TestDateTimeDateAddExpression, [] () {
         String("date_add('2015-01-01 00:00:00', '1 1:30:30', 'DAY_SECOND')"));
     EXPECT_EQ(v.toString(), "2015-01-02 01:30:30");
   }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('2015-12-31 00:00:00', '1 1:30', 'DAY_MINUTE')"));
+    EXPECT_EQ(v.toString(), "2016-01-01 01:30:00");
+  }
 });
