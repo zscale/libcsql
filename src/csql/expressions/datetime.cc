@@ -150,10 +150,61 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
     RAISE(kRuntimeError, "unknown expression %s for unit", expr.c_str());
   }
 
+  if (unit == "minute") {
+    if (StringUtil::isNumber(expr)) {
+      auto num = std::stoull(expr);
+      *out = SValue(SValue::TimeType(uint64_t(date) + (num * kMicrosPerMinute)));
+      return;
+    }
+
+    RAISE(kRuntimeError, "unknown expression %s for unit", expr.c_str());
+  }
+
+  if (unit == "hour") {
+    if (StringUtil::isNumber(expr)) {
+      auto num = std::stoull(expr);
+      *out = SValue(SValue::TimeType(uint64_t(date) + (num * kMicrosPerHour)));
+      return;
+    }
+
+    RAISE(kRuntimeError, "unknown expression %s for unit", expr.c_str());
+  }
+
   if (unit == "day") {
     if (StringUtil::isNumber(expr)) {
       auto num = std::stoull(expr);
       *out = SValue(SValue::TimeType(uint64_t(date) + (num * kMicrosPerDay)));
+      return;
+    }
+
+    RAISE(kRuntimeError, "unknown expression %s for unit", expr.c_str());
+  }
+
+  if (unit == "week") {
+    if (StringUtil::isNumber(expr)) {
+      auto num = std::stoull(expr);
+      *out = SValue(SValue::TimeType(uint64_t(date) + (num * kMicrosPerWeek)));
+      return;
+    }
+
+    RAISE(kRuntimeError, "unknown expression %s for unit", expr.c_str());
+  }
+
+  if (unit == "month") {
+    if (StringUtil::isNumber(expr)) {
+      auto num = std::stoull(expr);
+      *out = SValue(SValue::TimeType(
+          uint64_t(date) + (num * kMicrosPerDay * 31)));
+      return;
+    }
+
+    RAISE(kRuntimeError, "unknown expression %s for unit", expr.c_str());
+  }
+
+  if (unit == "year") {
+    if (StringUtil::isNumber(expr)) {
+      auto num = std::stoull(expr);
+      *out = SValue(SValue::TimeType(uint64_t(date) + (num * kMicrosPerYear)));
       return;
     }
 
