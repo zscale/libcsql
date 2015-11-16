@@ -442,10 +442,9 @@ void isNullExpr(int argc, SValue* argv, SValue* out) {
 
   if (argv[0].getType() == SValue::T_NULL) {
     *out = SValue(SValue::BoolType(true));
-    return;
+  } else {
+    *out = SValue(SValue::BoolType(false));
   }
-
-  *out = SValue(SValue::BoolType(false));
 }
 
 }
