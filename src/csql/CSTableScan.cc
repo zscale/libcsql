@@ -110,73 +110,84 @@ void CSTableScan::scan(
 
         uint64_t r;
         uint64_t d;
-        void* data;
-        size_t size;
-        reader->next(&r, &d, &data, &size);
 
-        if (d < reader->maxDefinitionLevel()) {
-          in_row[col.second.index] = SValue();
-        } else {
-          switch (col.second.reader->type()) {
+        switch (col.second.reader->type()) {
 
-            case msg::FieldType::STRING:
-              in_row[col.second.index] =
-                  SValue(SValue::StringType((char*) data, size));
-              break;
+          case cstable::ColumnType::STRING: {
+            String v;
+            reader->readString(&r, &d, &v);
 
-            case msg::FieldType::UINT32:
-            case msg::FieldType::UINT64:
-              switch (size) {
-                case sizeof(uint32_t):
-                  in_row[col.second.index] =
-                      SValue(SValue::IntegerType(*((uint32_t*) data)));
-                  break;
-                case sizeof(uint64_t):
-                  in_row[col.second.index] =
-                      SValue(SValue::IntegerType(*((uint64_t*) data)));
-                  break;
-                case 0:
-                  in_row[col.second.index] = SValue();
-                  break;
-              }
-              break;
-
-            case msg::FieldType::BOOLEAN:
-              switch (size) {
-                case sizeof(uint8_t):
-                  in_row[col.second.index] =
-                      SValue(SValue::BoolType(*((uint8_t*) data) > 0));
-                  break;
-                case sizeof(uint32_t):
-                  in_row[col.second.index] =
-                      SValue(SValue::BoolType(*((uint32_t*) data) > 0));
-                  break;
-                case sizeof(uint64_t):
-                  in_row[col.second.index] =
-                      SValue(SValue::BoolType(*((uint64_t*) data) > 0));
-                  break;
-                case 0:
-                  in_row[col.second.index] = SValue(SValue::BoolType(false));
-                  break;
-              }
-              break;
-
-            case msg::FieldType::DOUBLE:
-              switch (size) {
-                case sizeof(double):
-                  in_row[col.second.index] =
-                      SValue(SValue::FloatType(*((double*) data)));
-                  break;
-                case 0:
-                  in_row[col.second.index] = SValue();
-                  break;
-              }
-              break;
-
-            default:
-              RAISE(kIllegalStateError);
-
+            if (d < reader->maxDefinitionLevel()) {
+              in_row[col.second.index] = SValue();
+            } else {
+              in_row[col.second.index] = SValue(v);
+            }
+            break;
           }
+
+          case cstable::ColumnType::UNSIGNED_INT: {
+            uint64_t v = 0;
+            reader->readUnsignedInt(&r, &d, &v);
+
+            if (d < reader->maxDefinitionLevel()) {
+              in_row[col.second.index] = SValue();
+            } else {
+              in_row[col.second.index] = SValue(SValue::IntegerType(v));
+            }
+            break;
+          }
+
+          case cstable::ColumnType::SIGNED_INT: {
+            int64_t v = 0;
+            reader->readSignedInt(&r, &d, &v);
+
+            if (d < reader->maxDefinitionLevel()) {
+              in_row[col.second.index] = SValue();
+            } else {
+              in_row[col.second.index] = SValue(SValue::IntegerType(v));
+            }
+            break;
+          }
+
+          case cstable::ColumnType::BOOLEAN: {
+            bool v = 0;
+            reader->readBoolean(&r, &d, &v);
+
+            if (d < reader->maxDefinitionLevel()) {
+              in_row[col.second.index] = SValue();
+            } else {
+              in_row[col.second.index] = SValue(SValue::BoolType(v));
+            }
+            break;
+          }
+
+          case cstable::ColumnType::FLOAT: {
+            double v = 0;
+            reader->readFloat(&r, &d, &v);
+
+            if (d < reader->maxDefinitionLevel()) {
+              in_row[col.second.index] = SValue();
+            } else {
+              in_row[col.second.index] = SValue(SValue::FloatType(v));
+            }
+            break;
+          }
+
+          case cstable::ColumnType::DATETIME: {
+            UnixTime v;
+            reader->readDateTime(&r, &d, &v);
+
+            if (d < reader->maxDefinitionLevel()) {
+              in_row[col.second.index] = SValue();
+            } else {
+              in_row[col.second.index] = SValue(SValue::TimeType(v));
+            }
+            break;
+          }
+
+          case cstable::ColumnType::SUBRECORD:
+            RAISE(kIllegalStateError);
+
         }
       }
 
