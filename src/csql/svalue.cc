@@ -527,13 +527,14 @@ bool SValue::tryTimeConversion() {
     case SValue::T_FLOAT:
       ts = getFloat();
       break;
-    case SValue::T_STRING:
-    {
+    case SValue::T_STRING: {
       auto time_opt = stx::Human::parseTime(getString());
       if (!time_opt.isEmpty()) {
         //FIX allow micro timestamps
         ts = time_opt.get().unixMicros() / 1000000;
         break;
+      } else {
+        /* fallthrough */
       }
     }
     default:
