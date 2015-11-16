@@ -211,6 +211,19 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
     RAISE(kRuntimeError, "unknown expression %s for unit", expr.c_str());
   }
 
+  if (unit == "minute_second") {
+    auto values = StringUtil::split(expr, ":");
+    if (StringUtil::isNumber(values[0]) && StringUtil::isNumber(values[1])) {
+      *out = SValue(SValue::TimeType(
+          uint64_t(date) +
+          (std::stoull(values[0]) * kMicrosPerMinute) +
+          (std::stoull(values[1]) * kMicrosPerSecond)));
+      return;
+    }
+
+    RAISE(kRuntimeError, "unknown expression %s for unit", expr.c_str());
+  }
+
   RAISE(
       kRuntimeError,
       "unknown unit %s",
