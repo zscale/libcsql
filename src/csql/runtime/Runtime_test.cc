@@ -912,6 +912,12 @@ TEST_CASE(RuntimeTest, TestDateTimeDateAddExpression, [] () {
     EXPECT_EQ(v.toString(), "2015-11-16 11:00:25");
   }
 
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('1447671624', '-1', 'SECOND')"));
+    EXPECT_EQ(v.toString(), "2015-11-16 11:00:23");
+  }
+
   //TODO SValue::toTimestamp support date time string
   /*{
     auto v = runtime->evaluateStaticExpression(
