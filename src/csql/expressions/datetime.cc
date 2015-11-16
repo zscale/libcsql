@@ -286,6 +286,27 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
     RAISE(kRuntimeError, "unknown expression %s for unit", expr.c_str());
   }
 
+  if (unit == "day_minute") {
+    auto values = StringUtil::split(expr, " ");
+    if (values.size() == 2 && StringUtil::isNumber(values[0])) {
+
+      auto time_values = StringUtil::split(values[1], ":");
+      if (time_values.size() == 2 &&
+          StringUtil::isNumber(time_values[0]) &&
+          StringUtil::isNumber(time_values[1])) {
+
+        *out = SValue(SValue::TimeType(
+            uint64_t(date) +
+            (std::stoull(values[0]) * kMicrosPerDay) +
+            (std::stoull(time_values[0]) * kMicrosPerHour) +
+            (std::stoull(time_values[1]) * kMicrosPerMinute)));
+        return;
+      }
+    }
+
+    RAISE(kRuntimeError, "unknown expression %s for unit", expr.c_str());
+  }
+
   RAISE(
       kRuntimeError,
       "unknown unit %s",
