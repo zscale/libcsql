@@ -752,6 +752,14 @@ TEST_CASE(RuntimeTest, TestLogicalOr, [] () {
   }
 });
 
+TEST_CASE(RuntimeTest, TestIsNull, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+
+  {
+    auto v = runtime->evalutateStaticExpression("isnull(1)");
+  }
+});
+
 TEST_CASE(RuntimeTest, TestStringUppercaseExpression, [] () {
   auto runtime = Runtime::getDefaultRuntime();
 

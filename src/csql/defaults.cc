@@ -59,6 +59,7 @@ void installDefaultSymbols(SymbolTable* rt) {
   rt->registerFunction("lte", PureFunction(&expressions::lteExpr));
   rt->registerFunction("gt",  PureFunction(&expressions::gtExpr));
   rt->registerFunction("gte", PureFunction(&expressions::gteExpr));
+  rt->registerFunction("isnull", PureFunction(&expressions:isNullExpr));
 
   /* expressions/UnixTime.h */
   rt->registerFunction(
