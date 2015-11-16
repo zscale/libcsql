@@ -520,29 +520,29 @@ bool SValue::tryNumericConversion() {
 
 bool SValue::tryTimeConversion() {
   uint64_t ts;
+
   switch (data_.type) {
+    case SValue::T_TIMESTAMP:
+      return true;
     case SValue::T_INTEGER:
       ts = getInteger();
       break;
     case SValue::T_FLOAT:
       ts = getFloat();
       break;
-    case SValue::T_STRING: {
+    default: {
       auto time_opt = stx::Human::parseTime(getString());
-      if (!time_opt.isEmpty()) {
-        //FIX allow micro timestamps
-        ts = time_opt.get().unixMicros() / 1000000;
-        break;
+      if (time_opt.isEmpty()) {
+        RAISEF(
+           kTypeError,
+            "can't convert $0 '$1' to DateTime",
+            SValue::getTypeName(data_.type),
+            toString());
       } else {
-        /* fallthrough */
+        ts = time_opt.get().unixMicros() / kMicrosPerSecond;
       }
+      break;
     }
-    default:
-      RAISE(
-         kTypeError,
-          "can't convert %s '%s' to DateTime",
-          SValue::getTypeName(data_.type),
-          toString().c_str());
   }
 
   data_.type = T_TIMESTAMP;
