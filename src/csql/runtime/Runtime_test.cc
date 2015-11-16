@@ -902,3 +902,97 @@ TEST_CASE(RuntimeTest, TestDateTimeDateTruncExpression, [] () {
   //  EXPECT_EQ(v.toString(), "false");
   //}
 });
+
+TEST_CASE(RuntimeTest, TestDateTimeDateAddExpression, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('1447671624', '1.0', 'SECOND')"));
+    EXPECT_EQ(v.toString(), "2015-11-16 11:00:25");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('1447671624', '-1', 'SECOND')"));
+    EXPECT_EQ(v.toString(), "2015-11-16 11:00:23");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('2015-11-16 11:00:24', '1', 'SECOND')"));
+    EXPECT_EQ(v.toString(), "2015-11-16 11:00:25");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('1447671624', '2', 'MINUTE')"));
+    EXPECT_EQ(v.toString(), "2015-11-16 11:02:24");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('1447671624', '4', 'HOUR')"));
+    EXPECT_EQ(v.toString(), "2015-11-16 15:00:24");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('1447671624', '30', 'DAY')"));
+    EXPECT_EQ(v.toString(), "2015-12-16 11:00:24");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('1447671624', '1', 'MONTH')"));
+    EXPECT_EQ(v.toString(), "2015-12-17 11:00:24");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('1447671624', '2', 'YEAR')"));
+    EXPECT_EQ(v.toString(), "2017-11-15 11:00:24");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('1447671624', '2:15', 'MINUTE_SECOND')"));
+    EXPECT_EQ(v.toString(), "2015-11-16 11:02:39");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('1447671624', '2:15:00', 'HOUR_SECOND')"));
+    EXPECT_EQ(v.toString(), "2015-11-16 13:15:24");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('1447671624', '2:60', 'HOUR_MINUTE')"));
+    EXPECT_EQ(v.toString(), "2015-11-16 14:00:24");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('2015-01-01 00:00:00', '1 1:30:30', 'DAY_SECOND')"));
+    EXPECT_EQ(v.toString(), "2015-01-02 01:30:30");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('2015-12-31 00:00:00', '1 1:30', 'DAY_MINUTE')"));
+    EXPECT_EQ(v.toString(), "2016-01-01 01:30:00");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('2015-12-31 23:00:00', '2 2', 'DAY_HOUR')"));
+    EXPECT_EQ(v.toString(), "2016-01-03 01:00:00");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('2015-12-31 23:00:00', '2-2', 'YEAR_MONTH')"));
+    EXPECT_EQ(v.toString(), "2018-03-02 23:00:00");
+  }
+});
