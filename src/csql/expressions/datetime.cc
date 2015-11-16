@@ -129,6 +129,42 @@ void dateTruncExpr(int argc, SValue* argv, SValue* out) {
       time_suffix.c_str());
 }
 
+void dateAddExpr(int argc, SValue* argv, SValue* out) {
+  checkArgs("DATE_ADD", argc, 3);
+
+  SValue val = argv[0];
+  val.tryTimeConversion();
+
+  auto date = val.getTimestamp();
+  auto expr = argv[1].toString();
+  auto unit = argv[2].toString();
+  StringUtil::toLower(&unit);
+
+  if (unit == "second") {
+    if (StringUtil::isNumber(expr)) {
+      auto num = std::stoull(expr);
+      *out = SValue(SValue::TimeType(uint64_t(date) + (num * kMicrosPerSecond)));
+      return;
+    }
+
+    RAISE(kRuntimeError, "unknown expression %s for unit", expr.c_str());
+  }
+
+  if (unit == "day") {
+    if (StringUtil::isNumber(expr)) {
+      auto num = std::stoull(expr);
+      *out = SValue(SValue::TimeType(uint64_t(date) + (num * kMicrosPerDay)));
+      return;
+    }
+
+    RAISE(kRuntimeError, "unknown expression %s for unit", expr.c_str());
+  }
+
+  RAISE(
+      kRuntimeError,
+      "unknown unit %s",
+      argv[2].toString().c_str());
+}
 
 }
 }
