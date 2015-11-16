@@ -912,6 +912,13 @@ TEST_CASE(RuntimeTest, TestDateTimeDateAddExpression, [] () {
     EXPECT_EQ(v.toString(), "2015-11-16 11:00:25");
   }
 
+  //TODO SValue::toTimestamp support date time string
+  /*{
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('2015-11-16 11:00:24', '1', 'SECOND')"));
+    EXPECT_EQ(v.toString(), "2015-11-16 11:00:25");
+  }*/
+
   {
     auto v = runtime->evaluateStaticExpression(
         String("date_add('1447671624', '2', 'MINUTE')"));
@@ -941,5 +948,13 @@ TEST_CASE(RuntimeTest, TestDateTimeDateAddExpression, [] () {
         String("date_add('1447671624', '2', 'YEAR')"));
     EXPECT_EQ(v.toString(), "2017-11-15 11:00:24");
   }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String("date_add('1447671624', '2:15', 'MINUTE_SECOND')"));
+    EXPECT_EQ(v.toString(), "2015-11-16 11:02:39");
+  }
+
+
 
 });
