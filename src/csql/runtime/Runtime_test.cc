@@ -769,11 +769,6 @@ TEST_CASE(RuntimeTest, TestIsNull, [] () {
     auto v = runtime->evaluateStaticExpression("isnull(NULL)");
     EXPECT_EQ(v.toString(), "true");
   }
-
-  /*{
-    auto v = runtime->evaluateStaticExpression("isnull(1/0)");
-    EXPECT_EQ(v.toString(), "true");
-  }*/
 });
 
 TEST_CASE(RuntimeTest, TestStringUppercaseExpression, [] () {
