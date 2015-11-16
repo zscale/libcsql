@@ -1,5 +1,5 @@
-The DRAW Statement
-==================
+ChartSQL Extensions
+===================
 
 The DRAW statement allows you to specify that the query result should be
 returned as a chart (or other visualization) rather than a table. The
@@ -15,6 +15,57 @@ For example, a simple draw statement to draw a line chart looks like this:
 
     DRAW LINECHART:
     SELECT x, y FROM table;
+
+Syntax
+-------
+
+The full syntax of the ChartSQL extensions:
+
+    common_chart_options ::=
+        [ TITLE 'title' ]
+        [ SUBTITLE 'subtitle' ]
+        [ XDOMAIN [ min, max ] [ LOGARITHMIC ] [ INVERT ] ]
+        [ YDOMAIN [ min, max ] [ LOGARITHMIC ] [ INVERT ] ]
+        [ ZDOMAIN [ min, max ] [ LOGARITHMIC ] [ INVERT ] ]
+        [ GRID [ HORIZONTAL ] [ VERTICAL ] ]
+        [ axis_definition... ]
+        [ legend_definition ]
+
+    axis_definition ::=
+        AXIS { TOP | RIGHT | BOTTOM | LEFT }
+            [ TITLE 'title' ]
+            [ TICKS [ { INSIDE | OUTSIDE | OFF } ] [ ROTATE deg ] ]
+
+    legend_definition ::=
+        LEGEND { TOP | BOTTOM } { LEFT | RIGHT} { INSIDE | OUTSIDE }
+            [ TITLE 'title' ]
+
+    DRAW AREACHART
+        [ [ WITH ]
+              common_chart_options
+              [ STACKED ] ]
+
+    DRAW BARCHART
+        [ [ WITH ]
+              common_chart_options
+              [ ORIENTATION { HORIZONTAL | VERTICAL } ]
+              [ STACKED ] ]
+
+    DRAW HEATMAP
+        [ [ WITH ]
+              common_chart_options ]
+
+    DRAW HISTOGRAM
+        [ [ WITH ]
+              common_chart_options ]
+
+    DRAW LINECHART
+        [ [ WITH ]
+              common_chart_options ]
+
+    DRAW POINTCHART
+        [ [ WITH ]
+              common_chart_options ]
 
 
 Adding Series
