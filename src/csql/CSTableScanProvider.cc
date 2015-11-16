@@ -55,11 +55,11 @@ csql::TableInfo CSTableScanProvider::tableInfo() const {
 
   for (const auto& col : cstable->columns()) {
     csql::ColumnInfo ci;
-    ci.column_name = col;
+    ci.column_name = col.column_name;
     ci.type_size = 0;
     ci.is_nullable = true;
 
-    switch (cstable->getColumnType(col)) {
+    switch (col.logical_type) {
 
       case cstable::ColumnType::BOOLEAN:
         ci.type = "bool";
