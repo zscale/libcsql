@@ -78,6 +78,7 @@ Unit is a string specifying the expression's unit.
 | HOUR_MINUTE    | HOURS:MINUTES              |
 | DAY_SECOND     | DAY HOURS:MINUTES:SECONDS  |
 | DAY_MINUTE     | DAY HOURS:MINUTES          |
+| DAY_HOUR       | DAY HOURS                  |
 
 ```
 SELECT DATE_ADD('1447671624', '1', 'SECOND')
