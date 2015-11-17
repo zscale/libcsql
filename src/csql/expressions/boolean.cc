@@ -433,5 +433,19 @@ void gteExpr(int argc, SValue* argv, SValue* out) {
       rhs->getTypeName());
 }
 
+void isNullExpr(int argc, SValue* argv, SValue* out) {
+  if (argc != 1) {
+    RAISEF(
+        kRuntimeError,
+        "wrong number of arguments for isnull. expected: 1, got: $0", argc);
+  }
+
+  if (argv[0].getType() == SValue::T_NULL) {
+    *out = SValue(SValue::BoolType(true));
+  } else {
+    *out = SValue(SValue::BoolType(false));
+  }
+}
+
 }
 }

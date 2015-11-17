@@ -23,6 +23,7 @@ void ltExpr(int argc, SValue* argv, SValue* out);
 void lteExpr(int argc, SValue* argv, SValue* out);
 void gtExpr(int argc, SValue* argv, SValue* out);
 void gteExpr(int argc, SValue* argv, SValue* out);
+void isNullExpr(int argc, SValue* argv, SValue* out);
 
 }
 }
