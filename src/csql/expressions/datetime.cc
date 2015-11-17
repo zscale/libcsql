@@ -129,6 +129,378 @@ void dateTruncExpr(int argc, SValue* argv, SValue* out) {
       time_suffix.c_str());
 }
 
+void dateAddExpr(int argc, SValue* argv, SValue* out) {
+  checkArgs("DATE_ADD", argc, 3);
+
+  SValue val = argv[0];
+  val.tryTimeConversion();
+
+  auto date = val.getTimestamp();
+  auto unit = argv[2].toString();
+  StringUtil::toLower(&unit);
+
+  if (unit == "second") {
+    if (argv[1].tryNumericConversion()) {
+      switch (argv[1].getType()) {
+        case SValue::T_INTEGER:
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) + (argv[1].getInteger() * kMicrosPerSecond)));
+          return;
+
+        case SValue::T_FLOAT:
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) + (argv[1].getFloat() * kMicrosPerSecond)));
+          return;
+
+        default:
+          break;
+      }
+    }
+
+    RAISEF(
+        kRuntimeError,
+        "DATE_ADD: invalid expression $0 for unit $1",
+        argv[1].toString(),
+        argv[2].toString());
+  }
+
+  if (unit == "minute") {
+    if (argv[1].tryNumericConversion()) {
+      switch (argv[1].getType()) {
+        case SValue::T_INTEGER:
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) + (argv[1].getInteger() * kMicrosPerMinute)));
+          return;
+
+        case SValue::T_FLOAT:
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) + (argv[1].getFloat() * kMicrosPerMinute)));
+          return;
+
+        default:
+          break;
+      }
+    }
+
+    RAISEF(
+        kRuntimeError,
+        "DATE_ADD: invalid expression $0 for unit $1",
+        argv[1].toString(),
+        argv[2].toString());
+  }
+
+  if (unit == "hour") {
+    if (argv[1].tryNumericConversion()) {
+      switch (argv[1].getType()) {
+        case SValue::T_INTEGER:
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) + (argv[1].getInteger() * kMicrosPerHour)));
+          return;
+
+        case SValue::T_FLOAT:
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) + (argv[1].getFloat() * kMicrosPerHour)));
+          return;
+
+        default:
+          break;
+      }
+    }
+
+    RAISEF(
+        kRuntimeError,
+        "DATE_ADD: invalid expression $0 for unit $1",
+        argv[1].toString(),
+        argv[2].toString());
+  }
+
+  if (unit == "day") {
+    if (argv[1].tryNumericConversion()) {
+      switch (argv[1].getType()) {
+        case SValue::T_INTEGER:
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) + (argv[1].getInteger() * kMicrosPerDay)));
+          return;
+
+        case SValue::T_FLOAT:
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) + (argv[1].getFloat() * kMicrosPerDay)));
+          return;
+
+        default:
+          break;
+      }
+    }
+
+    RAISEF(
+        kRuntimeError,
+        "DATE_ADD: invalid expression $0 for unit $1",
+        argv[1].toString(),
+        argv[2].toString());
+  }
+
+  if (unit == "week") {
+    if (argv[1].tryNumericConversion()) {
+      switch (argv[1].getType()) {
+        case SValue::T_INTEGER:
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) + (argv[1].getInteger() * kMicrosPerWeek)));
+          return;
+
+        case SValue::T_FLOAT:
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) + (argv[1].getFloat() * kMicrosPerWeek)));
+          return;
+
+        default:
+          break;
+      }
+    }
+
+    RAISEF(
+        kRuntimeError,
+        "DATE_ADD: invalid expression $0 for unit $1",
+        argv[1].toString(),
+        argv[2].toString());
+  }
+
+  if (unit == "month") {
+    if (argv[1].tryNumericConversion()) {
+      switch (argv[1].getType()) {
+        case SValue::T_INTEGER:
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) + (argv[1].getInteger() * kMicrosPerDay * 31)));
+          return;
+
+        case SValue::T_FLOAT:
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) + (argv[1].getFloat() * kMicrosPerDay * 31)));
+          return;
+
+        default:
+          break;
+      }
+    }
+    RAISEF(
+        kRuntimeError,
+        "DATE_ADD: invalid expression $0 for unit $1",
+        argv[1].toString(),
+        argv[2].toString());
+  }
+
+  if (unit == "year") {
+    if (argv[1].tryNumericConversion()) {
+      switch (argv[1].getType()) {
+        case SValue::T_INTEGER:
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) + (argv[1].getInteger() * kMicrosPerYear)));
+          return;
+
+        case SValue::T_FLOAT:
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) + (argv[1].getFloat() * kMicrosPerYear)));
+          return;
+
+        default:
+          break;
+      }
+    }
+
+    RAISEF(
+        kRuntimeError,
+        "DATE_ADD: invalid expression $0 for unit $1",
+        argv[1].toString(),
+        argv[2].toString());
+  }
+
+  auto expr = argv[1].toString();
+  if (unit == "minute_second") {
+    auto values = StringUtil::split(expr, ":");
+    if (values.size() == 2 &&
+        StringUtil::isNumber(values[0]) &&
+        StringUtil::isNumber(values[1])) {
+
+      try {
+        *out = SValue(SValue::TimeType(
+            uint64_t(date) +
+            (std::stoull(values[0]) * kMicrosPerMinute) +
+            (std::stoull(values[1]) * kMicrosPerSecond)));
+        return;
+      } catch (std::invalid_argument e) {
+        /* fallthrough */
+      }
+    }
+
+    RAISEF(
+        kRuntimeError,
+        "DATE_ADD: invalid expression $0 for unit $1",
+        expr,
+        argv[2].toString());
+  }
+
+  if (unit == "hour_second") {
+    auto values = StringUtil::split(expr, ":");
+    if (values.size() == 3 &&
+        StringUtil::isNumber(values[0]) &&
+        StringUtil::isNumber(values[1]) &&
+        StringUtil::isNumber(values[2])) {
+
+      try {
+        *out = SValue(SValue::TimeType(
+            uint64_t(date) +
+            (std::stoull(values[0]) * kMicrosPerHour) +
+            (std::stoull(values[1]) * kMicrosPerMinute) +
+            (std::stoull(values[2]) * kMicrosPerSecond)));
+        return;
+      } catch (std::invalid_argument e) {
+        /* fallthrough */
+      }
+    }
+
+    RAISEF(
+        kRuntimeError,
+        "DATE_ADD: invalid expression $0 for unit $1",
+        expr,
+        argv[2].toString());
+  }
+
+  if (unit == "hour_minute") {
+    auto values = StringUtil::split(expr, ":");
+    if (values.size() == 2 &&
+        StringUtil::isNumber(values[0]) &&
+        StringUtil::isNumber(values[1])) {
+
+      try {
+        *out = SValue(SValue::TimeType(
+            uint64_t(date) +
+            (std::stoull(values[0]) * kMicrosPerHour) +
+            (std::stoull(values[1]) * kMicrosPerMinute)));
+        return;
+      } catch (std::invalid_argument e) {
+        /* fallthrough */
+      }
+    }
+
+    RAISEF(
+        kRuntimeError,
+        "DATE_ADD: invalid expression $0 for unit $1",
+        expr,
+        argv[2].toString());
+  }
+
+  if (unit == "day_second") {
+    auto values = StringUtil::split(expr, " ");
+    if (values.size() == 2 && StringUtil::isNumber(values[0])) {
+
+      auto time_values = StringUtil::split(values[1], ":");
+      if (time_values.size() == 3 &&
+          StringUtil::isNumber(time_values[0]) &&
+          StringUtil::isNumber(time_values[1]) &&
+          StringUtil::isNumber(time_values[2])) {
+
+        try {
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) +
+              (std::stoull(values[0]) * kMicrosPerDay) +
+              (std::stoull(time_values[0]) * kMicrosPerHour) +
+              (std::stoull(time_values[1]) * kMicrosPerMinute) +
+              (std::stoull(time_values[2]) * kMicrosPerSecond)));
+          return;
+        } catch (std::invalid_argument e) {
+          /* fallthrough */
+        }
+      }
+    }
+
+    RAISEF(
+        kRuntimeError,
+        "DATE_ADD: invalid expression $0 for unit $1",
+        expr,
+        argv[2].toString());
+  }
+
+  if (unit == "day_minute") {
+    auto values = StringUtil::split(expr, " ");
+    if (values.size() == 2 && StringUtil::isNumber(values[0])) {
+
+      auto time_values = StringUtil::split(values[1], ":");
+      if (time_values.size() == 2 &&
+          StringUtil::isNumber(time_values[0]) &&
+          StringUtil::isNumber(time_values[1])) {
+
+        try {
+          *out = SValue(SValue::TimeType(
+              uint64_t(date) +
+              (std::stoull(values[0]) * kMicrosPerDay) +
+              (std::stoull(time_values[0]) * kMicrosPerHour) +
+              (std::stoull(time_values[1]) * kMicrosPerMinute)));
+          return;
+        } catch (std::invalid_argument e) {
+          /* fallthrough */
+        }
+      }
+    }
+
+    RAISEF(
+        kRuntimeError,
+        "DATE_ADD: invalid expression $0 for unit $1",
+        expr,
+        argv[2].toString());
+  }
+
+  if (unit == "day_hour") {
+    auto values = StringUtil::split(expr, " ");
+    if (values.size() == 2 &&
+        StringUtil::isNumber(values[0]) &&
+        StringUtil::isNumber(values[1])) {
+
+      try {
+        *out = SValue(SValue::TimeType(
+            uint64_t(date) +
+            (std::stoull(values[0]) * kMicrosPerDay) +
+            (std::stoull(values[1]) * kMicrosPerHour)));
+        return;
+      } catch (std::invalid_argument e) {
+        /* fallthrough */
+      }
+    }
+
+    RAISEF(
+        kRuntimeError,
+        "DATE_ADD: invalid expression $0 for unit $1",
+        expr,
+        argv[2].toString());
+  }
+
+  if (unit == "year_month") {
+    auto values = StringUtil::split(expr, "-");
+    if (values.size() == 2 &&
+        StringUtil::isNumber(values[0]) &&
+        StringUtil::isNumber(values[1])) {
+
+      try {
+        *out = SValue(SValue::TimeType(
+            uint64_t(date) +
+            (std::stoull(values[0]) * kMicrosPerYear) +
+            (std::stoull(values[1]) * kMicrosPerDay * 31)));
+        return;
+      } catch (std::invalid_argument e) {
+        /* fallthrough */
+      }
+    }
+
+    RAISEF(
+        kRuntimeError,
+        "DATE_ADD: invalid expression $0 for unit $1",
+        expr,
+        argv[2].toString());
+  }
+
+  RAISEF(
+      kRuntimeError,
+      "DATE_ADD: invalid unit $0",
+      argv[2].toString());
+}
 
 }
 }
