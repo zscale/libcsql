@@ -46,6 +46,11 @@ public:
       RefPtr<ExecutionStrategy> execution_strategy,
       RefPtr<ResultFormat> result_format);
 
+  void executeQuery(
+      RefPtr<QueryPlan> query_plan,
+      RefPtr<ExecutionStrategy> execution_strategy,
+      RefPtr<ResultFormat> result_format);
+
   void executeStatement(
       Statement* statement,
       ResultList* result);

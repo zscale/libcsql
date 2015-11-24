@@ -61,8 +61,16 @@ void Runtime::executeQuery(
     const String& query,
     RefPtr<ExecutionStrategy> execution_strategy,
     RefPtr<ResultFormat> result_format) {
-  auto query_plan = buildQueryPlan(query, execution_strategy);
+  executeQuery(
+      buildQueryPlan(query, execution_strategy),
+      execution_strategy,
+      result_format);
+}
 
+void Runtime::executeQuery(
+    RefPtr<QueryPlan> query_plan,
+    RefPtr<ExecutionStrategy> execution_strategy,
+    RefPtr<ResultFormat> result_format) {
   /* execute query and format results */
   csql::ExecutionContext context(&tpool_);
   if (!cachedir_.isEmpty()) {
