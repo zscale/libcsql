@@ -12,10 +12,11 @@
 #include <stx/json/json.h>
 #include <csql/runtime/queryplan.h>
 #include <csql/runtime/charts/ChartStatement.h>
+#include <csql/runtime/ResultFormat.h>
 
 namespace csql {
 
-class JSONResultFormat {
+class JSONResultFormat : public ResultFormat {
 public:
 
   JSONResultFormat(json::JSONOutputStream* json);

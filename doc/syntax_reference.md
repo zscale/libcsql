@@ -1,5 +1,17 @@
-ChartSQL Syntax Reference
-=========================
+Syntax Reference
+================
+
+### The SELECT statement
+
+    SELECT
+        select_expr [, select_expr ...]
+        [FROM table_references
+            [WHERE predicate_expr]
+            [GROUP BY {col_name | expr}, ...]
+            [HAVING predicate_expr]
+            [ORDER BY {col_name | expr} [ASC | DESC], ...]
+            [LIMIT {[offset,] row_count | row_count OFFSET offset}]]
+
 
 ### The DRAW statement
 
@@ -48,34 +60,5 @@ ChartSQL Syntax Reference
     DRAW POINTCHART
         [ [ WITH ]
               common_chart_options ]
-
-### The IMPORT statement
-
-    IMPORT TABLE tablename [, tablename]...
-        FROM source_url;
-
-Examples:
-
-    IMPORT TABLE measurements
-        FROM "csv://my_measurements.csv?headers=true";
-
-    IMPORT TABLE products, users
-        FROM "mysql://localhost:3306/mydatabase?user=hans&pass=geheim"
-
-
-### The SELECT statement
-
-    SELECT
-        [ALL | DISTINCT | DISTINCTROW ]
-        select_expr [, select_expr ...]
-        [FROM table_references
-        [WHERE where_condition]
-        [GROUP [OVER TIMEWINDOW(time_column, window_expr [, step_expr]) ]
-            [ BY {col_name | expr | position} ]
-            [ASC | DESC], ...]
-        [HAVING where_condition]
-        [ORDER BY {col_name | expr | position}
-            [ASC | DESC], ...]
-        [LIMIT {[offset,] row_count | row_count OFFSET offset}]
 
 

@@ -55,31 +55,34 @@ csql::TableInfo CSTableScanProvider::tableInfo() const {
 
   for (const auto& col : cstable->columns()) {
     csql::ColumnInfo ci;
-    ci.column_name = col;
+    ci.column_name = col.column_name;
     ci.type_size = 0;
     ci.is_nullable = true;
 
-    switch (cstable->getColumnType(col)) {
+    switch (col.logical_type) {
+
       case cstable::ColumnType::BOOLEAN:
         ci.type = "bool";
         break;
 
-      case cstable::ColumnType::UINT32_BITPACKED:
-      case cstable::ColumnType::UINT32_PLAIN:
-        ci.type = "uint32";
-        break;
-
-      case cstable::ColumnType::UINT64_PLAIN:
-      case cstable::ColumnType::UINT64_LEB128:
+      case cstable::ColumnType::UNSIGNED_INT:
         ci.type = "uint64";
         break;
 
-      case cstable::ColumnType::DOUBLE:
+      case cstable::ColumnType::SIGNED_INT:
+        ci.type = "int64";
+        break;
+
+      case cstable::ColumnType::FLOAT:
         ci.type = "double";
         break;
 
-      case cstable::ColumnType::STRING_PLAIN:
+      case cstable::ColumnType::STRING:
         ci.type = "string";
+        break;
+
+      case cstable::ColumnType::DATETIME:
+        ci.type = "datetime";
         break;
 
     }
