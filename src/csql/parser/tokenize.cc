@@ -106,20 +106,44 @@ next:
 
   /* quoted strings */
   if (quote_char) {
-    int escape_level = 0;
-    while (*cur < end) {
-      if (**cur == quote_char) {
-        if (escape_level % 2 == 0) break;
-      } else if (**cur == '\\') {
-        escape_level++;
-      } else {
-        escape_level = 0;
+    std::string str;
+
+    bool escaped = false;
+    bool eof = false;
+    for (; !eof && *cur < end; (*cur)++) {
+      auto chr = **cur;
+      switch (chr) {
+
+        case '"':
+        case '\'':
+        case '`':
+          if (escaped || quote_char != chr) {
+            str += chr;
+            break;
+          } else {
+            eof = true;
+            continue;
+          }
+
+        case '\\':
+          if (escaped) {
+            str += "\\";
+            break;
+          } else {
+            escaped = true;
+            continue;
+          }
+
+        default:
+          str += chr;
+          break;
+
       }
-      (*cur)++;
-      len++;
+
+      escaped = false;
     }
-    (*cur)++;
-    token_list->emplace_back(string_type, begin, len);
+
+    token_list->emplace_back(string_type, str);
     quote_char = 0;
     string_type = Token::T_STRING;
     goto next;

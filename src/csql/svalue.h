@@ -93,6 +93,9 @@ protected:
   } data_;
 };
 
+
+String sql_escape(const String& str);
+
 }
 
 namespace std {

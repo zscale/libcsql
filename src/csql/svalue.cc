@@ -369,8 +369,7 @@ String SValue::toSQL() const {
     }
 
     case T_STRING: {
-      auto str = getString();
-      StringUtil::replaceAll(&str, "\"", "\\\"");
+      auto str = sql_escape(getString());
       return StringUtil::format("\"$0\"", str);
     }
 
@@ -599,6 +598,14 @@ void SValue::decode(InputStream* is) {
       *this = SValue();
       return;
   }
+}
+
+String sql_escape(const String& orig_str) {
+  auto str = orig_str;
+  StringUtil::replaceAll(&str, "\\", "\\\\");
+  StringUtil::replaceAll(&str, "'", "\\'");
+  StringUtil::replaceAll(&str, "\"", "\\\"");
+  return str;
 }
 
 }

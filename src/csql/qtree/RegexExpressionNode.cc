@@ -8,6 +8,7 @@
  * <http://www.gnu.org/licenses/>.
  */
 #include <csql/qtree/RegexExpressionNode.h>
+#include <csql/svalue.h>
 
 using namespace stx;
 
@@ -39,9 +40,9 @@ RefPtr<QueryTreeNode> RegexExpressionNode::deepCopy() const {
 
 String RegexExpressionNode::toSQL() const {
   return StringUtil::format(
-      "($0 REGEX $1)",
+      "($0 REGEX '$1')",
       subject_->toSQL(),
-      pattern_);
+      sql_escape(pattern_));
 }
 
 } // namespace csql
