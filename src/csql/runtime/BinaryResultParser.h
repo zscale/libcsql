@@ -17,15 +17,26 @@
 #include "stx/http/httpstats.h"
 #include "stx/http/httpconnectionpool.h"
 #include "stx/http/httpclient.h"
+#include "csql/svalue.h"
+#include "csql/runtime/ExecutionContext.h"
+
+using namespace stx;
 
 namespace csql {
 
 class BinaryResultParser : public stx::RefCounted {
 public:
 
-  void onEvent(stx::Function<void ()> fn);
+  BinaryResultParser();
+
+  void onTableHeader(stx::Function<void (const Vector<String>& columns)> fn);
+  void onRow(stx::Function<void (int argc, const SValue* argv)> fn);
+  void onProgress(stx::Function<void (const ExecutionStatus& status)> fn);
+  void onError(stx::Function<void (const String& error)> fn);
 
   void parse(const char* data, size_t size);
+
+  bool eof() const;
 
 protected:
 
@@ -35,7 +46,13 @@ protected:
   size_t parseError(const void* data, size_t size);
 
   stx::Buffer buf_;
-  stx::Function<void ()> on_event_;
+  stx::Function<void (const Vector<String>& columns)> on_table_header_;
+  stx::Function<void (int argc, const SValue* argv)> on_row_;
+  stx::Function<void (const ExecutionStatus& status)> on_progress_;
+  stx::Function<void (const String& error)> on_error_;
+
+  bool got_header_;
+  bool got_footer_;
 };
 
 }

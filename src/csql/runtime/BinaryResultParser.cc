@@ -15,10 +15,28 @@ using namespace stx;
 
 namespace csql {
 
-//void BinaryResultParser::onEvent(Function<void (const HTTPSSEEvent& ev)> fn) {
-//  on_event_ = fn;
-//}
-//
+BinaryResultParser::BinaryResultParser() :
+    got_header_(false),
+    got_footer_(false) {}
+
+void BinaryResultParser::onTableHeader(
+    stx::Function<void (const Vector<String>& columns)> fn) {
+  on_table_header_ = fn;
+}
+
+void BinaryResultParser::onRow(
+    stx::Function<void (int argc, const SValue* argv)> fn) {
+  on_row_ = fn;
+}
+
+void BinaryResultParser::onProgress(
+    stx::Function<void (const ExecutionStatus& status)> fn) {
+  on_progress_ = fn;
+}
+
+void BinaryResultParser::onError(stx::Function<void (const String& error)> fn) {
+  on_error_ = fn;
+}
 
 void BinaryResultParser::parse(const char* data, size_t size) {
   buf_.append(data, size);
@@ -33,8 +51,8 @@ void BinaryResultParser::parse(const char* data, size_t size) {
 
       // header
       case 0x01:
-        iputs("got header...", 1);
         ++cur;
+        got_header_ = true;
         break;
 
       case 0xf1: {
@@ -79,8 +97,8 @@ void BinaryResultParser::parse(const char* data, size_t size) {
 
       // footer
       case 0xff:
-        iputs("got footer...", 1);
         ++cur;
+        got_footer_ = true;
         break;
 
       default:
@@ -119,7 +137,10 @@ size_t BinaryResultParser::parseTableHeader(const void* data, size_t size) {
     columns.emplace_back(colname);
   }
 
-  iputs("tbl header: $0", columns);
+  if (on_table_header_) {
+    on_table_header_(columns);
+  }
+
   return reader.position();
 }
 
@@ -199,7 +220,10 @@ size_t BinaryResultParser::parseRow(const void* data, size_t size) {
     }
   }
 
-  iputs("tbl row: $0", row);
+  if (on_row_) {
+    on_row_(row.size(), row.data());
+  }
+
   return reader.position();
 }
 
@@ -216,7 +240,6 @@ size_t BinaryResultParser::parseProgress(const void* data, size_t size) {
     return 0;
   }
 
-  iputs("progress: $0", progress);
   return reader.position();
 }
 
@@ -233,8 +256,15 @@ size_t BinaryResultParser::parseError(const void* data, size_t size) {
     return 0;
   }
 
-  iputs("error: $0", error_str);
+  if (on_error_) {
+    on_error_(error_str);
+  }
+
   return reader.position();
+}
+
+bool BinaryResultParser::eof() const {
+  return got_footer_;
 }
 
 }
