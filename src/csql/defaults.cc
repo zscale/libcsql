@@ -67,6 +67,7 @@ void installDefaultSymbols(SymbolTable* rt) {
       PureFunction(&expressions::fromTimestamp));
   rt->registerFunction("date_trunc", PureFunction(&expressions::dateTruncExpr));
   rt->registerFunction("date_add", PureFunction(&expressions::dateAddExpr));
+  rt->registerFunction("date_sub", PureFunction(&expressions::dateAddExpr));
 
   /* expressions/math.h */
   rt->registerFunction("add", PureFunction(&expressions::addExpr));
