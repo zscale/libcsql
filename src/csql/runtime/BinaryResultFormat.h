@@ -16,10 +16,10 @@
 
 namespace csql {
 
-class BinaryStreamFormat : public ResultFormat {
+class BinaryResultFormat : public ResultFormat {
 public:
 
-  BinaryStreamFormat(RefPtr<http::HTTPResponseStream> output);
+  BinaryResultFormat(RefPtr<http::HTTPResponseStream> output);
 
   void formatResults(
       RefPtr<QueryPlan> query,
