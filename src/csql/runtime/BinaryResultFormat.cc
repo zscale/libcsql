@@ -8,16 +8,16 @@
  * copy of the GNU General Public License along with this program. If not, see
  * <http://www.gnu.org/licenses/>.
  */
-#include <csql/runtime/BinaryStreamFormat.h>
+#include <csql/runtime/BinaryResultFormat.h>
 #include <stx/logging.h>
 
 namespace csql {
 
-BinaryStreamFormat::BinaryStreamFormat(
+BinaryResultFormat::BinaryResultFormat(
     RefPtr<http::HTTPResponseStream> output) :
     output_(output) {}
 
-void BinaryStreamFormat::formatResults(
+void BinaryResultFormat::formatResults(
     RefPtr<QueryPlan> query,
     ExecutionContext* context) {
 
@@ -59,7 +59,7 @@ void BinaryStreamFormat::formatResults(
   }
 }
 
-void BinaryStreamFormat::renderTable(
+void BinaryResultFormat::renderTable(
     TableExpression* stmt,
     ExecutionContext* context,
     stx::util::BinaryMessageWriter* writer) {
