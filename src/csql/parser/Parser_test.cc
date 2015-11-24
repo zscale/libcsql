@@ -461,11 +461,11 @@ TEST_CASE(ParserTest, TestLimitOffsetClause, [] () {
 TEST_CASE(ParserTest, TestTokenizerEscaping, [] () {
   std::vector<Token> tl;
   tokenizeQuery(
-      " SELECT  fnord,sum(blah) from fubar blah.id"
-      "= 'fnor\\'dbar' + 123.5;",
+      R"( SELECT fnord,sum(blah) from fubar blah.id = 'fnor\'dbar' + 123.5; )",
       &tl);
 
   EXPECT(tl.size() == 17);
+
   EXPECT(tl[0].getType() == Token::T_SELECT);
   EXPECT(tl[1].getType() == Token::T_IDENTIFIER);
   EXPECT(tl[1] == "fnord");
@@ -486,7 +486,7 @@ TEST_CASE(ParserTest, TestTokenizerEscaping, [] () {
   EXPECT(tl[11] == "id");
   EXPECT(tl[12].getType() == Token::T_EQUAL);
   EXPECT(tl[13].getType() == Token::T_STRING);
-  //EXPECT(tl[13] == "fnord'bar"); // FIXPAUL
+  EXPECT_EQ(tl[13].getString(), "fnor'dbar");
   EXPECT(tl[14].getType() == Token::T_PLUS);
   EXPECT(tl[15].getType() == Token::T_NUMERIC);
   EXPECT(tl[15] == "123.5");

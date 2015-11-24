@@ -1015,3 +1015,49 @@ TEST_CASE(RuntimeTest, TestDateTimeDateAddExpression, [] () {
     EXPECT_EQ(v.toString(), "2018-03-02 23:00:00");
   }
 });
+
+TEST_CASE(RuntimeTest, TestEscaping, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String(R"( "fnord'fnord" )"));
+
+    EXPECT_EQ(v.toString(), "fnord'fnord");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String(R"( "fnord\'fnord" )"));
+
+    EXPECT_EQ(v.toString(), "fnord'fnord");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String(R"( "fnord\\'fnord" )"));
+
+    EXPECT_EQ(v.toString(), "fnord\\'fnord");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String(R"( "fnord\\'fn\ord" )"));
+
+    EXPECT_EQ(v.toString(), "fnord\\'fnord");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String(R"( "fnord\\\'fn\ord" )"));
+
+    EXPECT_EQ(v.toString(), "fnord\\'fnord");
+  }
+
+  {
+    auto v = runtime->evaluateStaticExpression(
+        String(R"( "fnord\\\\'fn\ord" )"));
+
+    EXPECT_EQ(v.toString(), "fnord\\\\'fnord");
+  }
+});
