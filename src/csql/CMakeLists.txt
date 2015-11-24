@@ -6,7 +6,7 @@
 # copy of the GNU General Public License along with this program. If not, see
 # <http://www.gnu.org/licenses/>.
 file(GLOB PROTO_FILES **/*.proto)
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
+STX_PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
 
 add_library(chartsql STATIC
     svalue.cc
@@ -101,6 +101,7 @@ add_library(chartsql STATIC
     ${PROTO_SRCS}
     defaults.cc)
 
+add_dependencies(chartsql stx-protobuf)
 set(CSQL_LIBS chartsql cplot cstable stx-http stx-protobuf stx-json stx-base pcre)
 
 add_executable(test-chartsql-runtime runtime/Runtime_test.cc)

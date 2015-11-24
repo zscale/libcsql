@@ -17,6 +17,9 @@ namespace expressions {
 
 void fromTimestamp(int argc, SValue* argv, SValue* out);
 void dateTruncExpr(int argc, SValue* argv, SValue* out);
+void dateAddExpr(int argc, SValue* argv, SValue* out);
+void dateSubExpr(int argc, SValue* argv, SValue* out);
+
 }
 }
 #endif
