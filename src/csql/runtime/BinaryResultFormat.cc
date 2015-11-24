@@ -14,100 +14,98 @@
 namespace csql {
 
 BinaryResultFormat::BinaryResultFormat(
-    RefPtr<http::HTTPResponseStream> output) :
-    output_(output) {}
+    WriteCallback write_cb) :
+    write_cb_(write_cb) {
+  sendHeader();
+}
+
+BinaryResultFormat::~BinaryResultFormat() {
+  sendFooter();
+}
+
+void BinaryResultFormat::sendProgress(double progress) {
+  stx::util::BinaryMessageWriter writer;
+  writer.appendUInt8(0xf3);
+  writer.appendDouble(progress);
+  write_cb_(writer.data(), writer.size());
+}
+
+void BinaryResultFormat::sendError(const String& error) {
+  stx::util::BinaryMessageWriter writer;
+  writer.appendUInt8(0xf4);
+  writer.appendLenencString(error);
+  write_cb_(writer.data(), writer.size());
+}
+
+void BinaryResultFormat::sendHeader() {
+  stx::util::BinaryMessageWriter writer;
+  writer.appendUInt8(0x01);
+  write_cb_(writer.data(), writer.size());
+}
+
+void BinaryResultFormat::sendFooter() {
+  stx::util::BinaryMessageWriter writer;
+  writer.appendUInt8(0xff);
+  write_cb_(writer.data(), writer.size());
+}
 
 void BinaryResultFormat::formatResults(
     RefPtr<QueryPlan> query,
     ExecutionContext* context) {
+  context->onStatusChange([this] (const csql::ExecutionStatus& status) {
+    sendProgress(status.progress());
+  });
 
-  auto writer = stx::util::BinaryMessageWriter();
   try {
-    context->onStatusChange([this, &writer, context] (const csql::ExecutionStatus& status) {
-      auto progress = status.progress();
-
-      if (output_->isClosed()) {
-        stx::logDebug("sql", "Aborting Query...");
-        context->cancel();
-        return;
-      }
-
-      writer.appendUInt8(2);
-      writer.appendDouble(progress);
-      output_->writeBodyChunk(writer.data(), writer.size());
-    });
-
     for (int i = 0; i < query->numStatements(); ++i) {
       auto stmt = query->getStatement(i);
 
       auto table_expr = dynamic_cast<TableExpression*>(stmt);
       if (table_expr) {
-        renderTable(table_expr, context, &writer);
-        output_->writeBodyChunk(writer.data(), writer.size());
+        sendTable(table_expr, context);
         continue;
       }
 
-      RAISE(kRuntimeError, "can't render statement in BinaryFormat")
+      RAISE(kRuntimeError, "can't render DRAW statement in BinaryFormat")
     }
-
   } catch (const StandardException& e) {
     stx::logError("sql", e, "SQL execution failed");
-
-    writer.appendUInt8(3);
-    writer.appendLenencString(e.what());
-    output_->writeBodyChunk(writer.data(), writer.size());
+    sendError(e.what());
   }
 }
 
-void BinaryResultFormat::renderTable(
+void BinaryResultFormat::sendTable(
     TableExpression* stmt,
-    ExecutionContext* context,
-    stx::util::BinaryMessageWriter* writer) {
+    ExecutionContext* context) {
 
-  writer->appendUInt8(1);
+  // table header
+  {
+    stx::util::BinaryMessageWriter writer;
+    writer.appendUInt8(0xf1);
 
-  auto columns = stmt->columnNames();
-  writer->appendUInt32(columns.size());
-  for (int n = 0; n < columns.size(); ++n) {
-    writer->appendUInt16(columns[n].size());
-    writer->appendString(columns[n]);
-  }
-
-  //rows
-  size_t j = 0;
-  stmt->execute(
-      context,
-      [this, writer] (int argc, const csql::SValue* argv) -> bool {
-
-    writer->appendUInt8(1);
-    writer->appendUInt32(argc);
-
-    for (int n = 0; n < argc; ++n) {
-      switch (argv[n].getType()) {
-        case SValue::T_STRING:
-          writer->appendLenencString(argv[n].getString());
-          break;
-        case SValue::T_FLOAT:
-          writer->appendDouble(argv[n].getFloat());
-          break;
-        case SValue::T_INTEGER:
-          writer->appendUInt64(argv[n].getInteger());
-          break;
-        case SValue::T_BOOL:
-          writer->appendUInt8(argv[n].getBool() ? 1 : 0);
-          break;
-        case SValue::T_TIMESTAMP:
-          writer->appendUInt64(argv[n].getInteger());
-          break;
-        case SValue::T_NULL:
-          break;
-      }
+    auto columns = stmt->columnNames();
+    writer.appendVarUInt(columns.size());
+    for (const auto& col : columns) {
+      writer.appendLenencString(col);
     }
 
+    write_cb_(writer.data(), writer.size());
+  }
+
+  stmt->execute(
+      context,
+      [this] (int argc, const csql::SValue* argv) -> bool {
+    Buffer buf;
+    BufferOutputStream writer(&buf);
+    writer.appendUInt8(0xf2);
+    writer.appendVarUInt(argc);
+    for (int n = 0; n < argc; ++n) {
+      argv[n].encode(&writer);
+    }
+
+    write_cb_(buf.data(), buf.size());
     return true;
   });
-
-
 }
 
 }
