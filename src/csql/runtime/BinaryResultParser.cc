@@ -159,7 +159,10 @@ size_t BinaryResultParser::parseRow(const void* data, size_t size) {
 
   Vector<SValue> row;
   for (uint64_t i = 0; i < ncols; ++i) {
-    auto stype = *reader.readUInt8();
+    uint8_t stype;
+    if (!reader.maybeReadUInt8(&stype)) {
+      return 0;
+    }
 
     switch (stype) {
       case SValue::T_STRING: {
