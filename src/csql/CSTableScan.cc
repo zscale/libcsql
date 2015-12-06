@@ -40,7 +40,15 @@ void CSTableScan::prepare(ExecutionContext* context) {
 void CSTableScan::execute(
     ExecutionContext* context,
     Function<bool (int argc, const SValue* argv)> fn) {
-  logDebug("sql", "Scanning cstable: $0", cstable_filename_);
+  auto cstable = cstable::CSTableReader::openFile(cstable_filename_);
+  execute(cstable.get(), context, fn);
+}
+
+void CSTableScan::execute(
+    cstable::CSTableReader* cstable,
+    ExecutionContext* context,
+    Function<bool (int argc, const SValue* argv)> fn) {
+  logTrace("sql", "Scanning cstable: $0", cstable_filename_);
 
   Set<String> column_names;
   for (const auto& slnode : stmt_->selectList()) {
@@ -51,8 +59,6 @@ void CSTableScan::execute(
   if (!where_expr.isEmpty()) {
     findColumns(where_expr.get(), &column_names);
   }
-
-  auto cstable = cstable::CSTableReader::openFile(cstable_filename_);
 
   for (const auto& col : column_names) {
     if (cstable->hasColumn(col)) {
@@ -79,9 +85,9 @@ void CSTableScan::execute(
   }
 
   if (columns_.empty()) {
-    scanWithoutColumns(cstable.get(), fn);
+    scanWithoutColumns(cstable, fn);
   } else {
-    scan(cstable.get(), fn);
+    scan(cstable, fn);
   }
 
   context->incrNumSubtasksCompleted(1);
@@ -92,6 +98,7 @@ void CSTableScan::scan(
     Function<bool (int argc, const SValue* argv)> fn) {
   uint64_t select_level = 0;
   uint64_t fetch_level = 0;
+  bool filter_pred = true;
 
   Vector<SValue> in_row(colindex_, SValue{});
   Vector<SValue> out_row(select_list_.size(), SValue{});
@@ -199,10 +206,13 @@ void CSTableScan::scan(
     fetch_level = next_level;
     if (fetch_level == 0) {
       ++num_records;
+      if (filter_fn_) {
+        filter_pred = filter_fn_();
+      }
     }
 
-    bool where_pred = true;
-    if (where_expr_.program() != nullptr) {
+    bool where_pred = filter_pred;
+    if (where_pred && where_expr_.program() != nullptr) {
       SValue where_tmp;
       VM::evaluate(
           where_expr_.program(),
@@ -435,6 +445,10 @@ void CSTableScan::setCacheKey(const SHA1Hash& key) {
 
 size_t CSTableScan::rowsScanned() const {
   return rows_scanned_;
+}
+
+void CSTableScan::setFilter(Function<bool ()> filter_fn) {
+  filter_fn_ = filter_fn;
 }
 
 CSTableScan::ColumnRef::ColumnRef(
