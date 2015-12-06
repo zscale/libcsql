@@ -39,10 +39,17 @@ public:
       ExecutionContext* context,
       Function<bool (int argc, const SValue* argv)> fn) override;
 
+  void execute(
+      cstable::CSTableReader* reader,
+      ExecutionContext* context,
+      Function<bool (int argc, const SValue* argv)> fn);
+
   Option<SHA1Hash> cacheKey() const override;
   void setCacheKey(const SHA1Hash& key);
 
   size_t rowsScanned() const;
+
+  void setFilter(Function<bool ()> filter_fn);
 
 protected:
 
@@ -96,6 +103,7 @@ protected:
   AggregationStrategy aggr_strategy_;
   Option<SHA1Hash> cache_key_;
   size_t rows_scanned_;
+  Function<bool ()> filter_fn_;
 };
 
 
