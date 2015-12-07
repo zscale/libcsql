@@ -99,6 +99,9 @@ void CSTableScan::scan(
   uint64_t select_level = 0;
   uint64_t fetch_level = 0;
   bool filter_pred = true;
+  if (filter_fn_) {
+    filter_pred = filter_fn_();
+  }
 
   Vector<SValue> in_row(colindex_, SValue{});
   Vector<SValue> out_row(select_list_.size(), SValue{});
@@ -206,7 +209,7 @@ void CSTableScan::scan(
     fetch_level = next_level;
     if (fetch_level == 0) {
       ++num_records;
-      if (filter_fn_) {
+      if (num_records < total_records && filter_fn_) {
         filter_pred = filter_fn_();
       }
     }
