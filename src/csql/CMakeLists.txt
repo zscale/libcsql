@@ -61,6 +61,7 @@ add_library(chartsql STATIC
     runtime/BinaryResultFormat.cc
     runtime/BinaryResultParser.cc
     runtime/JSONResultFormat.cc
+    runtime/ResultFormat.cc
     runtime/ValueExpression.cc
     runtime/ScratchMemory.cc
     runtime/runtime.cc
