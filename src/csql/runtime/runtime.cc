@@ -57,19 +57,32 @@ RefPtr<QueryPlan> Runtime::buildQueryPlan(
           this));
 }
 
+RefPtr<QueryPlan> Runtime::buildQueryPlan(
+    Vector<RefPtr<QueryTreeNode>> statements,
+    RefPtr<ExecutionStrategy> execution_strategy) {
+  for (auto& stmt : statements) {
+    stmt = execution_strategy->rewriteQueryTree(stmt);
+  }
+
+  return mkRef(
+      new QueryPlan(
+          statements,
+          execution_strategy->tableProvider(),
+          query_builder_.get(),
+          this));
+}
+
 void Runtime::executeQuery(
     const String& query,
     RefPtr<ExecutionStrategy> execution_strategy,
     RefPtr<ResultFormat> result_format) {
   executeQuery(
       buildQueryPlan(query, execution_strategy),
-      execution_strategy,
       result_format);
 }
 
 void Runtime::executeQuery(
     RefPtr<QueryPlan> query_plan,
-    RefPtr<ExecutionStrategy> execution_strategy,
     RefPtr<ResultFormat> result_format) {
   /* execute query and format results */
   csql::ExecutionContext context(&tpool_);
