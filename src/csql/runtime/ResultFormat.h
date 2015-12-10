@@ -22,4 +22,22 @@ public:
 
 };
 
+class CallbackResultHandler : public ResultFormat {
+public:
+
+  void onStatementBegin(Function<void (size_t stmt_id)> fn);
+
+  void onRow(
+      Function<void (size_t stmt_id, int argc, const SValue* argv)> fn);
+
+  void onStatementEnd(Function<void (size_t stmt_id)> fn);
+
+  void formatResults(
+      RefPtr<QueryPlan> query,
+      ExecutionContext* context) override;
+
+protected:
+  Function<void (size_t stmt_id, int argc, const SValue* argv)> on_row_;
+};
+
 }
