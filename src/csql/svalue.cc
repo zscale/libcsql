@@ -143,19 +143,34 @@ SValue& SValue::operator=(const SValue& copy) {
 }
 
 bool SValue::operator==(const SValue& other) const {
-  if (data_.type != other.data_.type) {
-    return false;
-  }
-
   switch (data_.type) {
-    case T_STRING:
+
+    case T_INTEGER: {
+      return getInteger() == other.getInteger();
+    }
+
+    case T_TIMESTAMP: {
+      return getInteger() == other.getInteger();
+    }
+
+    case T_FLOAT: {
+      return getFloat() == other.getFloat();
+    }
+
+    case T_BOOL: {
+      return getBool() == other.getBool();
+    }
+
+    case T_STRING: {
       return memcmp(
           data_.u.t_string.ptr,
           other.data_.u.t_string.ptr,
           data_.u.t_string.len) == 0;
+    }
 
-    default:
-      return memcmp(&data_, &other.data_, sizeof(data_)) == 0;
+    case T_NULL: {
+      return other.getInteger() == 0;
+    }
 
   }
 }
@@ -172,6 +187,15 @@ SValue::IntegerType SValue::getInteger() const {
 
     case T_TIMESTAMP:
       return data_.u.t_timestamp;
+
+    case T_FLOAT:
+      return data_.u.t_float;
+
+    case T_BOOL:
+      return data_.u.t_bool;
+
+    case T_NULL:
+      return 0;
 
     case T_STRING:
       try {
@@ -198,8 +222,17 @@ SValue::FloatType SValue::getFloat() const {
     case T_INTEGER:
       return data_.u.t_integer;
 
+    case T_TIMESTAMP:
+      return data_.u.t_timestamp;
+
     case T_FLOAT:
       return data_.u.t_float;
+
+    case T_BOOL:
+      return data_.u.t_bool;
+
+    case T_NULL:
+      return 0;
 
     case T_STRING:
       try {
@@ -221,18 +254,6 @@ SValue::FloatType SValue::getFloat() const {
 }
 
 SValue::BoolType SValue::getBool() const {
-  if (data_.type != T_BOOL) {
-    RAISE(
-       kTypeError,
-        "can't convert %s '%s' to Bool",
-        SValue::getTypeName(data_.type),
-        toString().c_str());
-  }
-
-  return data_.u.t_bool;
-}
-
-SValue::BoolType SValue::toBool() const {
   switch (data_.type) {
 
     case T_INTEGER:
@@ -242,7 +263,7 @@ SValue::BoolType SValue::toBool() const {
       return getFloat() > 0;
 
     case T_BOOL:
-      return getBool();
+      return data_.u.t_bool;
 
     case T_STRING:
       return true;
@@ -258,6 +279,10 @@ SValue::BoolType SValue::toBool() const {
           toString());
 
   }
+}
+
+SValue::BoolType SValue::toBool() const {
+  return getBool();
 }
 
 SValue::TimeType SValue::getTimestamp() const {
