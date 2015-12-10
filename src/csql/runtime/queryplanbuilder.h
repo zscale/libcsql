@@ -33,8 +33,6 @@ public:
 
   ValueExpressionNode* buildValueExpression(ASTNode* ast);
 
-protected:
-
   /**
    * Returns true if the ast is a SELECT statement that has columns in its
    * select list that are not of the form T_TABLE_NAME -> T_COLUMN_NAME
@@ -153,11 +151,11 @@ protected:
   bool buildInternalSelectList(
       ASTNode* ast,
       ASTNode* select_list,
-      bool in_aggregation);
+      bool in_aggregation = false);
 
   SelectListNode* buildSelectList(ASTNode* select_list);
 
-
+protected:
   SymbolTable* symbol_table_;
 };
 

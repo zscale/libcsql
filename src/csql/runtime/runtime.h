@@ -41,6 +41,10 @@ public:
       const String& query,
       RefPtr<ExecutionStrategy> execution_strategy);
 
+  RefPtr<QueryPlan> buildQueryPlan(
+      Vector<RefPtr<csql::QueryTreeNode>> statements,
+      RefPtr<ExecutionStrategy> execution_strategy);
+
   void executeQuery(
       const String& query,
       RefPtr<ExecutionStrategy> execution_strategy,
@@ -48,7 +52,6 @@ public:
 
   void executeQuery(
       RefPtr<QueryPlan> query_plan,
-      RefPtr<ExecutionStrategy> execution_strategy,
       RefPtr<ResultFormat> result_format);
 
   void executeStatement(
