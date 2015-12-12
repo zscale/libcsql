@@ -51,6 +51,7 @@ add_library(chartsql STATIC
     qtree/LimitNode.cc
     qtree/OrderByNode.cc
     qtree/QueryTreeNode.cc
+    qtree/QueryTreeUtil.cc
     qtree/ShowTablesNode.cc
     qtree/DescribeTableNode.cc
     qtree/DrawStatementNode.cc
