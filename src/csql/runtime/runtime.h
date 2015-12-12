@@ -62,14 +62,35 @@ public:
       TableExpression* statement,
       Function<bool (int argc, const SValue* argv)> fn);
 
-  void executeAggregate(
-      const RemoteAggregateParams& query,
-      RefPtr<ExecutionStrategy> execution_strategy,
-      OutputStream* os);
+  SValue evaluateExpression(
+      const String& expr,
+      int argc,
+      const SValue* argv);
+
+  SValue evaluateExpression(
+      ASTNode* expr,
+      int argc,
+      const SValue* argv);
+
+  SValue evaluateExpression(
+      RefPtr<ValueExpressionNode> expr,
+      int argc,
+      const SValue* argv);
+
+  SValue evaluateExpression(
+      const ValueExpression& expr,
+      int argc,
+      const SValue* argv);
 
   SValue evaluateStaticExpression(const String& expr);
   SValue evaluateStaticExpression(ASTNode* expr);
   SValue evaluateStaticExpression(RefPtr<ValueExpressionNode> expr);
+  SValue evaluateStaticExpression(const ValueExpression& expr);
+
+  void executeAggregate(
+      const RemoteAggregateParams& query,
+      RefPtr<ExecutionStrategy> execution_strategy,
+      OutputStream* os);
 
   Option<String> cacheDir() const;
   void setCacheDir(const String& cachedir);

@@ -234,6 +234,60 @@ void Runtime::executeAggregate(
   group_expr->executeRemote(&context, os);
 }
 
+SValue Runtime::evaluateExpression(
+    ASTNode* expr,
+    int argc,
+    const SValue* argv) {
+  auto val_expr = mkRef(query_plan_builder_->buildValueExpression(expr));
+  auto compiled = query_builder_->buildValueExpression(val_expr);
+
+  SValue out;
+  VM::evaluate(compiled.program(), argc, argv, &out);
+  return out;
+}
+
+SValue Runtime::evaluateExpression(
+    const String& expr,
+    int argc,
+    const SValue* argv) {
+  csql::Parser parser;
+  parser.parseValueExpression(expr.data(), expr.size());
+
+  auto stmts = parser.getStatements();
+  if (stmts.size() != 1) {
+    RAISE(
+        kParseError,
+        "static expression must consist of exactly one statement");
+  }
+
+  auto val_expr = mkRef(query_plan_builder_->buildValueExpression(stmts[0]));
+  auto compiled = query_builder_->buildValueExpression(val_expr);
+
+  SValue out;
+  VM::evaluate(compiled.program(), argc, argv, &out);
+  return out;
+}
+
+SValue Runtime::evaluateExpression(
+    RefPtr<ValueExpressionNode> expr,
+    int argc,
+    const SValue* argv) {
+  auto compiled = query_builder_->buildValueExpression(expr);
+
+  SValue out;
+  VM::evaluate(compiled.program(), argc, argv, &out);
+  return out;
+}
+
+SValue Runtime::evaluateExpression(
+    const ValueExpression& expr,
+    int argc,
+    const SValue* argv) {
+  SValue out;
+  VM::evaluate(expr.program(), argc, argv, &out);
+  return out;
+}
+
 SValue Runtime::evaluateStaticExpression(ASTNode* expr) {
   auto val_expr = mkRef(query_plan_builder_->buildValueExpression(expr));
   auto compiled = query_builder_->buildValueExpression(val_expr);
@@ -267,6 +321,12 @@ SValue Runtime::evaluateStaticExpression(RefPtr<ValueExpressionNode> expr) {
 
   SValue out;
   VM::evaluate(compiled.program(), 0, nullptr, &out);
+  return out;
+}
+
+SValue Runtime::evaluateStaticExpression(const ValueExpression& expr) {
+  SValue out;
+  VM::evaluate(expr.program(), 0, nullptr, &out);
   return out;
 }
 
