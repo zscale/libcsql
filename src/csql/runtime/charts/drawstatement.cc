@@ -110,7 +110,7 @@ void DrawStatement::applyAxisDefinitions(stx::chart::Drawable* chart) const {
           prop->getToken() != nullptr &&
           *prop->getToken() == Token::T_TITLE &&
           prop->getChildren().size() == 1) {
-        auto axis_title = runtime_->evaluateStaticExpression(
+        auto axis_title = runtime_->evaluateConstExpression(
             prop->getChildren()[0]);
         axis->setTitle(axis_title.toString());
         continue;
@@ -147,7 +147,7 @@ void DrawStatement::applyAxisLabels(
           RAISE(kRuntimeError, "corrupt AST: ROTATE has no children");
         }
 
-        auto rot = runtime_->evaluateStaticExpression(
+        auto rot = runtime_->evaluateConstExpression(
             prop->getChildren()[0]);
         axis->setLabelRotation(rot.getValue<double>());
         break;
@@ -229,8 +229,8 @@ void DrawStatement::applyDomainDefinitions(
     domain_config.setInvert(invert);
     domain_config.setLogarithmic(logarithmic);
     if (min_expr != nullptr && max_expr != nullptr) {
-      domain_config.setMin(runtime_->evaluateStaticExpression(min_expr));
-      domain_config.setMax(runtime_->evaluateStaticExpression(max_expr));
+      domain_config.setMin(runtime_->evaluateConstExpression(min_expr));
+      domain_config.setMax(runtime_->evaluateConstExpression(max_expr));
     }
   }
 }
@@ -248,7 +248,7 @@ void DrawStatement::applyTitle(stx::chart::Drawable* chart) const {
       RAISE(kRuntimeError, "corrupt AST: [SUB]TITLE has != 1 child");
     }
 
-    auto title_eval = runtime_->evaluateStaticExpression(
+    auto title_eval = runtime_->evaluateConstExpression(
         child->getChildren()[0]);
     auto title_str = title_eval.toString();
 
@@ -355,7 +355,7 @@ void DrawStatement::applyLegend(stx::chart::Drawable* chart) const {
             RAISE(kRuntimeError, "corrupt AST: TITLE has no children");
           }
 
-          auto sval = runtime_->evaluateStaticExpression(
+          auto sval = runtime_->evaluateConstExpression(
               prop->getChildren()[0]);
 
           title = sval.toString();

@@ -234,7 +234,7 @@ void Runtime::executeAggregate(
   group_expr->executeRemote(&context, os);
 }
 
-SValue Runtime::evaluateExpression(
+SValue Runtime::evaluateScalarExpression(
     ASTNode* expr,
     int argc,
     const SValue* argv) {
@@ -246,7 +246,7 @@ SValue Runtime::evaluateExpression(
   return out;
 }
 
-SValue Runtime::evaluateExpression(
+SValue Runtime::evaluateScalarExpression(
     const String& expr,
     int argc,
     const SValue* argv) {
@@ -268,7 +268,7 @@ SValue Runtime::evaluateExpression(
   return out;
 }
 
-SValue Runtime::evaluateExpression(
+SValue Runtime::evaluateScalarExpression(
     RefPtr<ValueExpressionNode> expr,
     int argc,
     const SValue* argv) {
@@ -279,7 +279,7 @@ SValue Runtime::evaluateExpression(
   return out;
 }
 
-SValue Runtime::evaluateExpression(
+SValue Runtime::evaluateScalarExpression(
     const ValueExpression& expr,
     int argc,
     const SValue* argv) {
@@ -288,7 +288,7 @@ SValue Runtime::evaluateExpression(
   return out;
 }
 
-SValue Runtime::evaluateStaticExpression(ASTNode* expr) {
+SValue Runtime::evaluateConstExpression(ASTNode* expr) {
   auto val_expr = mkRef(query_plan_builder_->buildValueExpression(expr));
   auto compiled = query_builder_->buildValueExpression(val_expr);
 
@@ -297,7 +297,7 @@ SValue Runtime::evaluateStaticExpression(ASTNode* expr) {
   return out;
 }
 
-SValue Runtime::evaluateStaticExpression(const String& expr) {
+SValue Runtime::evaluateConstExpression(const String& expr) {
   csql::Parser parser;
   parser.parseValueExpression(expr.data(), expr.size());
 
@@ -316,7 +316,7 @@ SValue Runtime::evaluateStaticExpression(const String& expr) {
   return out;
 }
 
-SValue Runtime::evaluateStaticExpression(RefPtr<ValueExpressionNode> expr) {
+SValue Runtime::evaluateConstExpression(RefPtr<ValueExpressionNode> expr) {
   auto compiled = query_builder_->buildValueExpression(expr);
 
   SValue out;
@@ -324,7 +324,7 @@ SValue Runtime::evaluateStaticExpression(RefPtr<ValueExpressionNode> expr) {
   return out;
 }
 
-SValue Runtime::evaluateStaticExpression(const ValueExpression& expr) {
+SValue Runtime::evaluateConstExpression(const ValueExpression& expr) {
   SValue out;
   VM::evaluate(expr.program(), 0, nullptr, &out);
   return out;
