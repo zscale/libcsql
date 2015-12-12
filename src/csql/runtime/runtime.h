@@ -62,30 +62,30 @@ public:
       TableExpression* statement,
       Function<bool (int argc, const SValue* argv)> fn);
 
-  SValue evaluateExpression(
+  SValue evaluateScalarExpression(
       const String& expr,
       int argc,
       const SValue* argv);
 
-  SValue evaluateExpression(
+  SValue evaluateScalarExpression(
       ASTNode* expr,
       int argc,
       const SValue* argv);
 
-  SValue evaluateExpression(
+  SValue evaluateScalarExpression(
       RefPtr<ValueExpressionNode> expr,
       int argc,
       const SValue* argv);
 
-  SValue evaluateExpression(
+  SValue evaluateScalarExpression(
       const ValueExpression& expr,
       int argc,
       const SValue* argv);
 
-  SValue evaluateStaticExpression(const String& expr);
-  SValue evaluateStaticExpression(ASTNode* expr);
-  SValue evaluateStaticExpression(RefPtr<ValueExpressionNode> expr);
-  SValue evaluateStaticExpression(const ValueExpression& expr);
+  SValue evaluateConstExpression(const String& expr);
+  SValue evaluateConstExpression(ASTNode* expr);
+  SValue evaluateConstExpression(RefPtr<ValueExpressionNode> expr);
+  SValue evaluateConstExpression(const ValueExpression& expr);
 
   void executeAggregate(
       const RemoteAggregateParams& query,
