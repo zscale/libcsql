@@ -18,6 +18,7 @@ RefPtr<Runtime> Runtime::getDefaultRuntime() {
   installDefaultSymbols(symbols.get());
 
   return new Runtime(
+      stx::thread::ThreadPoolOptions{},
       symbols,
       new QueryBuilder(
           new ValueExpressionBuilder(symbols.get()),
@@ -26,9 +27,11 @@ RefPtr<Runtime> Runtime::getDefaultRuntime() {
 }
 
 Runtime::Runtime(
+    stx::thread::ThreadPoolOptions tpool_opts,
     RefPtr<SymbolTable> symbol_table,
     RefPtr<QueryBuilder> query_builder,
     RefPtr<QueryPlanBuilder> query_plan_builder) :
+    tpool_(tpool_opts),
     symbol_table_(symbol_table),
     query_builder_(query_builder),
     query_plan_builder_(query_plan_builder) {}
