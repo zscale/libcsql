@@ -33,6 +33,7 @@ public:
 
   // FIXPAUL: make parser configurable via parserfactory
   Runtime(
+      stx::thread::ThreadPoolOptions tpool_opts,
       RefPtr<SymbolTable> symbol_table,
       RefPtr<QueryBuilder> query_builder,
       RefPtr<QueryPlanBuilder> query_plan_builder);
@@ -101,11 +102,10 @@ public:
   TaskScheduler* scheduler();
 
 protected:
-
+  thread::ThreadPool tpool_;
   RefPtr<SymbolTable> symbol_table_;
   RefPtr<QueryBuilder> query_builder_;
   RefPtr<QueryPlanBuilder> query_plan_builder_;
-  thread::ThreadPool tpool_;
   Option<String> cachedir_;
 };
 
