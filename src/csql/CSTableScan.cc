@@ -99,9 +99,6 @@ void CSTableScan::scan(
   uint64_t select_level = 0;
   uint64_t fetch_level = 0;
   bool filter_pred = true;
-  if (filter_fn_) {
-    filter_pred = filter_fn_();
-  }
 
   Vector<SValue> in_row(colindex_, SValue{});
   Vector<SValue> out_row(select_list_.size(), SValue{});
@@ -111,6 +108,12 @@ void CSTableScan::scan(
   while (num_records < total_records) {
     ++rows_scanned_;
     uint64_t next_level = 0;
+
+    if (fetch_level == 0) {
+      if (num_records < total_records && filter_fn_) {
+        filter_pred = filter_fn_();
+      }
+    }
 
     for (auto& col : columns_) {
       auto nextr = col.second.reader->nextRepetitionLevel();
@@ -209,9 +212,6 @@ void CSTableScan::scan(
     fetch_level = next_level;
     if (fetch_level == 0) {
       ++num_records;
-      if (num_records < total_records && filter_fn_) {
-        filter_pred = filter_fn_();
-      }
     }
 
     bool where_pred = filter_pred;
