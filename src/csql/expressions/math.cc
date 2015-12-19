@@ -28,37 +28,37 @@ void addExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   SValue* rhs = argv + 1;
 
   switch(lhs->testTypeWithNumericConversion()) {
-    case T_INTEGER:
+    case SQL_INTEGER:
       switch(rhs->testTypeWithNumericConversion()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue((int64_t) (lhs->getInteger() + rhs->getInteger()));
           return;
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue((double) (lhs->getInteger() + rhs->getFloat()));
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue();
           return;
         default:
           break;
       }
       break;
-    case T_FLOAT:
+    case SQL_FLOAT:
       switch(rhs->testTypeWithNumericConversion()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue((double) (lhs->getFloat() + rhs->getInteger()));
           return;
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue((double) (lhs->getFloat() + rhs->getFloat()));
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue();
           return;
         default:
           break;
       }
       break;
-    case T_NULL:
+    case SQL_NULL:
       *out = SValue();
       return;
     default:
@@ -79,37 +79,37 @@ void subExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   SValue* rhs = argv + 1;
 
   switch(lhs->testTypeWithNumericConversion()) {
-    case T_INTEGER:
+    case SQL_INTEGER:
       switch(rhs->testTypeWithNumericConversion()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue((int64_t) (lhs->getInteger() - rhs->getInteger()));
           return;
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue((double) (lhs->getInteger() - rhs->getFloat()));
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue();
           return;
         default:
           break;
       }
       break;
-    case T_FLOAT:
+    case SQL_FLOAT:
       switch(rhs->testTypeWithNumericConversion()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue((double) (lhs->getFloat() - rhs->getInteger()));
           return;
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue((double) (lhs->getFloat() - rhs->getFloat()));
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue();
           return;
         default:
           break;
       }
       break;
-    case T_NULL:
+    case SQL_NULL:
       *out = SValue();
       return;
     default:
@@ -132,37 +132,37 @@ void mulExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   SValue* rhs = argv + 1;
 
   switch(lhs->testTypeWithNumericConversion()) {
-    case T_INTEGER:
+    case SQL_INTEGER:
       switch(rhs->testTypeWithNumericConversion()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue((int64_t) (lhs->getInteger() * rhs->getInteger()));
           return;
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue((double) (lhs->getInteger() * rhs->getFloat()));
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue();
           return;
         default:
           break;
       }
       break;
-    case T_FLOAT:
+    case SQL_FLOAT:
       switch(rhs->testTypeWithNumericConversion()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue((double) (lhs->getFloat() * rhs->getInteger()));
           return;
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue((double) (lhs->getFloat() * rhs->getFloat()));
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue();
           return;
         default:
           break;
       }
       break;
-    case T_NULL:
+    case SQL_NULL:
       *out = SValue();
       return;
     default:
@@ -185,21 +185,21 @@ void divExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   SValue* rhs = argv + 1;
 
   switch(lhs->testTypeWithNumericConversion()) {
-    case T_INTEGER:
-    case T_FLOAT:
+    case SQL_INTEGER:
+    case SQL_FLOAT:
       switch(rhs->testTypeWithNumericConversion()) {
-        case T_INTEGER:
-        case T_FLOAT:
+        case SQL_INTEGER:
+        case SQL_FLOAT:
           *out = SValue((double) (lhs->getFloat() / rhs->getFloat()));
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue();
           return;
         default:
           break;
       }
       break;
-    case T_NULL:
+    case SQL_NULL:
       *out = SValue();
       return;
     default:
@@ -222,37 +222,37 @@ void modExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   SValue* rhs = argv + 1;
 
   switch(lhs->testTypeWithNumericConversion()) {
-    case T_INTEGER:
+    case SQL_INTEGER:
       switch(rhs->testTypeWithNumericConversion()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue((int64_t) (lhs->getInteger() % rhs->getInteger()));
           return;
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(fmod(lhs->getInteger(), rhs->getFloat()));
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue();
           return;
         default:
           break;
       }
       break;
-    case T_FLOAT:
+    case SQL_FLOAT:
       switch(rhs->testTypeWithNumericConversion()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue(fmod(lhs->getFloat(), rhs->getInteger()));
           return;
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(fmod(lhs->getFloat(), rhs->getFloat()));
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue();
           return;
         default:
           break;
       }
       break;
-    case T_NULL:
+    case SQL_NULL:
       *out = SValue();
       return;
     default:
@@ -275,37 +275,37 @@ void powExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   SValue* rhs = argv + 1;
 
   switch(lhs->testTypeWithNumericConversion()) {
-    case T_INTEGER:
+    case SQL_INTEGER:
       switch(rhs->testTypeWithNumericConversion()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue((int64_t) pow(lhs->getInteger(), rhs->getInteger()));
           return;
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue((double) pow(lhs->getInteger(), rhs->getFloat()));
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue();
           return;
         default:
           break;
       }
       break;
-    case T_FLOAT:
+    case SQL_FLOAT:
       switch(rhs->testTypeWithNumericConversion()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue((double) pow(lhs->getFloat(), rhs->getInteger()));
           return;
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue((double) pow(lhs->getFloat(), rhs->getFloat()));
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue();
           return;
         default:
           break;
       }
       break;
-    case T_NULL:
+    case SQL_NULL:
       *out = SValue();
       return;
     default:
@@ -342,11 +342,11 @@ void truncateExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
     case 1: {
       SValue* val = argv;
       switch(val->testTypeWithNumericConversion()) {
-        case T_INTEGER:
-        case T_FLOAT:
+        case SQL_INTEGER:
+        case SQL_FLOAT:
           *out = SValue(SValue::IntegerType(val->getFloat()));
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue();
           return;
         default:

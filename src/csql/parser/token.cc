@@ -61,7 +61,7 @@ const char* Token::getTypeName(kTokenType type) {
     case T_COMMA: return "T_COMMA";
     case T_DOT: return "T_DOT";
     case T_IDENTIFIER: return "T_IDENTIFIER";
-    case T_STRING: return "T_STRING";
+    case SQL_STRING: return "SQL_STRING";
     case T_NUMERIC: return "T_NUMERIC";
     case T_SEMICOLON: return "T_SEMICOLON";
     case T_LPAREN: return "T_LPAREN";

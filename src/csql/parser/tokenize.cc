@@ -19,7 +19,7 @@ void tokenizeQuery(
     const char* end,
     std::vector<Token>* token_list) {
   char quote_char = 0;
-  Token::kTokenType string_type = Token::T_STRING;
+  Token::kTokenType string_type = Token::SQL_STRING;
 
 next:
 
@@ -145,7 +145,7 @@ next:
 
     token_list->emplace_back(string_type, str);
     quote_char = 0;
-    string_type = Token::T_STRING;
+    string_type = Token::SQL_STRING;
     goto next;
   }
 

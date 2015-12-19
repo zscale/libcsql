@@ -142,12 +142,12 @@ void dateAddExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (unit == "second") {
     if (argv[1].tryNumericConversion()) {
       switch (argv[1].getType()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue(SValue::TimeType(
               uint64_t(date) + (argv[1].getInteger() * kMicrosPerSecond)));
           return;
 
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(SValue::TimeType(
               uint64_t(date) + (argv[1].getFloat() * kMicrosPerSecond)));
           return;
@@ -167,12 +167,12 @@ void dateAddExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (unit == "minute") {
     if (argv[1].tryNumericConversion()) {
       switch (argv[1].getType()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue(SValue::TimeType(
               uint64_t(date) + (argv[1].getInteger() * kMicrosPerMinute)));
           return;
 
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(SValue::TimeType(
               uint64_t(date) + (argv[1].getFloat() * kMicrosPerMinute)));
           return;
@@ -192,12 +192,12 @@ void dateAddExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (unit == "hour") {
     if (argv[1].tryNumericConversion()) {
       switch (argv[1].getType()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue(SValue::TimeType(
               uint64_t(date) + (argv[1].getInteger() * kMicrosPerHour)));
           return;
 
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(SValue::TimeType(
               uint64_t(date) + (argv[1].getFloat() * kMicrosPerHour)));
           return;
@@ -217,12 +217,12 @@ void dateAddExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (unit == "day") {
     if (argv[1].tryNumericConversion()) {
       switch (argv[1].getType()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue(SValue::TimeType(
               uint64_t(date) + (argv[1].getInteger() * kMicrosPerDay)));
           return;
 
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(SValue::TimeType(
               uint64_t(date) + (argv[1].getFloat() * kMicrosPerDay)));
           return;
@@ -242,12 +242,12 @@ void dateAddExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (unit == "week") {
     if (argv[1].tryNumericConversion()) {
       switch (argv[1].getType()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue(SValue::TimeType(
               uint64_t(date) + (argv[1].getInteger() * kMicrosPerWeek)));
           return;
 
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(SValue::TimeType(
               uint64_t(date) + (argv[1].getFloat() * kMicrosPerWeek)));
           return;
@@ -267,12 +267,12 @@ void dateAddExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (unit == "month") {
     if (argv[1].tryNumericConversion()) {
       switch (argv[1].getType()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue(SValue::TimeType(
               uint64_t(date) + (argv[1].getInteger() * kMicrosPerDay * 31)));
           return;
 
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(SValue::TimeType(
               uint64_t(date) + (argv[1].getFloat() * kMicrosPerDay * 31)));
           return;
@@ -291,12 +291,12 @@ void dateAddExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (unit == "year") {
     if (argv[1].tryNumericConversion()) {
       switch (argv[1].getType()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue(SValue::TimeType(
               uint64_t(date) + (argv[1].getInteger() * kMicrosPerYear)));
           return;
 
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(SValue::TimeType(
               uint64_t(date) + (argv[1].getFloat() * kMicrosPerYear)));
           return;
@@ -515,12 +515,12 @@ void dateSubExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (unit == "second") {
     if (argv[1].tryNumericConversion()) {
       switch (argv[1].getType()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue(SValue::TimeType(
               uint64_t(date) - (argv[1].getInteger() * kMicrosPerSecond)));
           return;
 
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(SValue::TimeType(
               uint64_t(date) - (argv[1].getFloat() * kMicrosPerSecond)));
           return;
@@ -540,12 +540,12 @@ void dateSubExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (unit == "minute") {
     if (argv[1].tryNumericConversion()) {
       switch (argv[1].getType()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue(SValue::TimeType(
               uint64_t(date) - (argv[1].getInteger() * kMicrosPerMinute)));
           return;
 
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(SValue::TimeType(
               uint64_t(date) - (argv[1].getFloat() * kMicrosPerMinute)));
           return;
@@ -565,12 +565,12 @@ void dateSubExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (unit == "hour") {
     if (argv[1].tryNumericConversion()) {
       switch (argv[1].getType()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue(SValue::TimeType(
               uint64_t(date) - (argv[1].getInteger() * kMicrosPerHour)));
           return;
 
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(SValue::TimeType(
               uint64_t(date) - (argv[1].getFloat() * kMicrosPerHour)));
           return;
@@ -590,12 +590,12 @@ void dateSubExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (unit == "day") {
     if (argv[1].tryNumericConversion()) {
       switch (argv[1].getType()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue(SValue::TimeType(
               uint64_t(date) - (argv[1].getInteger() * kMicrosPerDay)));
           return;
 
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(SValue::TimeType(
               uint64_t(date) - (argv[1].getFloat() * kMicrosPerDay)));
           return;
@@ -615,12 +615,12 @@ void dateSubExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (unit == "week") {
     if (argv[1].tryNumericConversion()) {
       switch (argv[1].getType()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue(SValue::TimeType(
               uint64_t(date) - (argv[1].getInteger() * kMicrosPerWeek)));
           return;
 
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(SValue::TimeType(
               uint64_t(date) - (argv[1].getFloat() * kMicrosPerWeek)));
           return;
@@ -640,12 +640,12 @@ void dateSubExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (unit == "month") {
     if (argv[1].tryNumericConversion()) {
       switch (argv[1].getType()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue(SValue::TimeType(
               uint64_t(date) - (argv[1].getInteger() * kMicrosPerDay * 31)));
           return;
 
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(SValue::TimeType(
               uint64_t(date) - (argv[1].getFloat() * kMicrosPerDay * 31)));
           return;
@@ -664,12 +664,12 @@ void dateSubExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (unit == "year") {
     if (argv[1].tryNumericConversion()) {
       switch (argv[1].getType()) {
-        case T_INTEGER:
+        case SQL_INTEGER:
           *out = SValue(SValue::TimeType(
               uint64_t(date) - (argv[1].getInteger() * kMicrosPerYear)));
           return;
 
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(SValue::TimeType(
               uint64_t(date) - (argv[1].getFloat() * kMicrosPerYear)));
           return;
