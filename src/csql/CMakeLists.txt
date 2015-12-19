@@ -12,6 +12,7 @@ add_library(chartsql STATIC
     svalue.cc
     SFunction.cc
     format.cc
+    Transaction.cc
     #queryendpoint.cc
     #query.cc
     #queryservice.cc

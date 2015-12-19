@@ -7,29 +7,17 @@
  * copy of the GNU General Public License along with this program. If not, see
  * <http://www.gnu.org/licenses/>.
  */
-#pragma once
-#include <stx/stdtypes.h>
-#include <csql/csql.h>
-#include <stx/UnixTime.h>
+#include <csql/Transaction.h>
+#include <stx/wallclock.h>
 
 using namespace stx;
 
 namespace csql {
 
-class Transaction {
-public:
+Transaction::Transaction() : now_(WallClock::now()) {}
 
-  static inline sql_txn* get(Transaction* ctx) {
-    return (sql_txn*) ctx;
-  }
-
-  Transaction();
-
-  UnixTime now() const;
-
-protected:
-  UnixTime now_;
-};
-
+UnixTime Transaction::now() const {
+  return now_;
+}
 
 } // namespace csql
