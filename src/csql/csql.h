@@ -22,23 +22,21 @@ enum sql_type : uint8_t {
   SQL_TIMESTAMP = 5,
 };
 
-typedef struct {
-  uint64_t now_unixmicros_;
-} sql_txn;
+struct sql_txn__ { int unused; };
+typedef struct sql_txn__* sql_txn;
 
-typedef struct {
-  sql_type type;
-  union {
-    int64_t t_integer;
-    double t_float;
-    bool t_bool;
-    uint64_t t_timestamp;
-    struct {
-      char* ptr;
-      uint32_t len;
-    } t_string;
-  } u;
-} sql_val;
+struct sql_val__ { int unused; };
+typedef struct sql_val__* sql_val;
+
+struct sql_args__ { int unused; };
+typedef struct sql_val__* sql_args;
+
+sql_val* sql_getarg(sql_args* args, size_t idx);
+
+bool sql_getint(sql_val* in, int64_t* out);
+bool sql_getfloat(sql_val* in, double* out);
+bool sql_getstring(sql_val* in, const char** data, size_t* size);
+bool sql_getbool(sql_val* in, bool* out);
 
 }
 

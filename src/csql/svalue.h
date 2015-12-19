@@ -69,12 +69,21 @@ public:
 
   String toSQL() const;
 
-  sql_val data_;
+protected:
+  struct {
+    sql_type type;
+    union {
+      int64_t t_integer;
+      double t_float;
+      bool t_bool;
+      uint64_t t_timestamp;
+      struct {
+        char* ptr;
+        uint32_t len;
+      } t_string;
+    } u;
+  } data_;
 };
-
-static_assert(
-    sizeof(SValue) == sizeof(sql_val),
-    "libcsql requires the C++ compiler to produce classes without overhead");
 
 String sql_escape(const String& str);
 
