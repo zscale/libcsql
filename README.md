@@ -19,7 +19,7 @@ Examples
 
 Most simple example: evaluate a constant expression without inputs:
 
-```
+```C++
 #include <csql/csql.h>
 #include <string>
 
