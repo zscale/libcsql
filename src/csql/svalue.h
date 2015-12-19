@@ -17,6 +17,7 @@
 #include <stx/stdtypes.h>
 #include <stx/UnixTime.h>
 #include <stx/exception.h>
+#include <csql/csql.h>
 
 using namespace stx;
 
@@ -31,16 +32,7 @@ public:
   typedef bool BoolType;
   typedef stx::UnixTime TimeType;
 
-  enum kSValueType : uint8_t {
-    T_NULL = 0,
-    T_STRING = 1,
-    T_FLOAT = 2,
-    T_INTEGER = 3,
-    T_BOOL = 4,
-    T_TIMESTAMP = 5,
-  };
-
-  static const char* getTypeName(kSValueType type);
+  static const char* getTypeName(sql_type type);
   const char* getTypeName() const;
 
   explicit SValue();
@@ -60,8 +52,8 @@ public:
 
   template <typename T> T getValue() const;
   template <typename T> bool testType() const;
-  kSValueType getType() const;
-  kSValueType testTypeWithNumericConversion() const;
+  sql_type getType() const;
+  sql_type testTypeWithNumericConversion() const;
   IntegerType getInteger() const;
   FloatType getFloat() const;
   BoolType getBool() const;
@@ -77,22 +69,12 @@ public:
 
   String toSQL() const;
 
-protected:
-  struct {
-    kSValueType type;
-    union {
-      IntegerType t_integer;
-      FloatType t_float;
-      BoolType t_bool;
-      uint64_t t_timestamp;
-      struct {
-        char* ptr;
-        uint32_t len;
-      } t_string;
-    } u;
-  } data_;
+  sql_val data_;
 };
 
+static_assert(
+    sizeof(SValue) == sizeof(sql_val),
+    "libcsql requires the C++ compiler to produce classes without overhead");
 
 String sql_escape(const String& str);
 

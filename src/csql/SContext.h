@@ -9,20 +9,14 @@
  */
 #pragma once
 #include <stx/stdtypes.h>
+#include <csql/csql.h>
 
 using namespace stx;
 
-extern "C" {
-
-typedef struct {
-  uint64_t now_unixmicros;
-} sql_ctx;
-
-}
-
 namespace csql {
 
-struct SContext {
+class SContext {
+public:
 
   static inline sql_ctx* get(SContext* ctx) {
     return (sql_ctx*)((char*) ctx + offsetof(SContext, ctx_));
@@ -31,5 +25,9 @@ struct SContext {
 protected:
   sql_ctx ctx_;
 };
+
+static_assert(
+    sizeof(SContext) == sizeof(sql_ctx),
+    "libcsql requires the c++ compiler to produce classes without overhead");
 
 } // namespace csql

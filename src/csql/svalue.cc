@@ -175,7 +175,7 @@ bool SValue::operator==(const SValue& other) const {
   }
 }
 
-SValue::kSValueType SValue::getType() const {
+sql_type SValue::getType() const {
   return data_.type;
 }
 
@@ -405,7 +405,7 @@ String SValue::toSQL() const {
   }
 }
 
-const char* SValue::getTypeName(kSValueType type) {
+const char* SValue::getTypeName(sql_type type) {
   switch (type) {
     case T_STRING:
       return "String";
@@ -518,7 +518,7 @@ template <> bool SValue::testType<std::string>() const {
   return true;
 }
 
-SValue::kSValueType SValue::testTypeWithNumericConversion() const {
+sql_type SValue::testTypeWithNumericConversion() const {
   if (testType<SValue::IntegerType>()) return T_INTEGER;
   if (testType<SValue::FloatType>()) return T_FLOAT;
   return getType();
@@ -546,12 +546,12 @@ bool SValue::tryTimeConversion() {
   uint64_t ts;
 
   switch (data_.type) {
-    case SValue::T_TIMESTAMP:
+    case T_TIMESTAMP:
       return true;
-    case SValue::T_INTEGER:
+    case T_INTEGER:
       ts = getInteger();
       break;
-    case SValue::T_FLOAT:
+    case T_FLOAT:
       ts = getFloat();
       break;
     default: {
@@ -638,8 +638,8 @@ String sql_escape(const String& orig_str) {
 namespace stx {
 
 template <>
-std::string inspect<csql::SValue::kSValueType>(
-    const csql::SValue::kSValueType& type) {
+std::string inspect<sql_type>(
+    const sql_type& type) {
   return csql::SValue::getTypeName(type);
 }
 

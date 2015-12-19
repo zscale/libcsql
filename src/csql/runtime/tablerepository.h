@@ -17,7 +17,7 @@
 namespace csql {
 class ImportStatement;
 class QueryBuilder;
-struct SContext;
+class SContext;
 
 struct ColumnInfo {
   String column_name;
