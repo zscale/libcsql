@@ -9,6 +9,8 @@
  */
 #include <csql/qtree/SequentialScanNode.h>
 #include <csql/qtree/ColumnReferenceNode.h>
+#include <csql/qtree/CallExpressionNode.h>
+#include <csql/qtree/LiteralExpressionNode.h>
 
 using namespace stx;
 
@@ -18,10 +20,11 @@ SequentialScanNode::SequentialScanNode(
     const String& table_name,
     Vector<RefPtr<SelectListNode>> select_list,
     Option<RefPtr<ValueExpressionNode>> where_expr) :
-    table_name_(table_name),
-    select_list_(select_list),
-    where_expr_(where_expr),
-    aggr_strategy_(AggregationStrategy::NO_AGGREGATION) {}
+    SequentialScanNode(
+        table_name,
+        select_list,
+        where_expr,
+        AggregationStrategy::NO_AGGREGATION) {}
 
 SequentialScanNode::SequentialScanNode(
     const String& table_name,
@@ -31,7 +34,11 @@ SequentialScanNode::SequentialScanNode(
     table_name_(table_name),
     select_list_(select_list),
     where_expr_(where_expr),
-    aggr_strategy_(aggr_strategy) {}
+    aggr_strategy_(aggr_strategy) {
+  if (!where_expr_.isEmpty()) {
+    findConstraints(where_expr_.get());
+  }
+}
 
 SequentialScanNode::SequentialScanNode(
     const SequentialScanNode& other) :
@@ -147,6 +154,62 @@ String SequentialScanNode::toString() const {
 
   str += ")";
   return str;
+}
+
+const Vector<ScanConstraint>& SequentialScanNode::constraints() const {
+  return constraints_;
+}
+
+void SequentialScanNode::findConstraints(RefPtr<ValueExpressionNode> expr) {
+  auto call_expr = dynamic_cast<CallExpressionNode*>(expr.get());
+
+  // logical ands allow chaining multiple constraints
+  if (call_expr && call_expr->symbol() == "logical_and") {
+    for (const auto& arg : call_expr->arguments()) {
+      findConstraints(arg);
+    }
+
+    return;
+  }
+
+  // extract constraints of format "column <OP> value"
+  {
+    bool found_type = false;
+    ScanConstraintType type;
+    bool found_literal = false;
+    RefPtr<LiteralExpressionNode> literal;
+    bool found_column = false;
+    RefPtr<ColumnReferenceNode> column;
+
+    if (call_expr && call_expr->symbol() == "eq") {
+      type = ScanConstraintType::EQUAL_TO;
+      found_type = true;
+    }
+
+    auto expr_args = expr->arguments();
+    if (expr_args.size() == 2) {
+      for (const auto& arg : expr_args) {
+        auto literal_expr = dynamic_cast<LiteralExpressionNode*>(arg.get());
+        if (literal_expr) {
+          literal = mkRef(literal_expr);
+          found_literal = true;
+        }
+        auto colref_expr = dynamic_cast<ColumnReferenceNode*>(arg.get());
+        if (colref_expr) {
+          column = mkRef(colref_expr);
+          found_column = true;
+        }
+      }
+    }
+
+    if (found_type && found_literal && found_column) {
+      ScanConstraint constraint;
+      constraint.column_name = column->fieldName();
+      constraint.type = type;
+      constraint.value = literal->value();
+      constraints_.emplace_back(constraint);
+    }
+  }
 }
 
 } // namespace csql
