@@ -9,17 +9,18 @@
  */
 #pragma once
 #include <csql/svalue.h>
+#include <csql/SContext.h>
 
 namespace csql {
 namespace expressions {
 
-void startsWithExpr(int argc, SValue* argv, SValue* out);
+void startsWithExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
 
-void endsWithExpr(int argc, SValue* argv, SValue* out);
+void endsWithExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
 
-void upperCaseExpr(int argc, SValue* argv, SValue* out);
+void upperCaseExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
 
-void lowerCaseExpr(int argc, SValue* argv, SValue* out);
+void lowerCaseExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
 
 }
 }

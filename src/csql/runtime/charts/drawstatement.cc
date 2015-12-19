@@ -18,9 +18,11 @@
 namespace csql {
 
 DrawStatement::DrawStatement(
+    SContext* ctx,
     RefPtr<DrawStatementNode> node,
     Vector<ScopedPtr<TableExpression>> sources,
     Runtime* runtime) :
+    ctx_(ctx),
     node_(node),
     sources_(std::move(sources)),
     runtime_(runtime) {
@@ -111,6 +113,7 @@ void DrawStatement::applyAxisDefinitions(stx::chart::Drawable* chart) const {
           *prop->getToken() == Token::T_TITLE &&
           prop->getChildren().size() == 1) {
         auto axis_title = runtime_->evaluateConstExpression(
+            ctx_,
             prop->getChildren()[0]);
         axis->setTitle(axis_title.toString());
         continue;
@@ -148,6 +151,7 @@ void DrawStatement::applyAxisLabels(
         }
 
         auto rot = runtime_->evaluateConstExpression(
+            ctx_,
             prop->getChildren()[0]);
         axis->setLabelRotation(rot.getValue<double>());
         break;
@@ -229,8 +233,8 @@ void DrawStatement::applyDomainDefinitions(
     domain_config.setInvert(invert);
     domain_config.setLogarithmic(logarithmic);
     if (min_expr != nullptr && max_expr != nullptr) {
-      domain_config.setMin(runtime_->evaluateConstExpression(min_expr));
-      domain_config.setMax(runtime_->evaluateConstExpression(max_expr));
+      domain_config.setMin(runtime_->evaluateConstExpression(ctx_, min_expr));
+      domain_config.setMax(runtime_->evaluateConstExpression(ctx_, max_expr));
     }
   }
 }
@@ -249,6 +253,7 @@ void DrawStatement::applyTitle(stx::chart::Drawable* chart) const {
     }
 
     auto title_eval = runtime_->evaluateConstExpression(
+        ctx_,
         child->getChildren()[0]);
     auto title_str = title_eval.toString();
 
@@ -356,6 +361,7 @@ void DrawStatement::applyLegend(stx::chart::Drawable* chart) const {
           }
 
           auto sval = runtime_->evaluateConstExpression(
+              ctx_,
               prop->getChildren()[0]);
 
           title = sval.toString();

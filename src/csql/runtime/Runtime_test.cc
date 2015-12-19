@@ -26,6 +26,7 @@ UNIT_TEST(RuntimeTest);
 
 TEST_CASE(RuntimeTest, TestStaticExpression, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   auto expr = mkRef(
       new csql::CallExpressionNode(
@@ -38,7 +39,7 @@ TEST_CASE(RuntimeTest, TestStaticExpression, [] () {
   auto t0 = WallClock::unixMicros();
   SValue out;
   for (int i = 0; i < 1000; ++i) {
-    out = runtime->evaluateConstExpression(expr.get());
+    out = runtime->evaluateConstExpression(ctx.get(), expr.get());
   }
   auto t1 = WallClock::unixMicros();
 
@@ -47,71 +48,90 @@ TEST_CASE(RuntimeTest, TestStaticExpression, [] () {
 
 TEST_CASE(RuntimeTest, TestComparisons, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   {
-    auto v = runtime->evaluateConstExpression(String(
-        "true = true"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("true = true"));
     EXPECT_EQ(v.toString(), "true");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String(
-        "false = false"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("false = false"));
     EXPECT_EQ(v.toString(), "true");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String(
-        "false = true"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("false = true"));
     EXPECT_EQ(v.toString(), "false");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String(
-        "true = false"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("true = false"));
     EXPECT_EQ(v.toString(), "false");
   }
-
-
 });
 
 TEST_CASE(RuntimeTest, TestExecuteIfStatement, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
-  auto out_a = runtime->evaluateConstExpression(String("if(1 = 1, 42, 23)"));
+  auto out_a = runtime->evaluateConstExpression(
+      ctx.get(),
+      String("if(1 = 1, 42, 23)"));
   EXPECT_EQ(out_a.getInteger(), 42);
 
-  auto out_b = runtime->evaluateConstExpression(String("if(1 = 2, 42, 23)"));
+  auto out_b = runtime->evaluateConstExpression(
+      ctx.get(),
+      String("if(1 = 2, 42, 23)"));
   EXPECT_EQ(out_b.getInteger(), 23);
 
   {
-    auto v = runtime->evaluateConstExpression(String("if(1 = 1, 'fnord', 'blah')"));
+    auto v = runtime->evaluateConstExpression(
+      ctx.get(),
+      String("if(1 = 1, 'fnord', 'blah')"));
     EXPECT_EQ(v.toString(), "fnord");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String("if(1 = 2, 'fnord', 'blah')"));
+    auto v = runtime->evaluateConstExpression(
+      ctx.get(),
+      String("if(1 = 2, 'fnord', 'blah')"));
     EXPECT_EQ(v.toString(), "blah");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String("if('fnord' = 'blah', 1, 2)"));
+    auto v = runtime->evaluateConstExpression(
+      ctx.get(),
+      String("if('fnord' = 'blah', 1, 2)"));
     EXPECT_EQ(v.toString(), "2");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String("if('fnord' = 'fnord', 1, 2)"));
+    auto v = runtime->evaluateConstExpression(
+      ctx.get(),
+      String("if('fnord' = 'fnord', 1, 2)"));
     EXPECT_EQ(v.toString(), "1");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String("if('fnord' = '', 1, 2)"));
+    auto v = runtime->evaluateConstExpression(
+      ctx.get(),
+      String("if('fnord' = '', 1, 2)"));
     EXPECT_EQ(v.toString(), "2");
   }
 });
 
 TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -121,8 +141,8 @@ TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
 
   ResultList result;
   auto query = R"(select count(1) from testtable;)";
-  auto qplan = runtime->buildQueryPlan(query, estrat.get());
-  runtime->executeStatement(qplan->getStatement(0), &result);
+  auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+  runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
   EXPECT_EQ(result.getNumColumns(), 1);
   EXPECT_EQ(result.getNumRows(), 1);
   EXPECT_EQ(result.getRow(0)[0], "213");
@@ -130,6 +150,7 @@ TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
 
 TEST_CASE(RuntimeTest, TestNestedCSTableAggregate, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -139,8 +160,8 @@ TEST_CASE(RuntimeTest, TestNestedCSTableAggregate, [] () {
 
   ResultList result;
   auto query = R"(select count(event.search_query.time) from testtable;)";
-  auto qplan = runtime->buildQueryPlan(query, estrat.get());
-  runtime->executeStatement(qplan->getStatement(0), &result);
+  auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+  runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
   EXPECT_EQ(result.getNumColumns(), 1);
   EXPECT_EQ(result.getNumRows(), 1);
   EXPECT_EQ(result.getRow(0)[0], "704");
@@ -148,6 +169,7 @@ TEST_CASE(RuntimeTest, TestNestedCSTableAggregate, [] () {
 
 TEST_CASE(RuntimeTest, TestWithinRecordCSTableAggregate, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -158,8 +180,8 @@ TEST_CASE(RuntimeTest, TestWithinRecordCSTableAggregate, [] () {
   {
     ResultList result;
     auto query = R"(select sum(event.search_query.num_result_items) from testtable;)";
-    auto qplan = runtime->buildQueryPlan(query, estrat.get());
-    runtime->executeStatement(qplan->getStatement(0), &result);
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 1);
     EXPECT_EQ(result.getNumRows(), 1);
     EXPECT_EQ(result.getRow(0)[0], "24793");
@@ -168,8 +190,8 @@ TEST_CASE(RuntimeTest, TestWithinRecordCSTableAggregate, [] () {
   {
     ResultList result;
     auto query = R"(select sum(count(event.search_query.result_items.position) WITHIN RECORD) from testtable;)";
-    auto qplan = runtime->buildQueryPlan(query, estrat.get());
-    runtime->executeStatement(qplan->getStatement(0), &result);
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 1);
     EXPECT_EQ(result.getNumRows(), 1);
     EXPECT_EQ(result.getRow(0)[0], "24793");
@@ -181,8 +203,8 @@ TEST_CASE(RuntimeTest, TestWithinRecordCSTableAggregate, [] () {
         sum(event.search_query.num_result_items) WITHIN RECORD,
         count(event.search_query.result_items.position) WITHIN RECORD
       from testtable;)";
-  auto qplan = runtime->buildQueryPlan(query, estrat.get());
-  runtime->executeStatement(qplan->getStatement(0), &result);
+  auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+  runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
   EXPECT_EQ(result.getNumColumns(), 2);
   EXPECT_EQ(result.getNumRows(), 213);
 
@@ -207,6 +229,7 @@ TEST_CASE(RuntimeTest, TestWithinRecordCSTableAggregate, [] () {
 
 TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggregate, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -223,8 +246,8 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggregate, [] () {
           event.search_query.num_result_items,
           event.search_query.result_items.position
         from testtable;)";
-    auto qplan = runtime->buildQueryPlan(query, estrat.get());
-    runtime->executeStatement(qplan->getStatement(0), &result);
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
     EXPECT_EQ(result.getNumRows(), 24866);
   }
 
@@ -237,8 +260,8 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggregate, [] () {
           sum(event.search_query.num_result_items),
           sum(count(event.search_query.result_items.position) WITHIN RECORD)
         from testtable;)";
-    auto qplan = runtime->buildQueryPlan(query, estrat.get());
-    runtime->executeStatement(qplan->getStatement(0), &result);
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
 
     EXPECT_EQ(result.getNumColumns(), 4);
     auto cols = result.getColumns();
@@ -272,8 +295,8 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggregate, [] () {
           )
         from testtable
         group by 1;)";
-    auto qplan = runtime->buildQueryPlan(query, estrat.get());
-    runtime->executeStatement(qplan->getStatement(0), &result);
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 5);
     EXPECT_EQ(result.getNumRows(), 1);
     EXPECT_EQ(result.getRow(0)[0], "213");
@@ -286,6 +309,7 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggregate, [] () {
 
 TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithGroup, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -301,8 +325,8 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithGroup, [] () {
           sum(sum(if(event.search_query.result_items.clicked, 1, 0)) WITHIN RECORD)
         from testtable
         where event.search_query.result_items.position = 6;)";
-    auto qplan = runtime->buildQueryPlan(query, estrat.get());
-    runtime->executeStatement(qplan->getStatement(0), &result);
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 2);
     EXPECT_EQ(result.getNumRows(), 1);
     EXPECT_EQ(result.getRow(0)[0], "688");
@@ -317,8 +341,8 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithGroup, [] () {
           sum(sum(if(event.search_query.result_items.clicked, 1, 0)) WITHIN RECORD)
         from testtable
         where event.search_query.result_items.position = 9;)";
-    auto qplan = runtime->buildQueryPlan(query, estrat.get());
-    runtime->executeStatement(qplan->getStatement(0), &result);
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 2);
     EXPECT_EQ(result.getNumRows(), 1);
     EXPECT_EQ(result.getRow(0)[0], "679");
@@ -336,8 +360,8 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithGroup, [] () {
         group by event.search_query.result_items.position
         order by event.search_query.result_items.position ASC
         LIMIT 10;)";
-    auto qplan = runtime->buildQueryPlan(query, estrat.get());
-    runtime->executeStatement(qplan->getStatement(0), &result);
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
 
     EXPECT_EQ(result.getNumColumns(), 3);
     auto cols = result.getColumns();
@@ -354,6 +378,7 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithGroup, [] () {
 
 TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithMultiLevelGroup, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -372,8 +397,8 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithMultiLevelGroup, [
           group by TRUNCATE(time / 86400000000)
           order by time desc;)";
 
-    auto qplan = runtime->buildQueryPlan(query, estrat.get());
-    runtime->executeStatement(qplan->getStatement(0), &result);
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 3);
     EXPECT_EQ(result.getNumRows(), 1);
     EXPECT_EQ(result.getRow(0)[0], "2015-07-28 00:00:00");
@@ -383,6 +408,7 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithMultiLevelGroup, [
 
 TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithWhere, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -422,6 +448,7 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithWhere, [] () {
 
 TEST_CASE(RuntimeTest, TestTableNamesWithDots, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -432,8 +459,8 @@ TEST_CASE(RuntimeTest, TestTableNamesWithDots, [] () {
   {
     ResultList result;
     auto query = R"(select count(1) from 'test.tbl';)";
-    auto qplan = runtime->buildQueryPlan(query, estrat.get());
-    runtime->executeStatement(qplan->getStatement(0), &result);
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 1);
     EXPECT_EQ(result.getNumRows(), 1);
     EXPECT_EQ(result.getRow(0)[0], "213");
@@ -442,8 +469,8 @@ TEST_CASE(RuntimeTest, TestTableNamesWithDots, [] () {
   {
     ResultList result;
     auto query = R"(select count(1) from `test.tbl`;)";
-    auto qplan = runtime->buildQueryPlan(query, estrat.get());
-    runtime->executeStatement(qplan->getStatement(0), &result);
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 1);
     EXPECT_EQ(result.getNumRows(), 1);
     EXPECT_EQ(result.getRow(0)[0], "213");
@@ -452,8 +479,8 @@ TEST_CASE(RuntimeTest, TestTableNamesWithDots, [] () {
   {
     ResultList result;
     auto query = R"(select count(1) from test.tbl;)";
-    auto qplan = runtime->buildQueryPlan(query, estrat.get());
-    runtime->executeStatement(qplan->getStatement(0), &result);
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 1);
     EXPECT_EQ(result.getNumRows(), 1);
     EXPECT_EQ(result.getRow(0)[0], "213");
@@ -462,66 +489,70 @@ TEST_CASE(RuntimeTest, TestTableNamesWithDots, [] () {
 
 TEST_CASE(RuntimeTest, SelectFloatIntegerDivision, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   {
-    auto v = runtime->evaluateConstExpression(String("1 / 5"));
+    auto v = runtime->evaluateConstExpression(ctx.get(), String("1 / 5"));
     EXPECT_EQ(v.toString(), "0.200000");
   }
 });
 
 TEST_CASE(RuntimeTest, SelectFloatIntegerMultiplication, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   {
-    auto v = runtime->evaluateConstExpression(String("10 * 5"));
+    auto v = runtime->evaluateConstExpression(ctx.get(), String("10 * 5"));
     EXPECT_EQ(v.toString(), "50");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String("10 * 5.0"));
+    auto v = runtime->evaluateConstExpression(ctx.get(), String("10 * 5.0"));
     EXPECT_EQ(v.toString(), "50.000000");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String("10.0 * 5"));
+    auto v = runtime->evaluateConstExpression(ctx.get(), String("10.0 * 5"));
     EXPECT_EQ(v.toString(), "50.000000");
   }
 });
 
 TEST_CASE(RuntimeTest, SelectFloatIntegerAddition, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   {
-    auto v = runtime->evaluateConstExpression(String("10 + 5"));
+    auto v = runtime->evaluateConstExpression(ctx.get(), String("10 + 5"));
     EXPECT_EQ(v.toString(), "15");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String("10 + 5.0"));
+    auto v = runtime->evaluateConstExpression(ctx.get(), String("10 + 5.0"));
     EXPECT_EQ(v.toString(), "15.000000");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String("10.0 + 5"));
+    auto v = runtime->evaluateConstExpression(ctx.get(), String("10.0 + 5"));
     EXPECT_EQ(v.toString(), "15.000000");
   }
 });
 
 TEST_CASE(RuntimeTest, SelectFloatIntegerSubtraction, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   {
-    auto v = runtime->evaluateConstExpression(String("10 - 5"));
+    auto v = runtime->evaluateConstExpression(ctx.get(), String("10 - 5"));
     EXPECT_EQ(v.toString(), "5");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String("10 - 5.0"));
+    auto v = runtime->evaluateConstExpression(ctx.get(), String("10 - 5.0"));
     EXPECT_EQ(v.toString(), "5.000000");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String("10.0 - 5"));
+    auto v = runtime->evaluateConstExpression(ctx.get(), String("10.0 - 5"));
     EXPECT_EQ(v.toString(), "5.000000");
   }
 });
@@ -529,6 +560,7 @@ TEST_CASE(RuntimeTest, SelectFloatIntegerSubtraction, [] () {
 TEST_CASE(RuntimeTest, TestSelectInvalidColumn, [] () {
   EXPECT_EXCEPTION("column(s) not found: fnord", [] () {
     auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
     auto estrat = mkRef(new DefaultExecutionStrategy());
     estrat->addTableProvider(
@@ -538,22 +570,25 @@ TEST_CASE(RuntimeTest, TestSelectInvalidColumn, [] () {
 
     ResultList result;
     auto query = R"(select fnord from 'test.tbl';)";
-    auto qplan = runtime->buildQueryPlan(query, estrat.get());
-    runtime->executeStatement(qplan->getStatement(0), &result);
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
   });
 });
 
 TEST_CASE(RuntimeTest, TestFromTimestampExpr, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("FROM_TIMESTAMP(1441408424)"));
     EXPECT_EQ(v.toString(), "2015-09-04 23:13:44");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("FROM_TIMESTAMP(1441408424.0)"));
     EXPECT_EQ(v.toString(), "2015-09-04 23:13:44");
   }
@@ -561,20 +596,26 @@ TEST_CASE(RuntimeTest, TestFromTimestampExpr, [] () {
 
 TEST_CASE(RuntimeTest, TestTruncateExpr, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   {
-    auto v = runtime->evaluateConstExpression(String("TRUNCATE(23.3)"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("TRUNCATE(23.3)"));
     EXPECT_EQ(v.toString(), "23");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String("TRUNCATE(23.7)"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("TRUNCATE(23.7)"));
     EXPECT_EQ(v.toString(), "23");
   }
 });
 
 TEST_CASE(RuntimeTest, TestWildcardSelect, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -585,8 +626,8 @@ TEST_CASE(RuntimeTest, TestWildcardSelect, [] () {
   {
     ResultList result;
     auto query = R"(select * from testtable order by time desc limit 1;)";
-    auto qplan = runtime->buildQueryPlan(query, estrat.get());
-    runtime->executeStatement(qplan->getStatement(0), &result);
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 63);
     EXPECT_EQ(result.getColumns()[0], "attr.ab_test_group");
     EXPECT_EQ(result.getColumns()[62], "user_id");
@@ -596,109 +637,133 @@ TEST_CASE(RuntimeTest, TestWildcardSelect, [] () {
 
 TEST_CASE(RuntimeTest, TestStringStartsWithExpression, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   {
-    auto v = runtime->evaluateConstExpression(String(
-        "startswith('fnordblah', 'fnord')"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("startswith('fnordblah', 'fnord')"));
     EXPECT_EQ(v.toString(), "true");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String(
-        "startswith('fnordblah', 'f')"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("startswith('fnordblah', 'f')"));
     EXPECT_EQ(v.toString(), "true");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String(
-        "startswith('fnordblah', 'fnordblah')"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("startswith('fnordblah', 'fnordblah')"));
     EXPECT_EQ(v.toString(), "true");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String(
-        "startswith('fnordblah', 'fnordx')"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("startswith('fnordblah', 'fnordx')"));
     EXPECT_EQ(v.toString(), "false");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String(
-        "startswith('fnordblah', 'bar')"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("startswith('fnordblah', 'bar')"));
     EXPECT_EQ(v.toString(), "false");
   }
 });
 
 TEST_CASE(RuntimeTest, TestStringEndsWithExpression, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   {
-    auto v = runtime->evaluateConstExpression(String(
-        "endswith('fnordblah', 'blah')"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("endswith('fnordblah', 'blah')"));
     EXPECT_EQ(v.toString(), "true");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String(
-        "endswith('fnordblah', 'h')"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("endswith('fnordblah', 'h')"));
     EXPECT_EQ(v.toString(), "true");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String(
-        "endswith('fnordblah', 'fnordblah')"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("endswith('fnordblah', 'fnordblah')"));
     EXPECT_EQ(v.toString(), "true");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String(
-        "endswith('fnordblah', 'bar')"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("endswith('fnordblah', 'bar')"));
     EXPECT_EQ(v.toString(), "false");
   }
 });
 
 TEST_CASE(RuntimeTest, TestLogicalAnd, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   {
-    auto v = runtime->evaluateConstExpression(String("true AND true"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("true AND true"));
     EXPECT_EQ(v.toString(), "true");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String("true AND false"));
-    EXPECT_EQ(v.toString(), "false");
-  }
-
-  {
-    auto v = runtime->evaluateConstExpression(String("false AND true"));
-    EXPECT_EQ(v.toString(), "false");
-  }
-
-  {
-    auto v = runtime->evaluateConstExpression(String("false AND false"));
-    EXPECT_EQ(v.toString(), "false");
-  }
-
-  {
-    auto v = runtime->evaluateConstExpression(String(
-        "logical_and(true, true)"));
-    EXPECT_EQ(v.toString(), "true");
-  }
-
-  {
-    auto v = runtime->evaluateConstExpression(String(
-        "logical_and(false, true)"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("true AND false"));
     EXPECT_EQ(v.toString(), "false");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("false AND true"));
+    EXPECT_EQ(v.toString(), "false");
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("false AND false"));
+    EXPECT_EQ(v.toString(), "false");
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("logical_and(true, true)"));
+    EXPECT_EQ(v.toString(), "true");
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("logical_and(false, true)"));
+    EXPECT_EQ(v.toString(), "false");
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("logical_and(true, false)"));
     EXPECT_EQ(v.toString(), "false");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("logical_and(false, false)"));
     EXPECT_EQ(v.toString(), "false");
   }
@@ -706,47 +771,60 @@ TEST_CASE(RuntimeTest, TestLogicalAnd, [] () {
 
 TEST_CASE(RuntimeTest, TestLogicalOr, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   {
-    auto v = runtime->evaluateConstExpression(String("true OR true"));
-    EXPECT_EQ(v.toString(), "true");
-  }
-
-  {
-    auto v = runtime->evaluateConstExpression(String("true OR false"));
-    EXPECT_EQ(v.toString(), "true");
-  }
-
-  {
-    auto v = runtime->evaluateConstExpression(String("false OR true"));
-    EXPECT_EQ(v.toString(), "true");
-  }
-
-  {
-    auto v = runtime->evaluateConstExpression(String("false OR false"));
-    EXPECT_EQ(v.toString(), "false");
-  }
-
-  {
-    auto v = runtime->evaluateConstExpression(String(
-        "logical_or(true, true)"));
-    EXPECT_EQ(v.toString(), "true");
-  }
-
-  {
-    auto v = runtime->evaluateConstExpression(String(
-        "logical_or(false, true)"));
-    EXPECT_EQ(v.toString(), "true");
-  }
-
-  {
-    auto v = runtime->evaluateConstExpression(String(
-        "logical_or(true, false)"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("true OR true"));
     EXPECT_EQ(v.toString(), "true");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("true OR false"));
+    EXPECT_EQ(v.toString(), "true");
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("false OR true"));
+    EXPECT_EQ(v.toString(), "true");
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("false OR false"));
+    EXPECT_EQ(v.toString(), "false");
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("logical_or(true, true)"));
+    EXPECT_EQ(v.toString(), "true");
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("logical_or(false, true)"));
+    EXPECT_EQ(v.toString(), "true");
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("logical_or(true, false)"));
+    EXPECT_EQ(v.toString(), "true");
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("logical_or(false, false)"));
     EXPECT_EQ(v.toString(), "false");
   }
@@ -754,34 +832,44 @@ TEST_CASE(RuntimeTest, TestLogicalOr, [] () {
 
 TEST_CASE(RuntimeTest, TestIsNull, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   {
-    auto v = runtime->evaluateConstExpression("isnull('NULL')");
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        "isnull('NULL')");
     EXPECT_EQ(v.toString(), "false");
   }
 
   {
-    auto v = runtime->evaluateConstExpression("isnull(0)");
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        "isnull(0)");
     EXPECT_EQ(v.toString(), "false");
   }
 
   {
-    auto v = runtime->evaluateConstExpression("isnull(NULL)");
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        "isnull(NULL)");
     EXPECT_EQ(v.toString(), "true");
   }
 });
 
 TEST_CASE(RuntimeTest, TestStringUppercaseExpression, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("uppercase('blah')"));
     EXPECT_EQ(v.toString(), "BLAH");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("ucase('blah')"));
     EXPECT_EQ(v.toString(), "BLAH");
   }
@@ -789,78 +877,93 @@ TEST_CASE(RuntimeTest, TestStringUppercaseExpression, [] () {
 
 TEST_CASE(RuntimeTest, TestStringLowercaseExpression, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("lowercase('FNORD')"));
     EXPECT_EQ(v.toString(), "fnord");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String("lcase('FnOrD')"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("lcase('FnOrD')"));
     EXPECT_EQ(v.toString(), "fnord");
   }
 });
 
 TEST_CASE(RuntimeTest, TestDateTimeDateTruncExpression, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_trunc('milliseconds', 1444229262.983758)"));
     EXPECT_EQ(double(v.getTimestamp()), 1444229262000000.000000);
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_trunc('seconds', 1444229262.983758)"));
     EXPECT_EQ(double(v.getTimestamp()), 1444229262000000.000000);
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_trunc('minutes', 1444229262)"));
     EXPECT_EQ(v.toString(), "2015-10-07 14:47:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_trunc('30minutes', 1444229262)"));
     EXPECT_EQ(v.toString(), "2015-10-07 14:30:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_trunc('hours', 1444229262)"));
     EXPECT_EQ(v.toString(), "2015-10-07 14:00:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_trunc('5hours', 1444229262.598)"));
     EXPECT_EQ(v.toString(), "2015-10-07 10:00:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_trunc('days', 1444229262)"));
     EXPECT_EQ(v.toString(), "2015-10-07 00:00:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_trunc('7days', 1444229262)"));
     EXPECT_EQ(v.toString(), "2015-10-01 00:00:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_trunc('week', 1444229262)"));
     EXPECT_EQ(v.toString(), "2015-10-01 00:00:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_trunc('month', 1444229262)"));
     EXPECT_EQ(v.toString(), "2015-10-01 00:00:00");
   }
@@ -868,12 +971,14 @@ TEST_CASE(RuntimeTest, TestDateTimeDateTruncExpression, [] () {
   {
     //date_trunc returns last day of previous month for months with 30 days
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_trunc('month', 1441836754)"));
     EXPECT_EQ(v.toString(), "2015-08-31 00:00:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_trunc('year', 1444229262)"));
     //returns first of year - number of leap years until now
     EXPECT_EQ(v.toString(), "2014-12-21 00:00:00");
@@ -881,18 +986,23 @@ TEST_CASE(RuntimeTest, TestDateTimeDateTruncExpression, [] () {
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_trunc('2years', 1444229262)"));
     //returns first of year - number of leap years until now
     EXPECT_EQ(v.toString(), "2013-12-21 00:00:00");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String("'blah' REGEXP '^b'"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("'blah' REGEXP '^b'"));
     EXPECT_EQ(v.toString(), "true");
   }
 
   {
-    auto v = runtime->evaluateConstExpression(String("'fubar' REGEX '^b'"));
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("'fubar' REGEX '^b'"));
     EXPECT_EQ(v.toString(), "false");
   }
 
@@ -924,93 +1034,109 @@ TEST_CASE(RuntimeTest, TestDateTimeDateTruncExpression, [] () {
 
 TEST_CASE(RuntimeTest, TestDateTimeDateAddExpression, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_add('1447671624', '1.0', 'SECOND')"));
     EXPECT_EQ(v.toString(), "2015-11-16 11:00:25");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_add('1447671624', '-1', 'SECOND')"));
     EXPECT_EQ(v.toString(), "2015-11-16 11:00:23");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_add('2015-11-16 11:00:24', '1', 'SECOND')"));
     EXPECT_EQ(v.toString(), "2015-11-16 11:00:25");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_add('1447671624', '2', 'MINUTE')"));
     EXPECT_EQ(v.toString(), "2015-11-16 11:02:24");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_add('1447671624', '4', 'HOUR')"));
     EXPECT_EQ(v.toString(), "2015-11-16 15:00:24");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_add('1447671624', '30', 'DAY')"));
     EXPECT_EQ(v.toString(), "2015-12-16 11:00:24");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_add('1447671624', '1', 'MONTH')"));
     EXPECT_EQ(v.toString(), "2015-12-17 11:00:24");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_add('1447671624', '2', 'YEAR')"));
     EXPECT_EQ(v.toString(), "2017-11-15 11:00:24");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_add('1447671624', '2:15', 'MINUTE_SECOND')"));
     EXPECT_EQ(v.toString(), "2015-11-16 11:02:39");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_add('1447671624', '2:15:00', 'HOUR_SECOND')"));
     EXPECT_EQ(v.toString(), "2015-11-16 13:15:24");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_add('1447671624', '2:60', 'HOUR_MINUTE')"));
     EXPECT_EQ(v.toString(), "2015-11-16 14:00:24");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_add('2015-01-01 00:00:00', '1 1:30:30', 'DAY_SECOND')"));
     EXPECT_EQ(v.toString(), "2015-01-02 01:30:30");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_add('2015-12-31 00:00:00', '1 1:30', 'DAY_MINUTE')"));
     EXPECT_EQ(v.toString(), "2016-01-01 01:30:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_add('2015-12-31 23:00:00', '2 2', 'DAY_HOUR')"));
     EXPECT_EQ(v.toString(), "2016-01-03 01:00:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String("date_add('2015-12-31 23:00:00', '2-2', 'YEAR_MONTH')"));
     EXPECT_EQ(v.toString(), "2018-03-02 23:00:00");
   }
@@ -1018,9 +1144,11 @@ TEST_CASE(RuntimeTest, TestDateTimeDateAddExpression, [] () {
 
 TEST_CASE(RuntimeTest, TestEscaping, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newContext();
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String(R"( "fnord'fnord" )"));
 
     EXPECT_EQ(v.toString(), "fnord'fnord");
@@ -1028,6 +1156,7 @@ TEST_CASE(RuntimeTest, TestEscaping, [] () {
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String(R"( "fnord\'fnord" )"));
 
     EXPECT_EQ(v.toString(), "fnord'fnord");
@@ -1035,6 +1164,7 @@ TEST_CASE(RuntimeTest, TestEscaping, [] () {
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String(R"( "fnord\\'fnord" )"));
 
     EXPECT_EQ(v.toString(), "fnord\\'fnord");
@@ -1042,6 +1172,7 @@ TEST_CASE(RuntimeTest, TestEscaping, [] () {
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String(R"( "fnord\\'fn\ord" )"));
 
     EXPECT_EQ(v.toString(), "fnord\\'fnord");
@@ -1049,6 +1180,7 @@ TEST_CASE(RuntimeTest, TestEscaping, [] () {
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String(R"( "fnord\\\'fn\ord" )"));
 
     EXPECT_EQ(v.toString(), "fnord\\'fnord");
@@ -1056,6 +1188,7 @@ TEST_CASE(RuntimeTest, TestEscaping, [] () {
 
   {
     auto v = runtime->evaluateConstExpression(
+        ctx.get(),
         String(R"( "fnord\\\\'fn\ord" )"));
 
     EXPECT_EQ(v.toString(), "fnord\\\\'fnord");

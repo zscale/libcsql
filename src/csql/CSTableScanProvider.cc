@@ -23,11 +23,13 @@ CSTableScanProvider::CSTableScanProvider(
 
 Option<ScopedPtr<TableExpression>>
     CSTableScanProvider::buildSequentialScan(
+        SContext* ctx,
         RefPtr<SequentialScanNode> node,
         QueryBuilder* runtime) const {
   return Option<ScopedPtr<TableExpression>>(
       mkScoped(
           new CSTableScan(
+              ctx,
               node,
               cstable_file_,
               runtime)));

@@ -11,14 +11,15 @@
 #ifndef _FNORDMETRIC_SQL_EXPRESSIONS_DATETIME_H
 #define _FNORDMETRIC_SQL_EXPRESSIONS_DATETIME_H
 #include <csql/svalue.h>
+#include <csql/SContext.h>
 
 namespace csql {
 namespace expressions {
 
-void fromTimestamp(int argc, SValue* argv, SValue* out);
-void dateTruncExpr(int argc, SValue* argv, SValue* out);
-void dateAddExpr(int argc, SValue* argv, SValue* out);
-void dateSubExpr(int argc, SValue* argv, SValue* out);
+void fromTimestamp(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
+void dateTruncExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
+void dateAddExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
+void dateSubExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
 
 }
 }

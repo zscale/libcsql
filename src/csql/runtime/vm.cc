@@ -24,28 +24,31 @@
 namespace csql {
 
 VM::Program::Program(
+    SContext* ctx,
     Instruction* entry,
     ScratchMemory&& static_storage,
     size_t dynamic_storage_size) :
+    ctx_(ctx),
     entry_(entry),
     static_storage_(std::move(static_storage)),
     dynamic_storage_size_(dynamic_storage_size),
     has_aggregate_(false) {
-  VM::initProgram(this, entry_);
+  VM::initProgram(ctx_, this, entry_);
 }
 
 VM::Program::~Program() {
-  VM::freeProgram(this, entry_);
+  VM::freeProgram(ctx_, this, entry_);
 }
 
 VM::Instance VM::allocInstance(
+    SContext* ctx,
     const Program* program,
     ScratchMemory* scratch) {
   Instance that;
 
   if (program->has_aggregate_) {
     that.scratch = scratch->alloc(program->dynamic_storage_size_);
-    initInstance(program, program->entry_, &that);
+    initInstance(ctx, program, program->entry_, &that);
   } else {
     that.scratch = scratch->construct<SValue>();
   }
@@ -54,31 +57,35 @@ VM::Instance VM::allocInstance(
 }
 
 void VM::freeInstance(
+    SContext* ctx,
     const Program* program,
     Instance* instance) {
   if (program->has_aggregate_) {
-    freeInstance(program, program->entry_, instance);
+    freeInstance(ctx, program, program->entry_, instance);
   } else {
     ((SValue*) instance->scratch)->~SValue();
   }
 }
 
 void VM::reset(
+    SContext* ctx,
     const Program* program,
     Instance* instance) {
   if (program->has_aggregate_) {
-    resetInstance(program, program->entry_, instance);
+    resetInstance(ctx, program, program->entry_, instance);
   } else {
     *((SValue*) instance->scratch) = SValue();
   }
 }
 
 void VM::result(
+    SContext* ctx,
     const Program* program,
     const Instance* instance,
     SValue* out) {
   if (program->has_aggregate_) {
     return evaluate(
+        ctx,
         program,
         const_cast<Instance*>(instance),
         program->entry_,
@@ -91,14 +98,16 @@ void VM::result(
 }
 
 void VM::accumulate(
+    SContext* ctx,
     const Program* program,
     Instance* instance,
     int argc,
     const SValue* argv) {
   if (program->has_aggregate_) {
-    return accumulate(program, instance, program->entry_, argc, argv);
+    return accumulate(ctx, program, instance, program->entry_, argc, argv);
   } else {
     return evaluate(
+        ctx,
         program,
         nullptr,
         program->entry_,
@@ -109,25 +118,28 @@ void VM::accumulate(
 }
 
 void VM::evaluate(
+    SContext* ctx,
     const Program* program,
     int argc,
     const SValue* argv,
     SValue* out) {
-  return evaluate(program, nullptr, program->entry_, argc, argv, out);
+  return evaluate(ctx, program, nullptr, program->entry_, argc, argv, out);
 }
 
 void VM::merge(
+    SContext* ctx,
     const Program* program,
     Instance* dst,
     const Instance* src) {
   if (program->has_aggregate_) {
-    mergeInstance(program, program->entry_, dst, src);
+    mergeInstance(ctx, program, program->entry_, dst, src);
   } else {
     *(SValue*) dst->scratch = *(SValue*) src->scratch;
   }
 }
 
 void VM::mergeInstance(
+    SContext* ctx,
     const Program* program,
     Instruction* e,
     Instance* dst,
@@ -135,6 +147,7 @@ void VM::mergeInstance(
   switch (e->type) {
     case X_CALL_AGGREGATE:
       e->vtable.t_aggregate.merge(
+          SContext::get(ctx),
           (char *) dst->scratch + (size_t) e->arg0,
           (char *) src->scratch + (size_t) e->arg0);
       break;
@@ -144,11 +157,12 @@ void VM::mergeInstance(
   }
 
   for (auto cur = e->child; cur != nullptr; cur = cur->next) {
-    mergeInstance(program, cur, dst, src);
+    mergeInstance(ctx, program, cur, dst, src);
   }
 }
 
 void VM::initInstance(
+    SContext* ctx,
     const Program* program,
     Instruction* e,
     Instance* instance) {
@@ -156,6 +170,7 @@ void VM::initInstance(
     case X_CALL_AGGREGATE:
       if (e->vtable.t_aggregate.init) {
         e->vtable.t_aggregate.init(
+            SContext::get(ctx),
             (char *) instance->scratch + (size_t) e->arg0);
       }
       break;
@@ -165,11 +180,12 @@ void VM::initInstance(
   }
 
   for (auto cur = e->child; cur != nullptr; cur = cur->next) {
-    initInstance(program, cur, instance);
+    initInstance(ctx, program, cur, instance);
   }
 }
 
 void VM::freeInstance(
+    SContext* ctx,
     const Program* program,
     Instruction* e,
     Instance* instance) {
@@ -177,6 +193,7 @@ void VM::freeInstance(
     case X_CALL_AGGREGATE:
       if (e->vtable.t_aggregate.free) {
         e->vtable.t_aggregate.free(
+            SContext::get(ctx),
             (char *) instance->scratch + (size_t) e->arg0);
       }
       break;
@@ -186,17 +203,19 @@ void VM::freeInstance(
   }
 
   for (auto cur = e->child; cur != nullptr; cur = cur->next) {
-    freeInstance(program, cur, instance);
+    freeInstance(ctx, program, cur, instance);
   }
 }
 
 void VM::resetInstance(
+    SContext* ctx,
     const Program* program,
     Instruction* e,
     Instance* instance) {
   switch (e->type) {
     case X_CALL_AGGREGATE:
       e->vtable.t_aggregate.reset(
+          SContext::get(ctx),
           (char *) instance->scratch + (size_t) e->arg0);
       break;
 
@@ -205,11 +224,12 @@ void VM::resetInstance(
   }
 
   for (auto cur = e->child; cur != nullptr; cur = cur->next) {
-    resetInstance(program, cur, instance);
+    resetInstance(ctx, program, cur, instance);
   }
 }
 
 void VM::initProgram(
+    SContext* ctx,
     Program* program,
     Instruction* e) {
   switch (e->type) {
@@ -222,11 +242,12 @@ void VM::initProgram(
   }
 
   for (auto cur = e->child; cur != nullptr; cur = cur->next) {
-    initProgram(program, cur);
+    initProgram(ctx, program, cur);
   }
 }
 
 void VM::freeProgram(
+    SContext* ctx,
     const Program* program,
     Instruction* e) {
   switch (e->type) {
@@ -247,11 +268,12 @@ void VM::freeProgram(
   }
 
   for (auto cur = e->child; cur != nullptr; cur = cur->next) {
-    freeProgram(program, cur);
+    freeProgram(ctx, program, cur);
   }
 }
 
 void VM::evaluate(
+    SContext* ctx,
     const Program* program,
     Instance* instance,
     Instruction* expr,
@@ -265,14 +287,14 @@ void VM::evaluate(
     case X_IF: {
       SValue cond;
       auto cond_expr = expr->child;
-      evaluate(program, instance, cond_expr, argc, argv, &cond);
+      evaluate(ctx, program, instance, cond_expr, argc, argv, &cond);
 
       auto branch = cond_expr->next;
       if (!cond.toBool()) {
         branch = branch->next;
       }
 
-      evaluate(program, instance, branch, argc, argv, out);
+      evaluate(ctx, program, instance, branch, argc, argv, out);
       return;
     }
 
@@ -288,10 +310,10 @@ void VM::evaluate(
         try {
           auto stackp = stackv;
           for (auto cur = expr->child; cur != nullptr; cur = cur->next) {
-            evaluate(program, instance, cur, argc, argv, stackp++);
+            evaluate(ctx, program, instance, cur, argc, argv, stackp++);
           }
 
-          expr->vtable.t_pure.call(stackn, stackv, out);
+          expr->vtable.t_pure.call(SContext::get(ctx), stackn, stackv, out);
         } catch (...) {
           for (int i = 0; i < stackn; ++i) {
             (stackv + i)->~SValue();
@@ -316,7 +338,7 @@ void VM::evaluate(
       }
 
       auto scratch = (char *) instance->scratch + (size_t) expr->arg0;
-      expr->vtable.t_aggregate.get(scratch, out);
+      expr->vtable.t_aggregate.get(SContext::get(ctx), scratch, out);
       return;
     }
 
@@ -339,7 +361,7 @@ void VM::evaluate(
     case X_REGEX: {
       SValue subj;
       auto subj_expr = expr->child;
-      evaluate(program, instance, subj_expr, argc, argv, &subj);
+      evaluate(ctx, program, instance, subj_expr, argc, argv, &subj);
 
       auto match = ((RegExp*) expr->arg0)->match(subj.toString());
       *out = SValue(SValue::BoolType(match));
@@ -350,7 +372,7 @@ void VM::evaluate(
     case X_LIKE: {
       SValue subj;
       auto subj_expr = expr->child;
-      evaluate(program, instance, subj_expr, argc, argv, &subj);
+      evaluate(ctx, program, instance, subj_expr, argc, argv, &subj);
 
       auto match = ((LikePattern*) expr->arg0)->match(subj.toString());
       *out = SValue(SValue::BoolType(match));
@@ -363,6 +385,7 @@ void VM::evaluate(
 }
 
 void VM::accumulate(
+    SContext* ctx,
     const Program* program,
     Instance* instance,
     Instruction* expr,
@@ -385,6 +408,7 @@ void VM::accumulate(
         auto stackp = stackv;
         for (auto cur = expr->child; cur != nullptr; cur = cur->next) {
           evaluate(
+              ctx,
               program,
               instance,
               cur,
@@ -395,13 +419,17 @@ void VM::accumulate(
       }
 
       auto scratch = (char *) instance->scratch + (size_t) expr->arg0;
-      expr->vtable.t_aggregate.accumulate(scratch, stackn, stackv);
+      expr->vtable.t_aggregate.accumulate(
+          SContext::get(ctx),
+          scratch,
+          stackn,
+          stackv);
       return;
     }
 
     default: {
       for (auto cur = expr->child; cur != nullptr; cur = cur->next) {
-        accumulate(program, instance, cur, argc, argv);
+        accumulate(ctx, program, instance, cur, argc, argv);
       }
 
       return;
@@ -411,28 +439,31 @@ void VM::accumulate(
 }
 
 void VM::saveState(
+    SContext* ctx,
     const Program* program,
     const Instance* instance,
     OutputStream* os) {
   if (program->has_aggregate_) {
-    saveInstance(program, program->entry_, instance, os);
+    saveInstance(ctx, program, program->entry_, instance, os);
   } else {
     ((SValue*) instance->scratch)->encode(os);
   }
 }
 
 void VM::loadState(
+    SContext* ctx,
     const Program* program,
     Instance* instance,
     InputStream* is) {
   if (program->has_aggregate_) {
-    loadInstance(program, program->entry_, instance, is);
+    loadInstance(ctx, program, program->entry_, instance, is);
   } else {
     ((SValue*) instance->scratch)->decode(is);
   }
 }
 
 void VM::saveInstance(
+    SContext* ctx,
     const Program* program,
     Instruction* e,
     const Instance* instance,
@@ -440,6 +471,7 @@ void VM::saveInstance(
   switch (e->type) {
     case X_CALL_AGGREGATE:
       e->vtable.t_aggregate.savestate(
+          SContext::get(ctx),
           (char *) instance->scratch + (size_t) e->arg0,
           os);
       break;
@@ -449,11 +481,12 @@ void VM::saveInstance(
   }
 
   for (auto cur = e->child; cur != nullptr; cur = cur->next) {
-    saveInstance(program, cur, instance, os);
+    saveInstance(ctx, program, cur, instance, os);
   }
 }
 
 void VM::loadInstance(
+    SContext* ctx,
     const Program* program,
     Instruction* e,
     Instance* instance,
@@ -461,6 +494,7 @@ void VM::loadInstance(
   switch (e->type) {
     case X_CALL_AGGREGATE:
       e->vtable.t_aggregate.loadstate(
+          SContext::get(ctx),
           (char *) instance->scratch + (size_t) e->arg0,
           os);
       break;
@@ -470,7 +504,7 @@ void VM::loadInstance(
   }
 
   for (auto cur = e->child; cur != nullptr; cur = cur->next) {
-    loadInstance(program, cur, instance, os);
+    loadInstance(ctx, program, cur, instance, os);
   }
 }
 

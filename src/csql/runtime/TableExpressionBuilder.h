@@ -35,6 +35,7 @@ class TableExpressionBuilder : public RefCounted {
 public:
 
   ScopedPtr<TableExpression> build(
+      SContext* ctx,
       RefPtr<QueryTreeNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
@@ -42,46 +43,55 @@ public:
 protected:
 
   ScopedPtr<TableExpression> buildGroupBy(
+      SContext* ctx,
       RefPtr<GroupByNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
   ScopedPtr<TableExpression> buildGroupMerge(
+      SContext* ctx,
       RefPtr<GroupByMergeNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
   ScopedPtr<TableExpression> buildUnion(
+      SContext* ctx,
       RefPtr<UnionNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
   ScopedPtr<TableExpression> buildLimit(
+      SContext* ctx,
       RefPtr<LimitNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
   ScopedPtr<TableExpression> buildOrderBy(
+      SContext* ctx,
       RefPtr<OrderByNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
   ScopedPtr<TableExpression> buildSequentialScan(
+      SContext* ctx,
       RefPtr<SequentialScanNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
   ScopedPtr<TableExpression> buildSelectExpression(
+      SContext* ctx,
       RefPtr<SelectExpressionNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
   ScopedPtr<TableExpression> buildDescribeTableStatment(
+      SContext* ctx,
       RefPtr<DescribeTableNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
   ScopedPtr<TableExpression> buildRemoteAggregate(
+      SContext* ctx,
       RefPtr<RemoteAggregateNode> node,
       QueryBuilder* runtime);
 

@@ -9,6 +9,7 @@
  */
 #pragma once
 #include <stx/stdtypes.h>
+#include <csql/SContext.h>
 #include <csql/runtime/TableExpression.h>
 #include <csql/qtree/OrderByNode.h>
 
@@ -18,6 +19,7 @@ class OrderBy : public TableExpression {
 public:
 
   OrderBy(
+      SContext* ctx,
       Vector<OrderByNode::SortSpec> sort_specs,
       size_t max_output_column_index,
       ScopedPtr<TableExpression> child);
@@ -33,6 +35,7 @@ public:
   size_t numColumns() const override;
 
 protected:
+  SContext* ctx_;
   Vector<OrderByNode::SortSpec> sort_specs_;
   size_t max_output_column_index_;
   ScopedPtr<TableExpression> child_;

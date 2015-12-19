@@ -68,10 +68,11 @@ void TableRepository::import(
 }
 
 Option<ScopedPtr<TableExpression>> TableRepository::buildSequentialScan(
+    SContext* ctx,
     RefPtr<SequentialScanNode> seqscan,
     QueryBuilder* runtime) const {
   for (const auto& p : providers_) {
-    auto tbl = p->buildSequentialScan(seqscan, runtime);
+    auto tbl = p->buildSequentialScan(ctx, seqscan, runtime);
     if (!tbl.isEmpty()) {
       return std::move(tbl.get());
     }

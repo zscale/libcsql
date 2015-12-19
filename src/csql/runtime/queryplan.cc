@@ -13,47 +13,17 @@
 namespace csql {
 
 QueryPlan::QueryPlan(
-    Vector<RefPtr<QueryTreeNode>> statements,
-    RefPtr<TableProvider> tables,
-    QueryBuilder* qbuilder,
-    Runtime* runtime) :
-    qtrees_(statements),
-    tables_(tables),
-    runtime_(runtime),
-    qbuilder_(qbuilder) {
-
-  for (const auto& stmt : qtrees_) {
-    if (dynamic_cast<TableExpressionNode*>(stmt.get())) {
-      statements_.emplace_back(qbuilder_->buildTableExpression(
-          stmt.asInstanceOf<TableExpressionNode>(),
-          tables_,
-          runtime_));
-
-      continue;
-    }
-
-    if (dynamic_cast<ChartStatementNode*>(stmt.get())) {
-      statements_.emplace_back(qbuilder_->buildChartStatement(
-          stmt.asInstanceOf<ChartStatementNode>(),
-          tables_,
-          runtime_));
-
-      continue;
-    }
-
-    RAISE(
-        kRuntimeError,
-        "cannot figure out how to execute this query plan");
-
-  }
-}
+    Vector<RefPtr<QueryTreeNode>> qtrees,
+    Vector<ScopedPtr<Statement>> statements) :
+    qtrees_(qtrees),
+    statements_(std::move(statements)) {}
 
 size_t QueryPlan::numStatements() const {
   return qtrees_.size();
 }
 
 Statement* QueryPlan::getStatement(size_t stmt_idx) const {
-  if (stmt_idx >= qtrees_.size()) {
+  if (stmt_idx >= statements_.size()) {
     RAISE(kIndexError, "invalid statement index");
   }
 

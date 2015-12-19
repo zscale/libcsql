@@ -17,6 +17,7 @@
 namespace csql {
 class ImportStatement;
 class QueryBuilder;
+struct SContext;
 
 struct ColumnInfo {
   String column_name;
@@ -35,6 +36,7 @@ class TableProvider : public RefCounted {
 public:
 
   virtual Option<ScopedPtr<TableExpression>> buildSequentialScan(
+      SContext* ctx,
       RefPtr<SequentialScanNode> seqscan,
       QueryBuilder* runtime) const = 0;
 
@@ -66,6 +68,7 @@ public:
       const std::vector<std::unique_ptr<Backend>>& backends);
 
   Option<ScopedPtr<TableExpression>> buildSequentialScan(
+      SContext* ctx,
       RefPtr<SequentialScanNode> seqscan,
       QueryBuilder* runtime) const override;
 

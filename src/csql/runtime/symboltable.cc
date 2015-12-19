@@ -18,7 +18,7 @@ namespace csql {
 
 void SymbolTable::registerFunction(
     const String& symbol,
-    void (*fn)(int, SValue*, SValue*)) {
+    void (*fn)(sql_ctx*, int, SValue*, SValue*)) {
   PureFunction sym;
   sym.call = fn;
   registerFunction(symbol, sym);
@@ -49,7 +49,7 @@ void SymbolTable::registerFunction(const String& symbol, SFunction fn) {
 
 void SymbolTable::registerSymbol(
     const std::string& symbol,
-    void (*method)(void*, int, SValue*, SValue*)) {
+    void (*method)(sql_ctx*, void*, int, SValue*, SValue*)) {
   std::string symbol_downcase = symbol;
   std::transform(
       symbol_downcase.begin(),
@@ -65,9 +65,9 @@ void SymbolTable::registerSymbol(
 
 void SymbolTable::registerSymbol(
     const std::string& symbol,
-    void (*method)(void*, int, SValue*, SValue*),
+    void (*method)(sql_ctx* ctx, void*, int, SValue*, SValue*),
     size_t scratchpad_size,
-    void (*free_method)(void*)) {
+    void (*free_method)(sql_ctx* ctx, void*)) {
   std::string symbol_downcase = symbol;
   StringUtil::toLower(&symbol_downcase);
 
@@ -121,22 +121,22 @@ bool SymbolTable::isAggregateFunction(const String& symbol) const {
 
 SymbolTableEntry::SymbolTableEntry(
     const std::string& symbol,
-    void (*method)(void*, int, SValue*, SValue*),
+    void (*method)(sql_ctx*, void*, int, SValue*, SValue*),
     size_t scratchpad_size,
-    void (*free_method)(void*)) :
+    void (*free_method)(sql_ctx*, void*)) :
     call_(method),
     scratchpad_size_(scratchpad_size) {}
 
 SymbolTableEntry::SymbolTableEntry(
     const std::string& symbol,
-    void (*method)(void*, int, SValue*, SValue*)) :
+    void (*method)(sql_ctx*, void*, int, SValue*, SValue*)) :
     SymbolTableEntry(symbol, method, 0, nullptr) {}
 
 bool SymbolTableEntry::isAggregate() const {
   return scratchpad_size_ > 0;
 }
 
-void (*SymbolTableEntry::getFnPtr() const)(void*, int, SValue*, SValue*) {
+void (*SymbolTableEntry::getFnPtr() const)(sql_ctx* ctx, void*, int, SValue*, SValue*) {
   return call_;
 }
 

@@ -20,10 +20,8 @@ class QueryPlan : public RefCounted  {
 public:
 
   QueryPlan(
-      Vector<RefPtr<QueryTreeNode>> statements,
-      RefPtr<TableProvider> tables,
-      QueryBuilder* qbuilder,
-      Runtime* runtime);
+      Vector<RefPtr<QueryTreeNode>> qtrees,
+      Vector<ScopedPtr<Statement>> statements);
 
   size_t numStatements() const;
 
@@ -33,9 +31,6 @@ public:
 protected:
   Vector<RefPtr<QueryTreeNode>> qtrees_;
   Vector<ScopedPtr<Statement>> statements_;
-  RefPtr<TableProvider> tables_;
-  Runtime* runtime_;
-  QueryBuilder* qbuilder_;
 };
 
 class ExecutionPlan : public RefCounted {

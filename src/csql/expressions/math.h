@@ -10,19 +10,20 @@
 #ifndef _FNORDMETRIC_SQL_EXPRESSIONS_MATH_H
 #define _FNORDMETRIC_SQL_EXPRESSIONS_MATH_H
 #include <csql/svalue.h>
+#include <csql/SContext.h>
 
 namespace csql {
 namespace expressions {
 
-void addExpr(int argc, SValue* argv, SValue* out);
-void subExpr(int argc, SValue* argv, SValue* out);
-void mulExpr(int argc, SValue* argv, SValue* out);
-void divExpr(int argc, SValue* argv, SValue* out);
-void modExpr(int argc, SValue* argv, SValue* out);
-void powExpr(int argc, SValue* argv, SValue* out);
+void addExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
+void subExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
+void mulExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
+void divExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
+void modExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
+void powExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
 
-void roundExpr(int argc, SValue* argv, SValue* out);
-void truncateExpr(int argc, SValue* argv, SValue* out);
+void roundExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
+void truncateExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
 
 }
 }

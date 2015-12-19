@@ -10,20 +10,21 @@
 #ifndef _FNORDMETRIC_SQL_EXPRESSIONS_BOOLEAN_H
 #define _FNORDMETRIC_SQL_EXPRESSIONS_BOOLEAN_H
 #include <csql/svalue.h>
+#include <csql/SContext.h>
 
 namespace csql {
 namespace expressions {
 
-void eqExpr(int argc, SValue* argv, SValue* out);
-void neqExpr(int argc, SValue* argv, SValue* out);
-void andExpr(int argc, SValue* argv, SValue* out);
-void orExpr(int argc, SValue* argv, SValue* out);
-void negExpr(int argc, SValue* argv, SValue* out);
-void ltExpr(int argc, SValue* argv, SValue* out);
-void lteExpr(int argc, SValue* argv, SValue* out);
-void gtExpr(int argc, SValue* argv, SValue* out);
-void gteExpr(int argc, SValue* argv, SValue* out);
-void isNullExpr(int argc, SValue* argv, SValue* out);
+void eqExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
+void neqExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
+void andExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
+void orExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
+void negExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
+void ltExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
+void lteExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
+void gtExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
+void gteExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
+void isNullExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out);
 
 }
 }

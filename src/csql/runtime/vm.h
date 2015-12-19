@@ -44,12 +44,14 @@ public:
 
   struct Program {
     Program(
+        SContext* ctx,
         Instruction* entry,
         ScratchMemory&& static_storage,
         size_t dynamic_storage_size);
 
     ~Program();
 
+    SContext* ctx_;
     Instruction* entry_;
     ScratchMemory static_storage_;
     size_t dynamic_storage_size_;
@@ -61,46 +63,55 @@ public:
   };
 
   static void evaluate(
+      SContext* ctx,
       const Program* program,
       int argc,
       const SValue* argv,
       SValue* out);
 
   static Instance allocInstance(
+      SContext* ctx,
       const Program* program,
       ScratchMemory* scratch);
 
   static void freeInstance(
+      SContext* ctx,
       const Program* program,
       Instance* instance);
 
   static void accumulate(
+      SContext* ctx,
       const Program* program,
       Instance* instance,
       int argc,
       const SValue* argv);
 
   static void result(
+      SContext* ctx,
       const Program* program,
       const Instance* instance,
       SValue* out);
 
   static void reset(
+      SContext* ctx,
       const Program* program,
       Instance* instance);
 
   // rename to mergeStat
   static void merge(
+      SContext* ctx,
       const Program* program,
       Instance* dst,
       const Instance* src);
 
   static void saveState(
+      SContext* ctx,
       const Program* program,
       const Instance* instance,
       OutputStream* os);
 
   static void loadState(
+      SContext* ctx,
       const Program* program,
       Instance* instance,
       InputStream* os);
@@ -108,6 +119,7 @@ public:
 protected:
 
   static void evaluate(
+      SContext* ctx,
       const Program* program,
       Instance* instance,
       Instruction* expr,
@@ -116,6 +128,7 @@ protected:
       SValue* out);
 
   static void accumulate(
+      SContext* ctx,
       const Program* program,
       Instance* instance,
       Instruction* expr,
@@ -123,41 +136,49 @@ protected:
       const SValue* argv);
 
   static void initInstance(
+      SContext* ctx,
       const Program* program,
       Instruction* e,
       Instance* instance);
 
   static void freeInstance(
+      SContext* ctx,
       const Program* program,
       Instruction* e,
       Instance* instance);
 
   static void resetInstance(
+      SContext* ctx,
       const Program* program,
       Instruction* e,
       Instance* instance);
 
   static void initProgram(
+      SContext* ctx,
       Program* program,
       Instruction* e);
 
   static void freeProgram(
+      SContext* ctx,
       const Program* program,
       Instruction* e);
 
   static void mergeInstance(
+      SContext* ctx,
       const Program* program,
       Instruction* e,
       Instance* dst,
       const Instance* src);
 
   static void saveInstance(
+      SContext* ctx,
       const Program* program,
       Instruction* e,
       const Instance* instance,
       OutputStream* os);
 
   static void loadInstance(
+      SContext* ctx,
       const Program* program,
       Instruction* e,
       Instance* instance,

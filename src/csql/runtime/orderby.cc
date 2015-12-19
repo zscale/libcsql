@@ -15,9 +15,11 @@
 namespace csql {
 
 OrderBy::OrderBy(
+    SContext* ctx,
     Vector<OrderByNode::SortSpec> sort_specs,
     size_t max_output_column_index,
     ScopedPtr<TableExpression> child) :
+    ctx_(ctx),
     sort_specs_(sort_specs),
     max_output_column_index_(max_output_column_index),
     child_(std::move(child)) {
@@ -71,15 +73,15 @@ void OrderBy::execute(
       args[0] = left[sort.column];
       args[1] = right[sort.column];
 
-      expressions::eqExpr(2, args, &res);
+      expressions::eqExpr(SContext::get(ctx_), 2, args, &res);
       if (res.getBool()) {
         continue;
       }
 
       if (sort.descending) {
-        expressions::gtExpr(2, args, &res);
+        expressions::gtExpr(SContext::get(ctx_), 2, args, &res);
       } else {
-        expressions::ltExpr(2, args, &res);
+        expressions::ltExpr(SContext::get(ctx_), 2, args, &res);
       }
 
       return res.getBool();

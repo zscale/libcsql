@@ -21,18 +21,21 @@ QueryBuilder::QueryBuilder(
     table_exp_builder_(table_exp_builder) {}
 
 ValueExpression QueryBuilder::buildValueExpression(
+    SContext* ctx,
     RefPtr<ValueExpressionNode> node) {
-  return scalar_exp_builder_->compile(node);
+  return scalar_exp_builder_->compile(ctx, node);
 }
 
 ScopedPtr<TableExpression> QueryBuilder::buildTableExpression(
+    SContext* ctx,
     RefPtr<TableExpressionNode> node,
     RefPtr<TableProvider> tables,
     Runtime* runtime) {
-  return table_exp_builder_->build(node.get(), this, tables.get());
+  return table_exp_builder_->build(ctx, node.get(), this, tables.get());
 }
 
 ScopedPtr<ChartStatement> QueryBuilder::buildChartStatement(
+    SContext* ctx,
     RefPtr<ChartStatementNode> node,
     RefPtr<TableProvider> tables,
     Runtime* runtime) {
@@ -44,11 +47,11 @@ ScopedPtr<ChartStatement> QueryBuilder::buildChartStatement(
     auto draw_stmt_node = node->child(i).asInstanceOf<DrawStatementNode>();
     for (const auto& table : draw_stmt_node->inputTables()) {
       union_tables.emplace_back(
-          table_exp_builder_->build(table, this, tables.get()));
+          table_exp_builder_->build(ctx, table, this, tables.get()));
     }
 
     draw_statements.emplace_back(
-        new DrawStatement(draw_stmt_node, std::move(union_tables), runtime));
+        new DrawStatement(ctx, draw_stmt_node, std::move(union_tables), runtime));
   }
 
   return mkScoped(new ChartStatement(std::move(draw_statements)));
