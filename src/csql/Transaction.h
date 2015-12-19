@@ -19,15 +19,10 @@ class Transaction {
 public:
 
   static inline sql_txn* get(Transaction* ctx) {
-    return (sql_txn*)((char*) ctx + offsetof(Transaction, ctx_));
+    return (sql_txn*) ctx;
   }
 
-protected:
-  sql_txn ctx_;
 };
 
-static_assert(
-    sizeof(Transaction) == sizeof(sql_txn),
-    "libcsql requires the c++ compiler to produce classes without overhead");
 
 } // namespace csql
