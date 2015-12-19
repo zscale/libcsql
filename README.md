@@ -30,7 +30,7 @@ Most simple example: evaluate a constant expression without inputs;
       auto res = runtime->evaluateConstExpression(txn.get(), expression);
       std::string res_str = v.toString();
 
-      printf("result: %s\n", re_str.c_str());
+      printf("result: %s\n", re_str.c_str()); // prints "3"
       return 0;
     }
 
