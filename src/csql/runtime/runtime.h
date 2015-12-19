@@ -38,7 +38,7 @@ public:
       RefPtr<QueryBuilder> query_builder,
       RefPtr<QueryPlanBuilder> query_plan_builder);
 
-  ScopedPtr<Transaction> newContext();
+  ScopedPtr<Transaction> newTransaction();
 
   RefPtr<QueryPlan> buildQueryPlan(
       Transaction* ctx,

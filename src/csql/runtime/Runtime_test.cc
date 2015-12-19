@@ -26,7 +26,7 @@ UNIT_TEST(RuntimeTest);
 
 TEST_CASE(RuntimeTest, TestStaticExpression, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   auto expr = mkRef(
       new csql::CallExpressionNode(
@@ -48,7 +48,7 @@ TEST_CASE(RuntimeTest, TestStaticExpression, [] () {
 
 TEST_CASE(RuntimeTest, TestComparisons, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   {
     auto v = runtime->evaluateConstExpression(
@@ -81,7 +81,7 @@ TEST_CASE(RuntimeTest, TestComparisons, [] () {
 
 TEST_CASE(RuntimeTest, TestExecuteIfStatement, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   auto out_a = runtime->evaluateConstExpression(
       ctx.get(),
@@ -131,7 +131,7 @@ TEST_CASE(RuntimeTest, TestExecuteIfStatement, [] () {
 
 TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -150,7 +150,7 @@ TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
 
 TEST_CASE(RuntimeTest, TestNestedCSTableAggregate, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -169,7 +169,7 @@ TEST_CASE(RuntimeTest, TestNestedCSTableAggregate, [] () {
 
 TEST_CASE(RuntimeTest, TestWithinRecordCSTableAggregate, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -229,7 +229,7 @@ TEST_CASE(RuntimeTest, TestWithinRecordCSTableAggregate, [] () {
 
 TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggregate, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -309,7 +309,7 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggregate, [] () {
 
 TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithGroup, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -378,7 +378,7 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithGroup, [] () {
 
 TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithMultiLevelGroup, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -408,7 +408,7 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithMultiLevelGroup, [
 
 TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithWhere, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -448,7 +448,7 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithWhere, [] () {
 
 TEST_CASE(RuntimeTest, TestTableNamesWithDots, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -489,7 +489,7 @@ TEST_CASE(RuntimeTest, TestTableNamesWithDots, [] () {
 
 TEST_CASE(RuntimeTest, SelectFloatIntegerDivision, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   {
     auto v = runtime->evaluateConstExpression(ctx.get(), String("1 / 5"));
@@ -499,7 +499,7 @@ TEST_CASE(RuntimeTest, SelectFloatIntegerDivision, [] () {
 
 TEST_CASE(RuntimeTest, SelectFloatIntegerMultiplication, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   {
     auto v = runtime->evaluateConstExpression(ctx.get(), String("10 * 5"));
@@ -519,7 +519,7 @@ TEST_CASE(RuntimeTest, SelectFloatIntegerMultiplication, [] () {
 
 TEST_CASE(RuntimeTest, SelectFloatIntegerAddition, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   {
     auto v = runtime->evaluateConstExpression(ctx.get(), String("10 + 5"));
@@ -539,7 +539,7 @@ TEST_CASE(RuntimeTest, SelectFloatIntegerAddition, [] () {
 
 TEST_CASE(RuntimeTest, SelectFloatIntegerSubtraction, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   {
     auto v = runtime->evaluateConstExpression(ctx.get(), String("10 - 5"));
@@ -560,7 +560,7 @@ TEST_CASE(RuntimeTest, SelectFloatIntegerSubtraction, [] () {
 TEST_CASE(RuntimeTest, TestSelectInvalidColumn, [] () {
   EXPECT_EXCEPTION("column(s) not found: fnord", [] () {
     auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
     auto estrat = mkRef(new DefaultExecutionStrategy());
     estrat->addTableProvider(
@@ -577,7 +577,7 @@ TEST_CASE(RuntimeTest, TestSelectInvalidColumn, [] () {
 
 TEST_CASE(RuntimeTest, TestFromTimestampExpr, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   {
     auto v = runtime->evaluateConstExpression(
@@ -596,7 +596,7 @@ TEST_CASE(RuntimeTest, TestFromTimestampExpr, [] () {
 
 TEST_CASE(RuntimeTest, TestTruncateExpr, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   {
     auto v = runtime->evaluateConstExpression(
@@ -615,7 +615,7 @@ TEST_CASE(RuntimeTest, TestTruncateExpr, [] () {
 
 TEST_CASE(RuntimeTest, TestWildcardSelect, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -637,7 +637,7 @@ TEST_CASE(RuntimeTest, TestWildcardSelect, [] () {
 
 TEST_CASE(RuntimeTest, TestStringStartsWithExpression, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   {
     auto v = runtime->evaluateConstExpression(
@@ -677,7 +677,7 @@ TEST_CASE(RuntimeTest, TestStringStartsWithExpression, [] () {
 
 TEST_CASE(RuntimeTest, TestStringEndsWithExpression, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   {
     auto v = runtime->evaluateConstExpression(
@@ -710,7 +710,7 @@ TEST_CASE(RuntimeTest, TestStringEndsWithExpression, [] () {
 
 TEST_CASE(RuntimeTest, TestLogicalAnd, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   {
     auto v = runtime->evaluateConstExpression(
@@ -771,7 +771,7 @@ TEST_CASE(RuntimeTest, TestLogicalAnd, [] () {
 
 TEST_CASE(RuntimeTest, TestLogicalOr, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   {
     auto v = runtime->evaluateConstExpression(
@@ -832,7 +832,7 @@ TEST_CASE(RuntimeTest, TestLogicalOr, [] () {
 
 TEST_CASE(RuntimeTest, TestIsNull, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   {
     auto v = runtime->evaluateConstExpression(
@@ -858,7 +858,7 @@ TEST_CASE(RuntimeTest, TestIsNull, [] () {
 
 TEST_CASE(RuntimeTest, TestStringUppercaseExpression, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   {
     auto v = runtime->evaluateConstExpression(
@@ -877,7 +877,7 @@ TEST_CASE(RuntimeTest, TestStringUppercaseExpression, [] () {
 
 TEST_CASE(RuntimeTest, TestStringLowercaseExpression, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   {
     auto v = runtime->evaluateConstExpression(
@@ -896,7 +896,7 @@ TEST_CASE(RuntimeTest, TestStringLowercaseExpression, [] () {
 
 TEST_CASE(RuntimeTest, TestDateTimeDateTruncExpression, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   {
     auto v = runtime->evaluateConstExpression(
@@ -1034,7 +1034,7 @@ TEST_CASE(RuntimeTest, TestDateTimeDateTruncExpression, [] () {
 
 TEST_CASE(RuntimeTest, TestDateTimeDateAddExpression, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   {
     auto v = runtime->evaluateConstExpression(
@@ -1144,7 +1144,7 @@ TEST_CASE(RuntimeTest, TestDateTimeDateAddExpression, [] () {
 
 TEST_CASE(RuntimeTest, TestEscaping, [] () {
   auto runtime = Runtime::getDefaultRuntime();
-  auto ctx = runtime->newContext();
+  auto ctx = runtime->newTransaction();
 
   {
     auto v = runtime->evaluateConstExpression(
