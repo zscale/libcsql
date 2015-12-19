@@ -11,6 +11,28 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#if defined _WIN32 || defined __CYGWIN__
+  #ifdef BUILDING_DLL
+    #ifdef __GNUC__
+      #define SQLAPI_PUBLIC __attribute__ ((dllexport))
+    #else
+      #define SQLAPI_PUBLIC __declspec(dllexport) // Note: actually gcc seems to also supports this syntax.
+    #endif
+  #else
+    #ifdef __GNUC__
+      #define SQLAPI_PUBLIC __attribute__ ((dllimport))
+    #else
+      #define SQLAPI_PUBLIC __declspec(dllimport) // Note: actually gcc seems to also supports this syntax.
+    #endif
+  #endif
+#else
+  #if __GNUC__ >= 4
+    #define SQLAPI_PUBLIC __attribute__ ((visibility ("default")))
+  #else
+    #define SQLAPI_PUBLIC
+  #endif
+#endif
+
 extern "C" {
 
 enum sql_type : uint8_t {
@@ -31,11 +53,11 @@ typedef struct sql_val__* sql_val;
 struct sql_args__ { int unused; };
 typedef struct sql_val__* sql_args;
 
-sql_val* sql_getarg(sql_args* args, size_t idx);
+SQLAPI_PUBLIC sql_val* sql_getarg(sql_args* args, size_t idx);
 
-bool sql_getint(sql_val* in, int64_t* out);
-bool sql_getfloat(sql_val* in, double* out);
-bool sql_getstring(sql_val* in, const char** data, size_t* size);
-bool sql_getbool(sql_val* in, bool* out);
+SQLAPI_PUBLIC bool sql_getint(sql_val* in, int64_t* out);
+SQLAPI_PUBLIC bool sql_getfloat(sql_val* in, double* out);
+SQLAPI_PUBLIC bool sql_getstring(sql_val* in, const char** data, size_t* size);
+SQLAPI_PUBLIC bool sql_getbool(sql_val* in, bool* out);
 
 };
