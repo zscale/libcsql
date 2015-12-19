@@ -1,5 +1,5 @@
 /**
- * This file is part of the "libfnord" project
+ * This file is part of the "libcsql" project
  *   Copyright (c) 2015 Paul Asmuth
  *
  * FnordMetric is free software: you can redistribute it and/or modify it under
@@ -13,6 +13,7 @@
 #include <stx/util/binarymessagereader.h>
 #include <stx/util/binarymessagewriter.h>
 #include <csql/svalue.h>
+#include <csql/SContext.h>
 
 using namespace stx;
 
@@ -28,8 +29,8 @@ enum kFunctionType {
  */
 struct PureFunction {
   PureFunction();
-  PureFunction(void (*_call)(int argc, SValue* in, SValue* out));
-  void (*call)(int argc, SValue* in, SValue* out);
+  PureFunction(void (*_call)(sql_ctx* ctx, int argc, SValue* in, SValue* out));
+  void (*call)(sql_ctx* ctx, int argc, SValue* in, SValue* out);
 };
 
 /**
@@ -37,14 +38,14 @@ struct PureFunction {
  */
 struct AggregateFunction {
   size_t scratch_size;
-  void (*accumulate)(void* scratch, int argc, SValue* in);
-  void (*get)(void* scratch, SValue* out);
-  void (*reset)(void* scratch);
-  void (*init)(void* scratch);
-  void (*free)(void* scratch);
-  void (*merge)(void* scratch, const void* other);
-  void (*savestate)(void* scratch, OutputStream* os);
-  void (*loadstate)(void* scratch, InputStream* is);
+  void (*accumulate)(sql_ctx*, void* scratch, int argc, SValue* in);
+  void (*get)(sql_ctx*, void* scratch, SValue* out);
+  void (*reset)(sql_ctx*, void* scratch);
+  void (*init)(sql_ctx*, void* scratch);
+  void (*free)(sql_ctx*, void* scratch);
+  void (*merge)(sql_ctx*, void* scratch, const void* other);
+  void (*savestate)(sql_ctx*, void* scratch, OutputStream* os);
+  void (*loadstate)(sql_ctx*, void* scratch, InputStream* is);
 };
 
 struct SFunction {

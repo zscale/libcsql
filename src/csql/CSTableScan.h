@@ -25,6 +25,7 @@ class CSTableScan : public TableExpression {
 public:
 
   CSTableScan(
+      SContext* ctx,
       RefPtr<SequentialScanNode> stmt,
       const String& cstable_filename,
       QueryBuilder* runtime);
@@ -61,6 +62,7 @@ protected:
 
   struct ExpressionRef {
     ExpressionRef(
+        SContext* _ctx,
         size_t _rep_level,
         ValueExpression _compiled,
         ScratchMemory* scratch);
@@ -68,6 +70,7 @@ protected:
     ExpressionRef(ExpressionRef&& other);
     ~ExpressionRef();
 
+    SContext* ctx;
     size_t rep_level;
     ValueExpression compiled;
     VM::Instance instance;
@@ -91,6 +94,7 @@ protected:
 
   void fetch();
 
+  SContext* ctx_;
   Vector<String> column_names_;
   ScratchMemory scratch_;
   RefPtr<SequentialScanNode> stmt_;

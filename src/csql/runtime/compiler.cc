@@ -23,6 +23,7 @@
 namespace csql {
 
 ScopedPtr<VM::Program> Compiler::compile(
+    SContext* ctx,
     RefPtr<ValueExpressionNode> node,
     SymbolTable* symbol_table) {
   ScratchMemory static_storage;
@@ -36,6 +37,7 @@ ScopedPtr<VM::Program> Compiler::compile(
 
   return mkScoped(
       new VM::Program(
+          ctx,
           expr,
           std::move(static_storage),
           dynamic_storage_size));

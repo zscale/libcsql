@@ -31,6 +31,7 @@ class Compiler {
 public:
 
   static ScopedPtr<VM::Program> compile(
+      SContext* ctx,
       RefPtr<ValueExpressionNode> node,
       SymbolTable* symbol_table);
 

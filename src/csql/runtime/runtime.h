@@ -38,57 +38,70 @@ public:
       RefPtr<QueryBuilder> query_builder,
       RefPtr<QueryPlanBuilder> query_plan_builder);
 
+  ScopedPtr<SContext> newContext();
+
   RefPtr<QueryPlan> buildQueryPlan(
+      SContext* ctx,
       const String& query,
       RefPtr<ExecutionStrategy> execution_strategy);
 
   RefPtr<QueryPlan> buildQueryPlan(
+      SContext* ctx,
       Vector<RefPtr<csql::QueryTreeNode>> statements,
       RefPtr<ExecutionStrategy> execution_strategy);
 
   void executeQuery(
+      SContext* ctx,
       const String& query,
       RefPtr<ExecutionStrategy> execution_strategy,
       RefPtr<ResultFormat> result_format);
 
   void executeQuery(
+      SContext* ctx,
       RefPtr<QueryPlan> query_plan,
       RefPtr<ResultFormat> result_format);
 
   void executeStatement(
+      SContext* ctx,
       Statement* statement,
       ResultList* result);
 
   void executeStatement(
+      SContext* ctx,
       TableExpression* statement,
       Function<bool (int argc, const SValue* argv)> fn);
 
   SValue evaluateScalarExpression(
+      SContext* ctx,
       const String& expr,
       int argc,
       const SValue* argv);
 
   SValue evaluateScalarExpression(
+      SContext* ctx,
       ASTNode* expr,
       int argc,
       const SValue* argv);
 
   SValue evaluateScalarExpression(
+      SContext* ctx,
       RefPtr<ValueExpressionNode> expr,
       int argc,
       const SValue* argv);
 
   SValue evaluateScalarExpression(
+      SContext* ctx,
       const ValueExpression& expr,
       int argc,
       const SValue* argv);
 
-  SValue evaluateConstExpression(const String& expr);
-  SValue evaluateConstExpression(ASTNode* expr);
-  SValue evaluateConstExpression(RefPtr<ValueExpressionNode> expr);
-  SValue evaluateConstExpression(const ValueExpression& expr);
+  SValue evaluateConstExpression(SContext* ctx, const String& expr);
+  SValue evaluateConstExpression(SContext* ctx, ASTNode* expr);
+  SValue evaluateConstExpression(SContext* ctx, RefPtr<ValueExpressionNode> expr);
+  SValue evaluateConstExpression(SContext* ctx, const ValueExpression& expr);
 
   void executeAggregate(
+      SContext* ctx,
       const RemoteAggregateParams& query,
       RefPtr<ExecutionStrategy> execution_strategy,
       OutputStream* os);

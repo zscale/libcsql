@@ -19,9 +19,11 @@ using namespace stx;
 namespace csql {
 
 CSTableScan::CSTableScan(
+    SContext* ctx,
     RefPtr<SequentialScanNode> stmt,
     const String& cstable_filename,
     QueryBuilder* runtime) :
+    ctx_(ctx),
     stmt_(stmt),
     cstable_filename_(cstable_filename),
     runtime_(runtime),
@@ -74,14 +76,15 @@ void CSTableScan::execute(
 
   for (const auto& slnode : stmt_->selectList()) {
     select_list_.emplace_back(
+        ctx_,
         findMaxRepetitionLevel(slnode->expression()),
-        runtime_->buildValueExpression(slnode->expression()),
+        runtime_->buildValueExpression(ctx_, slnode->expression()),
         &scratch_);
   }
 
   if (!where_expr.isEmpty()) {
     resolveColumns(where_expr.get());
-    where_expr_ = runtime_->buildValueExpression(where_expr.get());
+    where_expr_ = runtime_->buildValueExpression(ctx_, where_expr.get());
   }
 
   if (columns_.empty()) {
@@ -218,6 +221,7 @@ void CSTableScan::scan(
     if (where_pred && where_expr_.program() != nullptr) {
       SValue where_tmp;
       VM::evaluate(
+          ctx_,
           where_expr_.program(),
           in_row.size(),
           in_row.data(),
@@ -230,6 +234,7 @@ void CSTableScan::scan(
       for (int i = 0; i < select_list_.size(); ++i) {
         if (select_list_[i].rep_level >= select_level) {
           VM::accumulate(
+              ctx_,
               select_list_[i].compiled.program(),
               &select_list_[i].instance,
               in_row.size(),
@@ -250,11 +255,13 @@ void CSTableScan::scan(
         case AggregationStrategy::AGGREGATE_WITHIN_RECORD_DEEP:
           for (int i = 0; i < select_list_.size(); ++i) {
             VM::result(
+                ctx_,
                 select_list_[i].compiled.program(),
                 &select_list_[i].instance,
                 &out_row[i]);
 
             VM::reset(
+                ctx_,
                 select_list_[i].compiled.program(),
                 &select_list_[i].instance);
           }
@@ -268,6 +275,7 @@ void CSTableScan::scan(
         case AggregationStrategy::NO_AGGREGATION:
           for (int i = 0; i < select_list_.size(); ++i) {
             VM::evaluate(
+                ctx_,
                 select_list_[i].compiled.program(),
                 in_row.size(),
                 in_row.data(),
@@ -298,6 +306,7 @@ void CSTableScan::scan(
     case AggregationStrategy::AGGREGATE_ALL:
       for (int i = 0; i < select_list_.size(); ++i) {
         VM::result(
+            ctx_,
             select_list_[i].compiled.program(),
             &select_list_[i].instance,
             &out_row[i]);
@@ -322,7 +331,7 @@ void CSTableScan::scanWithoutColumns(
     bool where_pred = true;
     if (where_expr_.program() != nullptr) {
       SValue where_tmp;
-      VM::evaluate(where_expr_.program(), 0, nullptr, &where_tmp);
+      VM::evaluate(ctx_, where_expr_.program(), 0, nullptr, &where_tmp);
       where_pred = where_tmp.toBool();
     }
 
@@ -332,6 +341,7 @@ void CSTableScan::scanWithoutColumns(
         case AggregationStrategy::AGGREGATE_ALL:
           for (int i = 0; i < select_list_.size(); ++i) {
             VM::accumulate(
+                ctx_,
                 select_list_[i].compiled.program(),
                 &select_list_[i].instance,
                 0,
@@ -344,6 +354,7 @@ void CSTableScan::scanWithoutColumns(
         case AggregationStrategy::NO_AGGREGATION:
           for (int i = 0; i < select_list_.size(); ++i) {
             VM::evaluate(
+                ctx_,
                 select_list_[i].compiled.program(),
                 0,
                 nullptr,
@@ -362,6 +373,7 @@ void CSTableScan::scanWithoutColumns(
     case AggregationStrategy::AGGREGATE_ALL:
       for (int i = 0; i < select_list_.size(); ++i) {
         VM::result(
+            ctx_,
             select_list_[i].compiled.program(),
             &select_list_[i].instance,
             &out_row[i]);
@@ -461,12 +473,14 @@ CSTableScan::ColumnRef::ColumnRef(
     index(i) {}
 
 CSTableScan::ExpressionRef::ExpressionRef(
+    SContext* _ctx,
     size_t _rep_level,
     ValueExpression _compiled,
     ScratchMemory* smem) :
+    ctx(_ctx),
     rep_level(_rep_level),
     compiled(std::move(_compiled)),
-    instance(VM::allocInstance(compiled.program(), smem)) {}
+    instance(VM::allocInstance(ctx, compiled.program(), smem)) {}
 
 CSTableScan::ExpressionRef::ExpressionRef(
     ExpressionRef&& other) :
@@ -478,7 +492,7 @@ CSTableScan::ExpressionRef::ExpressionRef(
 
 CSTableScan::ExpressionRef::~ExpressionRef() {
   if (instance.scratch) {
-    VM::freeInstance(compiled.program(), &instance);
+    VM::freeInstance(ctx, compiled.program(), &instance);
   }
 }
 

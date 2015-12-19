@@ -17,7 +17,7 @@ namespace expressions {
 /**
  * COUNT() expression
  */
-void countExprAcc(void* scratchpad, int argc, SValue* argv) {
+void countExprAcc(sql_ctx* ctx, void* scratchpad, int argc, SValue* argv) {
   switch(argv->getType()) {
     case SValue::T_NULL:
       return;
@@ -28,23 +28,23 @@ void countExprAcc(void* scratchpad, int argc, SValue* argv) {
   }
 }
 
-void countExprGet(void* scratchpad, SValue* out) {
+void countExprGet(sql_ctx* ctx, void* scratchpad, SValue* out) {
   *out = SValue(SValue::IntegerType(*((uint64_t*) scratchpad)));
 }
 
-void countExprReset(void* scratchpad) {
+void countExprReset(sql_ctx* ctx, void* scratchpad) {
   memset(scratchpad, 0, sizeof(uint64_t));
 }
 
-void countExprMerge(void* scratchpad, const void* other) {
+void countExprMerge(sql_ctx* ctx, void* scratchpad, const void* other) {
   *(uint64_t*) scratchpad += *(uint64_t*) other;
 }
 
-void countExprSave(void* scratchpad, OutputStream* os) {
+void countExprSave(sql_ctx* ctx, void* scratchpad, OutputStream* os) {
   os->appendVarUInt(*(uint64_t*) scratchpad);
 }
 
-void countExprLoad(void* scratchpad, InputStream* is) {
+void countExprLoad(sql_ctx* ctx, void* scratchpad, InputStream* is) {
   *(uint64_t*) scratchpad = is->readVarUInt();
 }
 
@@ -69,7 +69,7 @@ struct sum_expr_scratchpad {
   double val;
 };
 
-void sumExprAcc(void* scratchpad, int argc, SValue* argv) {
+void sumExprAcc(sql_ctx* ctx, void* scratchpad, int argc, SValue* argv) {
   SValue* val = argv;
   auto data = (sum_expr_scratchpad*) scratchpad;
 
@@ -97,7 +97,7 @@ void sumExprAcc(void* scratchpad, int argc, SValue* argv) {
   }
 }
 
-void sumExprGet(void* scratchpad, SValue* out) {
+void sumExprGet(sql_ctx* ctx, void* scratchpad, SValue* out) {
   auto data = (sum_expr_scratchpad*) scratchpad;
 
   switch(data->type) {
@@ -115,11 +115,11 @@ void sumExprGet(void* scratchpad, SValue* out) {
   }
 }
 
-void sumExprReset(void* scratchpad) {
+void sumExprReset(sql_ctx* ctx, void* scratchpad) {
   memset(scratchpad, 0, sizeof(sum_expr_scratchpad));
 }
 
-void sumExprMerge(void* scratchpad, const void* other) {
+void sumExprMerge(sql_ctx* ctx, void* scratchpad, const void* other) {
   auto this_data = (sum_expr_scratchpad*) scratchpad;
   auto other_data = (const sum_expr_scratchpad*) other;
 
@@ -133,13 +133,13 @@ void sumExprMerge(void* scratchpad, const void* other) {
   this_data->val += other_data->val;
 }
 
-void sumExprSave(void* scratchpad, OutputStream* os) {
+void sumExprSave(sql_ctx* ctx, void* scratchpad, OutputStream* os) {
   auto data = (sum_expr_scratchpad*) scratchpad;
   os->appendVarUInt(data->type);
   os->appendDouble(data->val);
 }
 
-void sumExprLoad(void* scratchpad, InputStream* is) {
+void sumExprLoad(sql_ctx* ctx, void* scratchpad, InputStream* is) {
   auto data = (sum_expr_scratchpad*) scratchpad;
   data->type = (SValue::kSValueType) is->readVarUInt();
   data->val = is->readDouble();
@@ -165,7 +165,7 @@ struct mean_expr_scratchpad {
   int count;
 };
 
-void meanExprAcc(void* scratchpad, int argc, SValue* argv) {
+void meanExprAcc(sql_ctx* ctx, void* scratchpad, int argc, SValue* argv) {
   SValue* val = argv;
   auto data = (mean_expr_scratchpad*) scratchpad;
 
@@ -187,16 +187,16 @@ void meanExprAcc(void* scratchpad, int argc, SValue* argv) {
   }
 }
 
-void meanExprGet(void* scratchpad, SValue* out) {
+void meanExprGet(sql_ctx* ctx, void* scratchpad, SValue* out) {
   auto data = (mean_expr_scratchpad*) scratchpad;
   *out = SValue(data->sum / data->count);
 }
 
-void meanExprReset(void* scratchpad) {
+void meanExprReset(sql_ctx* ctx, void* scratchpad) {
   memset(scratchpad, 0, sizeof(mean_expr_scratchpad));
 }
 
-void meanExprFree(void* scratchpad) {
+void meanExprFree(sql_ctx* ctx, void* scratchpad) {
   /* noop */
 }
 
@@ -204,7 +204,7 @@ size_t meanExprScratchpadSize() {
   return sizeof(mean_expr_scratchpad);
 }
 
-void meanExprMerge(void* scratchpad, const void* other) {
+void meanExprMerge(sql_ctx* ctx, void* scratchpad, const void* other) {
   auto this_data = (mean_expr_scratchpad*) scratchpad;
   auto other_data = (const mean_expr_scratchpad*) other;
 
@@ -212,13 +212,13 @@ void meanExprMerge(void* scratchpad, const void* other) {
   this_data->count += other_data->count;
 }
 
-void meanExprSave(void* scratchpad, OutputStream* os) {
+void meanExprSave(sql_ctx* ctx, void* scratchpad, OutputStream* os) {
   auto data = (mean_expr_scratchpad*) scratchpad;
   os->appendVarUInt(data->count);
   os->appendDouble(data->sum);
 }
 
-void meanExprLoad(void* scratchpad, InputStream* is) {
+void meanExprLoad(sql_ctx* ctx, void* scratchpad, InputStream* is) {
   auto data = (mean_expr_scratchpad*) scratchpad;
   data->count = is->readVarUInt();
   data->sum = is->readDouble();
@@ -244,7 +244,7 @@ union max_expr_scratchpad {
   int count;
 };
 
-void maxExpr(void* scratchpad, int argc, SValue* argv, SValue* out) {
+void maxExpr(sql_ctx* ctx, void* scratchpad, int argc, SValue* argv, SValue* out) {
   SValue* val = argv;
   union max_expr_scratchpad* data = (union max_expr_scratchpad*) scratchpad;
 
@@ -272,7 +272,7 @@ void maxExpr(void* scratchpad, int argc, SValue* argv, SValue* out) {
   }
 }
 
-void maxExprFree(void* scratchpad) {
+void maxExprFree(sql_ctx* ctx, void* scratchpad) {
   /* noop */
 }
 
@@ -288,7 +288,7 @@ union min_expr_scratchpad {
   int count;
 };
 
-void minExpr(void* scratchpad, int argc, SValue* argv, SValue* out) {
+void minExpr(sql_ctx* ctx, void* scratchpad, int argc, SValue* argv, SValue* out) {
   SValue* val = argv;
   union min_expr_scratchpad* data = (union min_expr_scratchpad*) scratchpad;
 
@@ -316,7 +316,7 @@ void minExpr(void* scratchpad, int argc, SValue* argv, SValue* out) {
   }
 }
 
-void minExprFree(void* scratchpad) {
+void minExprFree(sql_ctx* ctx, void* scratchpad) {
   /* noop */
 }
 

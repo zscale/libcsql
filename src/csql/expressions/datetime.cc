@@ -29,7 +29,7 @@ static void checkArgs(const char* symbol, int argc, int argc_expected) {
   }
 }
 
-void fromTimestamp(int argc, SValue* argv, SValue* out) {
+void fromTimestamp(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("FROM_TIMESTAMP", argc, 1);
 
   SValue tmp = *argv;
@@ -37,7 +37,7 @@ void fromTimestamp(int argc, SValue* argv, SValue* out) {
   *out = SValue(tmp.getTimestamp());
 }
 
-void dateTruncExpr(int argc, SValue* argv, SValue* out) {
+void dateTruncExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("DATE_TRUNC", argc, 2);
 
   SValue val = argv[1];
@@ -129,7 +129,7 @@ void dateTruncExpr(int argc, SValue* argv, SValue* out) {
       time_suffix.c_str());
 }
 
-void dateAddExpr(int argc, SValue* argv, SValue* out) {
+void dateAddExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("DATE_ADD", argc, 3);
 
   SValue val = argv[0];
@@ -502,7 +502,7 @@ void dateAddExpr(int argc, SValue* argv, SValue* out) {
       argv[2].toString());
 }
 
-void dateSubExpr(int argc, SValue* argv, SValue* out) {
+void dateSubExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("DATE_SUB", argc, 3);
 
   SValue val = argv[0];

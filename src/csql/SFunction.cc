@@ -16,7 +16,7 @@ namespace csql {
 PureFunction::PureFunction() : call(nullptr) {}
 
 PureFunction::PureFunction(
-    void (*_call)(int argc, SValue* in, SValue* out)) :
+    void (*_call)(sql_ctx* ctx, int argc, SValue* in, SValue* out)) :
     call(_call) {}
 
 SFunction::SFunction() :

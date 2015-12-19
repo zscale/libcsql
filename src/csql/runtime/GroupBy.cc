@@ -14,8 +14,10 @@
 namespace csql {
 
 GroupByExpression::GroupByExpression(
+    SContext* ctx,
     const Vector<String>& column_names,
     Vector<ValueExpression> select_expressions) :
+    ctx_(ctx),
     column_names_(column_names),
     select_exprs_(std::move(select_expressions)) {}
 
@@ -55,12 +57,13 @@ void GroupByExpression::execute(
 }
 
 GroupBy::GroupBy(
+    SContext* ctx,
     ScopedPtr<TableExpression> source,
     const Vector<String>& column_names,
     Vector<ValueExpression> select_expressions,
     Vector<ValueExpression> group_expressions,
     SHA1Hash qtree_fingerprint) :
-    GroupByExpression(column_names, std::move(select_expressions)),
+    GroupByExpression(ctx, column_names, std::move(select_expressions)),
     source_(std::move(source)),
     group_exprs_(std::move(group_expressions)),
     qtree_fingerprint_(qtree_fingerprint) {}
@@ -114,7 +117,7 @@ void GroupByExpression::getResult(
   Vector<SValue> out_row(select_exprs_.size(), SValue{});
   for (auto& group : *groups) {
     for (size_t i = 0; i < select_exprs_.size(); ++i) {
-      VM::result(select_exprs_[i].program(), &group.second[i], &out_row[i]);
+      VM::result(ctx_, select_exprs_[i].program(), &group.second[i], &out_row[i]);
     }
 
     if (!fn(out_row.size(), out_row.data())) {
@@ -127,7 +130,7 @@ void GroupByExpression::freeResult(
     HashMap<String, Vector<VM::Instance >>* groups) {
   for (auto& group : (*groups)) {
     for (size_t i = 0; i < select_exprs_.size(); ++i) {
-      VM::freeInstance(select_exprs_[i].program(), &group.second[i]);
+      VM::freeInstance(ctx_, select_exprs_[i].program(), &group.second[i]);
     }
   }
 }
@@ -140,12 +143,13 @@ void GroupByExpression::mergeResult(
     auto& dst_group = (*dst)[src_group.first];
     if (dst_group.size() == 0) {
       for (const auto& e : select_exprs_) {
-        dst_group.emplace_back(VM::allocInstance(e.program(), scratch));
+        dst_group.emplace_back(VM::allocInstance(ctx_, e.program(), scratch));
       }
     }
 
     for (size_t i = 0; i < select_exprs_.size(); ++i) {
       VM::merge(
+          ctx_,
           select_exprs_[i].program(),
           &dst_group[i],
           &src_group.second[i]);
@@ -159,19 +163,19 @@ bool GroupBy::nextRow(
     int row_len, const SValue* row) {
   Vector<SValue> gkey(group_exprs_.size(), SValue{});
   for (size_t i = 0; i < group_exprs_.size(); ++i) {
-    VM::evaluate(group_exprs_[i].program(), row_len, row, &gkey[i]);
+    VM::evaluate(ctx_, group_exprs_[i].program(), row_len, row, &gkey[i]);
   }
 
   auto group_key = SValue::makeUniqueKey(gkey.data(), gkey.size());
   auto& group = (*groups)[group_key];
   if (group.size() == 0) {
     for (const auto& e : select_exprs_) {
-      group.emplace_back(VM::allocInstance(e.program(), scratch));
+      group.emplace_back(VM::allocInstance(ctx_, e.program(), scratch));
     }
   }
 
   for (size_t i = 0; i < select_exprs_.size(); ++i) {
-    VM::accumulate(select_exprs_[i].program(), &group[i], row_len, row);
+    VM::accumulate(ctx_, select_exprs_[i].program(), &group[i], row_len, row);
   }
 
   return true;
@@ -200,7 +204,7 @@ void GroupByExpression::encode(
     os->appendLenencString(group.first);
 
     for (size_t i = 0; i < select_exprs_.size(); ++i) {
-      VM::saveState(select_exprs_[i].program(), &group.second[i], os);
+      VM::saveState(ctx_, select_exprs_[i].program(), &group.second[i], os);
     }
   }
 }
@@ -222,8 +226,8 @@ bool GroupByExpression::decode(
     auto& group = (*groups)[group_key];
     for (size_t i = 0; i < select_exprs_.size(); ++i) {
       const auto& e = select_exprs_[i];
-      group.emplace_back(VM::allocInstance(e.program(), scratch));
-      VM::loadState(e.program(), &group[i], is);
+      group.emplace_back(VM::allocInstance(ctx_, e.program(), scratch));
+      VM::loadState(ctx_, e.program(), &group[i], is);
     }
   }
 
@@ -245,11 +249,12 @@ Option<SHA1Hash> GroupBy::cacheKey() const {
 }
 
 RemoteGroupBy::RemoteGroupBy(
+    SContext* ctx,
     const Vector<String>& column_names,
     Vector<ValueExpression> select_expressions,
     const RemoteAggregateParams& params,
     RemoteExecuteFn execute_fn) :
-    GroupByExpression(column_names, std::move(select_expressions)),
+    GroupByExpression(ctx, column_names, std::move(select_expressions)),
     params_(params),
     execute_fn_(execute_fn) {}
 

@@ -12,11 +12,12 @@
 #include <math.h>
 #include <string.h>
 #include <csql/expressions/math.h>
+#include <csql/SContext.h>
 
 namespace csql {
 namespace expressions {
 
-void addExpr(int argc, SValue* argv, SValue* out) {
+void addExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (argc != 2) {
     RAISE(
         kRuntimeError,
@@ -67,7 +68,7 @@ void addExpr(int argc, SValue* argv, SValue* out) {
   *out = SValue(lhs->toString() + rhs->toString());
 }
 
-void subExpr(int argc, SValue* argv, SValue* out) {
+void subExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (argc != 2) {
     RAISE(
         kRuntimeError,
@@ -120,7 +121,7 @@ void subExpr(int argc, SValue* argv, SValue* out) {
       rhs->getTypeName());
 }
 
-void mulExpr(int argc, SValue* argv, SValue* out) {
+void mulExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (argc != 2) {
     RAISE(
         kRuntimeError,
@@ -173,7 +174,7 @@ void mulExpr(int argc, SValue* argv, SValue* out) {
       rhs->getTypeName());
 }
 
-void divExpr(int argc, SValue* argv, SValue* out) {
+void divExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (argc != 2) {
     RAISE(
         kRuntimeError,
@@ -210,7 +211,7 @@ void divExpr(int argc, SValue* argv, SValue* out) {
       rhs->getTypeName());
 }
 
-void modExpr(int argc, SValue* argv, SValue* out) {
+void modExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (argc != 2) {
     RAISE(
         kRuntimeError,
@@ -263,7 +264,7 @@ void modExpr(int argc, SValue* argv, SValue* out) {
       rhs->getTypeName());
 }
 
-void powExpr(int argc, SValue* argv, SValue* out) {
+void powExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   if (argc != 2) {
     RAISE(
         kRuntimeError,
@@ -316,7 +317,7 @@ void powExpr(int argc, SValue* argv, SValue* out) {
       rhs->getTypeName());
 }
 
-void roundExpr(int argc, SValue* argv, SValue* out) {
+void roundExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   switch (argc) {
 
     // round to integer
@@ -334,7 +335,7 @@ void roundExpr(int argc, SValue* argv, SValue* out) {
   }
 }
 
-void truncateExpr(int argc, SValue* argv, SValue* out) {
+void truncateExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   switch (argc) {
 
     // truncate to integer

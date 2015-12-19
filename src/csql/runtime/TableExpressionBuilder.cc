@@ -22,35 +22,38 @@ using namespace stx;
 namespace csql {
 
 ScopedPtr<TableExpression> TableExpressionBuilder::build(
+    SContext* ctx,
     RefPtr<QueryTreeNode> node,
     QueryBuilder* runtime,
     TableProvider* tables) {
 
   if (dynamic_cast<LimitNode*>(node.get())) {
-    return buildLimit(node.asInstanceOf<LimitNode>(), runtime, tables);
+    return buildLimit(ctx, node.asInstanceOf<LimitNode>(), runtime, tables);
   }
 
   if (dynamic_cast<OrderByNode*>(node.get())) {
-    return buildOrderBy(node.asInstanceOf<OrderByNode>(), runtime, tables);
+    return buildOrderBy(ctx, node.asInstanceOf<OrderByNode>(), runtime, tables);
   }
 
   if (dynamic_cast<GroupByNode*>(node.get())) {
-    return buildGroupBy(node.asInstanceOf<GroupByNode>(), runtime, tables);
+    return buildGroupBy(ctx, node.asInstanceOf<GroupByNode>(), runtime, tables);
   }
 
   if (dynamic_cast<GroupByMergeNode*>(node.get())) {
     return buildGroupMerge(
+        ctx,
         node.asInstanceOf<GroupByMergeNode>(),
         runtime,
         tables);
   }
 
   if (dynamic_cast<UnionNode*>(node.get())) {
-    return buildUnion(node.asInstanceOf<UnionNode>(), runtime, tables);
+    return buildUnion(ctx, node.asInstanceOf<UnionNode>(), runtime, tables);
   }
 
   if (dynamic_cast<SequentialScanNode*>(node.get())) {
     return buildSequentialScan(
+        ctx,
         node.asInstanceOf<SequentialScanNode>(),
         runtime,
         tables);
@@ -58,6 +61,7 @@ ScopedPtr<TableExpression> TableExpressionBuilder::build(
 
   if (dynamic_cast<SelectExpressionNode*>(node.get())) {
     return buildSelectExpression(
+        ctx,
         node.asInstanceOf<SelectExpressionNode>(),
         runtime,
         tables);
@@ -69,6 +73,7 @@ ScopedPtr<TableExpression> TableExpressionBuilder::build(
 
   if (dynamic_cast<DescribeTableNode*>(node.get())) {
     return buildDescribeTableStatment(
+        ctx,
         node.asInstanceOf<DescribeTableNode>(),
         runtime,
         tables);
@@ -76,6 +81,7 @@ ScopedPtr<TableExpression> TableExpressionBuilder::build(
 
   if (dynamic_cast<RemoteAggregateNode*>(node.get())) {
     return buildRemoteAggregate(
+        ctx,
         node.asInstanceOf<RemoteAggregateNode>(),
         runtime);
   }
@@ -86,6 +92,7 @@ ScopedPtr<TableExpression> TableExpressionBuilder::build(
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildGroupBy(
+    SContext* ctx,
     RefPtr<GroupByNode> node,
     QueryBuilder* runtime,
     TableProvider* tables) {
@@ -97,17 +104,18 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildGroupBy(
     column_names.emplace_back(slnode->columnName());
 
     select_expressions.emplace_back(
-        runtime->buildValueExpression(slnode->expression()));
+        runtime->buildValueExpression(ctx, slnode->expression()));
   }
 
   for (const auto& e : node->groupExpressions()) {
-    group_expressions.emplace_back(runtime->buildValueExpression(e));
+    group_expressions.emplace_back(runtime->buildValueExpression(ctx, e));
   }
 
-  auto next = build(node->inputTable(), runtime, tables);
+  auto next = build(ctx, node->inputTable(), runtime, tables);
 
   return mkScoped(
       new GroupBy(
+          ctx,
           std::move(next),
           column_names,
           std::move(select_expressions),
@@ -116,6 +124,7 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildGroupBy(
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildSequentialScan(
+    SContext* ctx,
     RefPtr<SequentialScanNode> node,
     QueryBuilder* runtime,
     TableProvider* tables) {
@@ -140,7 +149,7 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildSequentialScan(
     }
   }
 
-  auto seqscan = tables->buildSequentialScan(node, runtime);
+  auto seqscan = tables->buildSequentialScan(ctx, node, runtime);
   if (seqscan.isEmpty()) {
     RAISEF(kRuntimeError, "table not found: $0", table_name);
   }
@@ -149,13 +158,14 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildSequentialScan(
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildGroupMerge(
+    SContext* ctx,
     RefPtr<GroupByMergeNode> node,
     QueryBuilder* runtime,
     TableProvider* tables) {
   Vector<ScopedPtr<GroupByExpression>> shards;
 
   for (const auto& table : node->inputTables()) {
-    auto shard = build(table, runtime, tables);
+    auto shard = build(ctx, table, runtime, tables);
     auto tshard = dynamic_cast<GroupByExpression*>(shard.get());
     if (tshard) {
       shard.release();
@@ -170,19 +180,21 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildGroupMerge(
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildUnion(
+    SContext* ctx,
     RefPtr<UnionNode> node,
     QueryBuilder* runtime,
     TableProvider* tables) {
   Vector<ScopedPtr<TableExpression>> union_tables;
 
   for (const auto& table : node->inputTables()) {
-    union_tables.emplace_back(build(table, runtime, tables));
+    union_tables.emplace_back(build(ctx, table, runtime, tables));
   }
 
   return mkScoped(new Union(std::move(union_tables)));
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildLimit(
+    SContext* ctx,
     RefPtr<LimitNode> node,
     QueryBuilder* runtime,
     TableProvider* tables) {
@@ -190,21 +202,24 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildLimit(
       new LimitClause(
           node->limit(),
           node->offset(),
-          build(node->inputTable(), runtime, tables)));
+          build(ctx, node->inputTable(), runtime, tables)));
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildOrderBy(
+    SContext* ctx,
     RefPtr<OrderByNode> node,
     QueryBuilder* runtime,
     TableProvider* tables) {
   return mkScoped(
       new OrderBy(
+          ctx,
           node->sortSpecs(),
           node->maxOutputColumnIndex(),
-          build(node->inputTable(), runtime, tables)));
+          build(ctx, node->inputTable(), runtime, tables)));
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildSelectExpression(
+    SContext* ctx,
     RefPtr<SelectExpressionNode> node,
     QueryBuilder* runtime,
     TableProvider* tables) {
@@ -215,15 +230,17 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildSelectExpression(
     column_names.emplace_back(slnode->columnName());
 
     select_expressions.emplace_back(
-        runtime->buildValueExpression(slnode->expression()));
+        runtime->buildValueExpression(ctx, slnode->expression()));
   }
 
   return mkScoped(new SelectExpression(
+      ctx,
       column_names,
       std::move(select_expressions)));
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildDescribeTableStatment(
+    SContext* ctx,
     RefPtr<DescribeTableNode> node,
     QueryBuilder* runtime,
     TableProvider* tables) {
@@ -236,6 +253,7 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildDescribeTableStatment(
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildRemoteAggregate(
+    SContext* ctx,
     RefPtr<RemoteAggregateNode> node,
     QueryBuilder* runtime) {
 
@@ -246,11 +264,12 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildRemoteAggregate(
     column_names.emplace_back(slnode->columnName());
 
     select_expressions.emplace_back(
-        runtime->buildValueExpression(slnode->expression()));
+        runtime->buildValueExpression(ctx, slnode->expression()));
   }
 
   return mkScoped(
       new RemoteGroupBy(
+          ctx,
           column_names,
           std::move(select_expressions),
           node->remoteAggregateParams(),

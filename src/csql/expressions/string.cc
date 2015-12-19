@@ -24,28 +24,28 @@ static void checkArgs(const char* symbol, int argc, int argc_expected) {
   }
 }
 
-void startsWithExpr(int argc, SValue* argv, SValue* out) {
+void startsWithExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("STARTSWITH", argc, 2);
 
   auto val = StringUtil::beginsWith(argv[0].toString(), argv[1].toString());
   *out = SValue(SValue::BoolType(val));
 }
 
-void endsWithExpr(int argc, SValue* argv, SValue* out) {
+void endsWithExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("ENDSWITH", argc, 2);
 
   auto val = StringUtil::endsWith(argv[0].toString(), argv[1].toString());
   *out = SValue(SValue::BoolType(val));
 }
 
-void upperCaseExpr(int argc, SValue* argv, SValue* out) {
+void upperCaseExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("UPPERCASE", argc, 1);
   auto val = argv[0].toString();
   StringUtil::toUpper(&val);
   *out = SValue(val);
 }
 
-void lowerCaseExpr(int argc, SValue* argv, SValue* out) {
+void lowerCaseExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("LOWERCASE", argc, 1);
   auto val = argv[0].toString();
   StringUtil::toLower(&val);
