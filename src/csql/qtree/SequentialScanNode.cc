@@ -174,40 +174,88 @@ void SequentialScanNode::findConstraints(RefPtr<ValueExpressionNode> expr) {
 
   // extract constraints of format "column <OP> value"
   {
-    bool found_type = false;
-    ScanConstraintType type;
-    bool found_literal = false;
     RefPtr<LiteralExpressionNode> literal;
-    bool found_column = false;
     RefPtr<ColumnReferenceNode> column;
-
-    if (call_expr && call_expr->symbol() == "eq") {
-      type = ScanConstraintType::EQUAL_TO;
-      found_type = true;
-    }
-
-    auto expr_args = expr->arguments();
-    if (expr_args.size() == 2) {
-      for (const auto& arg : expr_args) {
-        auto literal_expr = dynamic_cast<LiteralExpressionNode*>(arg.get());
+    bool reverse_expr = false;
+    auto args = expr->arguments();
+    if (args.size() == 2) {
+      for (size_t i = 0; i < args.size(); ++i) {
+        auto literal_expr = dynamic_cast<LiteralExpressionNode*>(args[i].get());
         if (literal_expr) {
           literal = mkRef(literal_expr);
-          found_literal = true;
         }
-        auto colref_expr = dynamic_cast<ColumnReferenceNode*>(arg.get());
+        auto colref_expr = dynamic_cast<ColumnReferenceNode*>(args[i].get());
         if (colref_expr) {
           column = mkRef(colref_expr);
-          found_column = true;
+          reverse_expr = i > 0;
         }
       }
     }
 
-    if (found_type && found_literal && found_column) {
-      ScanConstraint constraint;
-      constraint.column_name = column->fieldName();
-      constraint.type = type;
-      constraint.value = literal->value();
-      constraints_.emplace_back(constraint);
+    if (literal.get() != nullptr && column.get() != nullptr) {
+
+      // EQUAL_TO
+      if (call_expr && call_expr->symbol() == "eq") {
+        ScanConstraint constraint;
+        constraint.column_name = column->fieldName();
+        constraint.type = ScanConstraintType::EQUAL_TO;
+        constraint.value = literal->value();
+        constraints_.emplace_back(constraint);
+      }
+
+      // NOT_EQUAL_TO
+      if (call_expr && call_expr->symbol() == "neq") {
+        ScanConstraint constraint;
+        constraint.column_name = column->fieldName();
+        constraint.type = ScanConstraintType::NOT_EQUAL_TO;
+        constraint.value = literal->value();
+        constraints_.emplace_back(constraint);
+      }
+
+      // LESS_THAN
+      if (call_expr && call_expr->symbol() == "lt") {
+        ScanConstraint constraint;
+        constraint.column_name = column->fieldName();
+        constraint.type = reverse_expr ?
+            ScanConstraintType::GREATER_THAN :
+            ScanConstraintType::LESS_THAN;
+        constraint.value = literal->value();
+        constraints_.emplace_back(constraint);
+      }
+
+      // LESS_THAN_OR_EQUALS
+      if (call_expr && call_expr->symbol() == "lte") {
+        ScanConstraint constraint;
+        constraint.column_name = column->fieldName();
+        constraint.type = reverse_expr ?
+            ScanConstraintType::GREATER_THAN_OR_EQUAL_TO :
+            ScanConstraintType::LESS_THAN_OR_EQUAL_TO;
+        constraint.value = literal->value();
+        constraints_.emplace_back(constraint);
+      }
+
+      // GREATER_THAN
+      if (call_expr && call_expr->symbol() == "gt") {
+        ScanConstraint constraint;
+        constraint.column_name = column->fieldName();
+        constraint.type = reverse_expr ?
+            ScanConstraintType::LESS_THAN :
+            ScanConstraintType::GREATER_THAN;
+        constraint.value = literal->value();
+        constraints_.emplace_back(constraint);
+      }
+
+      // GREATER_THAN_OR_EQUAL_TO
+      if (call_expr && call_expr->symbol() == "gte") {
+        ScanConstraint constraint;
+        constraint.column_name = column->fieldName();
+        constraint.type = reverse_expr ?
+            ScanConstraintType::LESS_THAN_OR_EQUAL_TO :
+            ScanConstraintType::GREATER_THAN_OR_EQUAL_TO;
+        constraint.value = literal->value();
+        constraints_.emplace_back(constraint);
+      }
+
     }
   }
 }
