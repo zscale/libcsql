@@ -17,23 +17,24 @@ make
 Examples
 --------
 
-Most simple example: evaluate a constant expression without inputs;
+Most simple example: evaluate a constant expression without inputs:
 
-    #include <csql/csql.h>
-    #include <string>
+```
+#include <csql/csql.h>
+#include <string>
 
-    int main() {
-      auto runtime = Runtime::getDefaultRuntime();
-      auto txn = runtime->newTransaction();
+int main() {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto txn = runtime->newTransaction();
 
-      std::string expression = "1 + 2";
-      auto res = runtime->evaluateConstExpression(txn.get(), expression);
-      std::string res_str = v.toString();
+  std::string expression = "1 + 2";
+  auto res = runtime->evaluateConstExpression(txn.get(), expression);
+  std::string res_str = v.toString();
 
-      printf("result: %s\n", re_str.c_str()); // prints "3"
-      return 0;
-    }
-
+  printf("result: %s\n", re_str.c_str()); // prints "result: 3"
+  return 0;
+}
+```
 
 LICENSE
 -------
