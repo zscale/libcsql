@@ -245,3 +245,53 @@ TEST_CASE(QTreeTest, TestExtractGreaterThanOrEqualToConstraint, [] () {
     EXPECT_EQ(constraint.value.toString(), "1234");
   }
 });
+
+TEST_CASE(QTreeTest, TestExtractMultipleConstraints, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new CSTableScanProvider(
+          "testtable",
+          "src/csql/testdata/testtbl.cst"));
+
+  String query = "select 1 from testtable where 1234 > time AND session_id != 444 AND time >= 6666;";
+
+  csql::Parser parser;
+  parser.parse(query.data(), query.size());
+
+  auto qtree_builder = runtime->queryPlanBuilder();
+  auto qtrees = qtree_builder->build(
+      parser.getStatements(),
+      estrat->tableProvider());
+
+  EXPECT_EQ(qtrees.size(), 1);
+  auto qtree = qtrees[0];
+  EXPECT_TRUE(dynamic_cast<SequentialScanNode*>(qtree.get()) != nullptr);
+  auto seqscan = qtree.asInstanceOf<SequentialScanNode>();
+  EXPECT_EQ(seqscan->tableName(), "testtable");
+
+  auto constraints = seqscan->constraints();
+  EXPECT_EQ(constraints.size(), 3);
+
+  {
+    auto constraint = constraints[0];
+    EXPECT_EQ(constraint.column_name, "time");
+    EXPECT_TRUE(constraint.type == ScanConstraintType::LESS_THAN);
+    EXPECT_EQ(constraint.value.toString(), "1234");
+  }
+
+  {
+    auto constraint = constraints[1];
+    EXPECT_EQ(constraint.column_name, "session_id");
+    EXPECT_TRUE(constraint.type == ScanConstraintType::NOT_EQUAL_TO);
+    EXPECT_EQ(constraint.value.toString(), "444");
+  }
+
+  {
+    auto constraint = constraints[2];
+    EXPECT_EQ(constraint.column_name, "time");
+    EXPECT_TRUE(constraint.type == ScanConstraintType::GREATER_THAN_OR_EQUAL_TO);
+    EXPECT_EQ(constraint.value.toString(), "6666");
+  }
+});
