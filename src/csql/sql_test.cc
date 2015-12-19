@@ -717,7 +717,7 @@ TEST_CASE(SQLTest, TestSimpleGroupOverTimeWindow, [] () {
 TEST_CASE(SQLTest, TestNumericConversion, [] () {
   {
     SValue val("42");
-    EXPECT_EQ(val.getType(), T_STRING);
+    EXPECT_EQ(val.getType(), SQL_STRING);
     EXPECT(val.testType<SValue::IntegerType>());
     EXPECT(val.tryNumericConversion());
     EXPECT_EQ(val.getInteger(), 42);
@@ -725,7 +725,7 @@ TEST_CASE(SQLTest, TestNumericConversion, [] () {
 
   {
     SValue val("1415912541648");
-    EXPECT_EQ(val.getType(), T_STRING);
+    EXPECT_EQ(val.getType(), SQL_STRING);
     EXPECT(val.testType<SValue::IntegerType>());
     EXPECT(val.tryNumericConversion());
     EXPECT_EQ(val.getInteger(), 1415912541648lu);

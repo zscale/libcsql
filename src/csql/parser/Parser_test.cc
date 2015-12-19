@@ -485,7 +485,7 @@ TEST_CASE(ParserTest, TestTokenizerEscaping, [] () {
   EXPECT(tl[11].getType() == Token::T_IDENTIFIER);
   EXPECT(tl[11] == "id");
   EXPECT(tl[12].getType() == Token::T_EQUAL);
-  EXPECT(tl[13].getType() == Token::T_STRING);
+  EXPECT(tl[13].getType() == Token::SQL_STRING);
   EXPECT_EQ(tl[13].getString(), "fnor'dbar");
   EXPECT(tl[14].getType() == Token::T_PLUS);
   EXPECT(tl[15].getType() == Token::T_NUMERIC);
@@ -519,7 +519,7 @@ TEST_CASE(ParserTest, TestTokenizerSimple, [] () {
   //EXPECT(tl[11].getType() == Token::T_IDENTIFIER);
   //EXPECT(tl[11] == "id");
   //EXPECT(tl[12].getType() == Token::T_EQUAL);
-  //EXPECT(tl[13].getType() == Token::T_STRING);
+  //EXPECT(tl[13].getType() == Token::SQL_STRING);
   //EXPECT(tl[13] == "fn'o=,rdbar");
   //EXPECT(tl[14].getType() == Token::T_PLUS);
   //EXPECT(tl[15].getType() == Token::T_NUMERIC);

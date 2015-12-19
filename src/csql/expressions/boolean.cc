@@ -28,40 +28,40 @@ void eqExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   SValue* rhs = argv + 1;
 
   switch(lhs->getType()) {
-    case T_INTEGER:
-    case T_TIMESTAMP:
+    case SQL_INTEGER:
+    case SQL_TIMESTAMP:
       switch(rhs->getType()) {
-        case T_INTEGER:
-        case T_TIMESTAMP:
+        case SQL_INTEGER:
+        case SQL_TIMESTAMP:
           *out = SValue(lhs->getInteger() == rhs->getInteger());
           return;
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(lhs->getFloat() == rhs->getFloat());
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue(SValue::BoolType(false));
           return;
         default:
           break;
       }
       break;
-    case T_FLOAT:
+    case SQL_FLOAT:
       switch(rhs->getType()) {
-        case T_INTEGER:
-        case T_FLOAT:
-        case T_TIMESTAMP:
+        case SQL_INTEGER:
+        case SQL_FLOAT:
+        case SQL_TIMESTAMP:
           *out = SValue(lhs->getFloat() == rhs->getFloat());
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue(SValue::BoolType(false));
           return;
         default:
           break;
       }
       break;
-    case T_NULL:
+    case SQL_NULL:
       switch(rhs->getType()) {
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue(SValue::BoolType(true));
           return;
         default:
@@ -69,9 +69,9 @@ void eqExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
           return;
       }
       return;
-    case T_BOOL:
+    case SQL_BOOL:
       switch(rhs->getType()) {
-        case T_BOOL:
+        case SQL_BOOL:
           *out = SValue(SValue::BoolType(lhs->getBool() == rhs->getBool()));
           return;
         default:
@@ -82,8 +82,8 @@ void eqExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
       break;
   }
 
-  if (lhs->getType() == T_STRING ||
-      rhs->getType() == T_STRING) {
+  if (lhs->getType() == SQL_STRING ||
+      rhs->getType() == SQL_STRING) {
     *out = SValue(lhs->toString() == rhs->toString());
     return;
   }
@@ -133,16 +133,16 @@ void negExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   SValue* val = argv;
 
   switch(val->getType()) {
-    case T_INTEGER:
+    case SQL_INTEGER:
       *out = SValue(val->getInteger() * -1);
       return;
-    case T_FLOAT:
+    case SQL_FLOAT:
       *out = SValue(val->getFloat() * -1.0f);
       return;
-    case T_BOOL:
+    case SQL_BOOL:
       *out = SValue(!val->getBool());
       return;
-    case T_NULL:
+    case SQL_NULL:
       *out = SValue();
       return;
     default:
@@ -164,45 +164,45 @@ void ltExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   SValue* rhs = argv + 1;
 
   switch(lhs->getType()) {
-    case T_INTEGER:
-    case T_TIMESTAMP:
+    case SQL_INTEGER:
+    case SQL_TIMESTAMP:
       switch(rhs->getType()) {
-        case T_INTEGER:
-        case T_TIMESTAMP:
+        case SQL_INTEGER:
+        case SQL_TIMESTAMP:
           *out = SValue(lhs->getInteger() < rhs->getInteger());
           return;
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(lhs->getFloat() < rhs->getFloat());
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue(lhs->getFloat() < 0.0f);
           return;
         default:
           break;
       }
       break;
-    case T_FLOAT:
+    case SQL_FLOAT:
       switch(rhs->getType()) {
-        case T_INTEGER:
-        case T_FLOAT:
-        case T_TIMESTAMP:
+        case SQL_INTEGER:
+        case SQL_FLOAT:
+        case SQL_TIMESTAMP:
           *out = SValue(lhs->getFloat() < rhs->getFloat());
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue(lhs->getFloat() < 0.0f);
           return;
         default:
           break;
       }
       break;
-    case T_NULL:
+    case SQL_NULL:
       switch(rhs->getType()) {
-        case T_INTEGER:
-        case T_FLOAT:
-        case T_TIMESTAMP:
+        case SQL_INTEGER:
+        case SQL_FLOAT:
+        case SQL_TIMESTAMP:
           *out = SValue(0.0f < rhs->getFloat());
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue(SValue::BoolType(false));
           return;
         default:
@@ -212,8 +212,8 @@ void ltExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
       break;
   }
 
-  if (lhs->getType() == T_STRING ||
-      rhs->getType() == T_STRING) {
+  if (lhs->getType() == SQL_STRING ||
+      rhs->getType() == SQL_STRING) {
     *out = SValue(lhs->toString() < rhs->toString());
     return;
   }
@@ -234,45 +234,45 @@ void lteExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   SValue* rhs = argv + 1;
 
   switch(lhs->getType()) {
-    case T_INTEGER:
-    case T_TIMESTAMP:
+    case SQL_INTEGER:
+    case SQL_TIMESTAMP:
       switch(rhs->getType()) {
-        case T_INTEGER:
-        case T_TIMESTAMP:
+        case SQL_INTEGER:
+        case SQL_TIMESTAMP:
           *out = SValue(lhs->getInteger() <= rhs->getInteger());
           return;
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(lhs->getFloat() <= rhs->getFloat());
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue(lhs->getFloat() <= 0.0f);
           return;
         default:
           break;
       }
       break;
-    case T_FLOAT:
+    case SQL_FLOAT:
       switch(rhs->getType()) {
-        case T_INTEGER:
-        case T_FLOAT:
-        case T_TIMESTAMP:
+        case SQL_INTEGER:
+        case SQL_FLOAT:
+        case SQL_TIMESTAMP:
           *out = SValue(lhs->getFloat() <= rhs->getFloat());
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue(lhs->getFloat() <= 0.0f);
           return;
         default:
           break;
       }
       break;
-    case T_NULL:
+    case SQL_NULL:
       switch(rhs->getType()) {
-        case T_INTEGER:
-        case T_FLOAT:
-        case T_TIMESTAMP:
+        case SQL_INTEGER:
+        case SQL_FLOAT:
+        case SQL_TIMESTAMP:
           *out = SValue(0.0f <= rhs->getFloat());
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue(SValue::BoolType(true));
           return;
         default:
@@ -282,8 +282,8 @@ void lteExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
       break;
   }
 
-  if (lhs->getType() == T_STRING ||
-      rhs->getType() == T_STRING) {
+  if (lhs->getType() == SQL_STRING ||
+      rhs->getType() == SQL_STRING) {
     *out = SValue(lhs->toString() <= rhs->toString());
     return;
   }
@@ -304,45 +304,45 @@ void gtExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   SValue* rhs = argv + 1;
 
   switch(lhs->getType()) {
-    case T_INTEGER:
-    case T_TIMESTAMP:
+    case SQL_INTEGER:
+    case SQL_TIMESTAMP:
       switch(rhs->getType()) {
-        case T_INTEGER:
-        case T_TIMESTAMP:
+        case SQL_INTEGER:
+        case SQL_TIMESTAMP:
           *out = SValue(lhs->getInteger() > rhs->getInteger());
           return;
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(lhs->getFloat() > rhs->getFloat());
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue(lhs->getFloat() > 0.0f);
           return;
         default:
           break;
       }
       break;
-    case T_FLOAT:
+    case SQL_FLOAT:
       switch(rhs->getType()) {
-        case T_INTEGER:
-        case T_FLOAT:
-        case T_TIMESTAMP:
+        case SQL_INTEGER:
+        case SQL_FLOAT:
+        case SQL_TIMESTAMP:
           *out = SValue(lhs->getFloat() > rhs->getFloat());
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue(lhs->getFloat() > 0.0f);
           return;
         default:
           break;
       }
       break;
-    case T_NULL:
+    case SQL_NULL:
       switch(rhs->getType()) {
-        case T_INTEGER:
-        case T_FLOAT:
-        case T_TIMESTAMP:
+        case SQL_INTEGER:
+        case SQL_FLOAT:
+        case SQL_TIMESTAMP:
           *out = SValue(0.0f > rhs->getFloat());
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue(SValue::BoolType(false));
           return;
         default:
@@ -352,8 +352,8 @@ void gtExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
       break;
   }
 
-  if (lhs->getType() == T_STRING ||
-      rhs->getType() == T_STRING) {
+  if (lhs->getType() == SQL_STRING ||
+      rhs->getType() == SQL_STRING) {
     *out = SValue(lhs->toString() > rhs->toString());
     return;
   }
@@ -374,45 +374,45 @@ void gteExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   SValue* rhs = argv + 1;
 
   switch(lhs->getType()) {
-    case T_INTEGER:
-    case T_TIMESTAMP:
+    case SQL_INTEGER:
+    case SQL_TIMESTAMP:
       switch(rhs->getType()) {
-        case T_INTEGER:
-        case T_TIMESTAMP:
+        case SQL_INTEGER:
+        case SQL_TIMESTAMP:
           *out = SValue(lhs->getInteger() >= rhs->getInteger());
           return;
-        case T_FLOAT:
+        case SQL_FLOAT:
           *out = SValue(lhs->getFloat() >= rhs->getFloat());
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue(lhs->getFloat() >= 0.0f);
           return;
         default:
           break;
       }
       break;
-    case T_FLOAT:
+    case SQL_FLOAT:
       switch(rhs->getType()) {
-        case T_INTEGER:
-        case T_FLOAT:
-        case T_TIMESTAMP:
+        case SQL_INTEGER:
+        case SQL_FLOAT:
+        case SQL_TIMESTAMP:
           *out = SValue(lhs->getFloat() >= rhs->getFloat());
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue(lhs->getFloat() >= 0.0f);
           return;
         default:
           break;
       }
       break;
-    case T_NULL:
+    case SQL_NULL:
       switch(rhs->getType()) {
-        case T_INTEGER:
-        case T_FLOAT:
-        case T_TIMESTAMP:
+        case SQL_INTEGER:
+        case SQL_FLOAT:
+        case SQL_TIMESTAMP:
           *out = SValue(0.0f >= rhs->getFloat());
           return;
-        case T_NULL:
+        case SQL_NULL:
           *out = SValue(SValue::BoolType(true));
           return;
         default:
@@ -422,8 +422,8 @@ void gteExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
       break;
   }
 
-  if (lhs->getType() == T_STRING ||
-      rhs->getType() == T_STRING) {
+  if (lhs->getType() == SQL_STRING ||
+      rhs->getType() == SQL_STRING) {
     *out = SValue(lhs->toString() >= rhs->toString());
     return;
   }
@@ -440,7 +440,7 @@ void isNullExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
         "wrong number of arguments for isnull. expected: 1, got: $0", argc);
   }
 
-  if (argv[0].getType() == T_NULL) {
+  if (argv[0].getType() == SQL_NULL) {
     *out = SValue(SValue::BoolType(true));
   } else {
     *out = SValue(SValue::BoolType(false));

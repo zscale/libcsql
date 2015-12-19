@@ -14,12 +14,12 @@
 extern "C" {
 
 enum sql_type : uint8_t {
-  T_NULL = 0,
-  T_STRING = 1,
-  T_FLOAT = 2,
-  T_INTEGER = 3,
-  T_BOOL = 4,
-  T_TIMESTAMP = 5,
+  SQL_NULL = 0,
+  SQL_STRING = 1,
+  SQL_FLOAT = 2,
+  SQL_INTEGER = 3,
+  SQL_BOOL = 4,
+  SQL_TIMESTAMP = 5,
 };
 
 typedef struct {

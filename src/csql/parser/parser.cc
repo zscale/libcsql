@@ -124,7 +124,7 @@ ASTNode* Parser::unaryExpr() {
     case Token::T_TRUE:
     case Token::T_FALSE:
     case Token::T_NUMERIC:
-    case Token::T_STRING: {
+    case Token::SQL_STRING: {
       auto e = new ASTNode(ASTNode::T_LITERAL);
       e->setToken(cur_token_);
       consumeToken();
@@ -815,7 +815,7 @@ ASTNode* Parser::limitClause() {
 ASTNode* Parser::tableName() {
   switch (cur_token_->getType()) {
     case Token::T_IDENTIFIER:
-    case Token::T_STRING:
+    case Token::SQL_STRING:
       break;
 
     default:

@@ -19,7 +19,7 @@ namespace expressions {
  */
 void countExprAcc(sql_ctx* ctx, void* scratchpad, int argc, SValue* argv) {
   switch(argv->getType()) {
-    case T_NULL:
+    case SQL_NULL:
       return;
 
     default:
@@ -81,17 +81,17 @@ void sumExprAcc(sql_ctx* ctx, void* scratchpad, int argc, SValue* argv) {
   }
 
   switch(val->getType()) {
-    case T_NULL:
+    case SQL_NULL:
       return;
 
-    case T_INTEGER:
-      data->type = T_INTEGER;
+    case SQL_INTEGER:
+      data->type = SQL_INTEGER;
       data->val += val->getInteger();
       return;
 
-    case T_FLOAT:
+    case SQL_FLOAT:
     default:
-      data->type = T_FLOAT;
+      data->type = SQL_FLOAT;
       data->val += val->getFloat();
       return;
   }
@@ -101,11 +101,11 @@ void sumExprGet(sql_ctx* ctx, void* scratchpad, SValue* out) {
   auto data = (sum_expr_scratchpad*) scratchpad;
 
   switch(data->type) {
-    case T_INTEGER:
+    case SQL_INTEGER:
       *out = SValue(SValue::IntegerType(data->val));
       return;
 
-    case T_FLOAT:
+    case SQL_FLOAT:
       *out = SValue(SValue::FloatType(data->val));
       return;
 
@@ -123,11 +123,11 @@ void sumExprMerge(sql_ctx* ctx, void* scratchpad, const void* other) {
   auto this_data = (sum_expr_scratchpad*) scratchpad;
   auto other_data = (const sum_expr_scratchpad*) other;
 
-  if (this_data->type == T_INTEGER &&
-      other_data->type == T_INTEGER) {
-    this_data->type = T_INTEGER;
+  if (this_data->type == SQL_INTEGER &&
+      other_data->type == SQL_INTEGER) {
+    this_data->type = SQL_INTEGER;
   } else {
-    this_data->type = T_FLOAT;
+    this_data->type = SQL_FLOAT;
   }
 
   this_data->val += other_data->val;
@@ -177,7 +177,7 @@ void meanExprAcc(sql_ctx* ctx, void* scratchpad, int argc, SValue* argv) {
   }
 
   switch(val->getType()) {
-    case T_NULL:
+    case SQL_NULL:
       return;
 
     default:
@@ -256,7 +256,7 @@ void maxExpr(sql_ctx* ctx, void* scratchpad, int argc, SValue* argv, SValue* out
   }
 
   switch(val->getType()) {
-    case T_NULL:
+    case SQL_NULL:
       return;
 
     default: {
@@ -300,7 +300,7 @@ void minExpr(sql_ctx* ctx, void* scratchpad, int argc, SValue* argv, SValue* out
   }
 
   switch(val->getType()) {
-    case T_NULL:
+    case SQL_NULL:
       return;
 
     default: {
