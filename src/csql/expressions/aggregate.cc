@@ -19,7 +19,7 @@ namespace expressions {
  */
 void countExprAcc(sql_ctx* ctx, void* scratchpad, int argc, SValue* argv) {
   switch(argv->getType()) {
-    case SValue::T_NULL:
+    case T_NULL:
       return;
 
     default:
@@ -65,7 +65,7 @@ const AggregateFunction kCountExpr {
  * SUM() expression
  */
 struct sum_expr_scratchpad {
-  SValue::kSValueType type;
+  sql_type type;
   double val;
 };
 
@@ -81,17 +81,17 @@ void sumExprAcc(sql_ctx* ctx, void* scratchpad, int argc, SValue* argv) {
   }
 
   switch(val->getType()) {
-    case SValue::T_NULL:
+    case T_NULL:
       return;
 
-    case SValue::T_INTEGER:
-      data->type = SValue::T_INTEGER;
+    case T_INTEGER:
+      data->type = T_INTEGER;
       data->val += val->getInteger();
       return;
 
-    case SValue::T_FLOAT:
+    case T_FLOAT:
     default:
-      data->type = SValue::T_FLOAT;
+      data->type = T_FLOAT;
       data->val += val->getFloat();
       return;
   }
@@ -101,11 +101,11 @@ void sumExprGet(sql_ctx* ctx, void* scratchpad, SValue* out) {
   auto data = (sum_expr_scratchpad*) scratchpad;
 
   switch(data->type) {
-    case SValue::T_INTEGER:
+    case T_INTEGER:
       *out = SValue(SValue::IntegerType(data->val));
       return;
 
-    case SValue::T_FLOAT:
+    case T_FLOAT:
       *out = SValue(SValue::FloatType(data->val));
       return;
 
@@ -123,11 +123,11 @@ void sumExprMerge(sql_ctx* ctx, void* scratchpad, const void* other) {
   auto this_data = (sum_expr_scratchpad*) scratchpad;
   auto other_data = (const sum_expr_scratchpad*) other;
 
-  if (this_data->type == SValue::T_INTEGER &&
-      other_data->type == SValue::T_INTEGER) {
-    this_data->type = SValue::T_INTEGER;
+  if (this_data->type == T_INTEGER &&
+      other_data->type == T_INTEGER) {
+    this_data->type = T_INTEGER;
   } else {
-    this_data->type = SValue::T_FLOAT;
+    this_data->type = T_FLOAT;
   }
 
   this_data->val += other_data->val;
@@ -141,7 +141,7 @@ void sumExprSave(sql_ctx* ctx, void* scratchpad, OutputStream* os) {
 
 void sumExprLoad(sql_ctx* ctx, void* scratchpad, InputStream* is) {
   auto data = (sum_expr_scratchpad*) scratchpad;
-  data->type = (SValue::kSValueType) is->readVarUInt();
+  data->type = (sql_type) is->readVarUInt();
   data->val = is->readDouble();
 }
 
@@ -177,7 +177,7 @@ void meanExprAcc(sql_ctx* ctx, void* scratchpad, int argc, SValue* argv) {
   }
 
   switch(val->getType()) {
-    case SValue::T_NULL:
+    case T_NULL:
       return;
 
     default:
@@ -256,7 +256,7 @@ void maxExpr(sql_ctx* ctx, void* scratchpad, int argc, SValue* argv, SValue* out
   }
 
   switch(val->getType()) {
-    case SValue::T_NULL:
+    case T_NULL:
       return;
 
     default: {
@@ -300,7 +300,7 @@ void minExpr(sql_ctx* ctx, void* scratchpad, int argc, SValue* argv, SValue* out
   }
 
   switch(val->getType()) {
-    case SValue::T_NULL:
+    case T_NULL:
       return;
 
     default: {
