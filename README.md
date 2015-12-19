@@ -13,6 +13,28 @@ cd chartsql
 make
 ```
 
+
+Examples
+--------
+
+Most simple example: evaluate a constant expression without inputs;
+
+    #include <csql/csql.h>
+    #include <string>
+
+    int main() {
+      auto runtime = Runtime::getDefaultRuntime();
+      auto txn = runtime->newTransaction();
+
+      std::string expression = "1 + 2";
+      auto res = runtime->evaluateConstExpression(txn.get(), expression);
+      std::string res_str = v.toString();
+
+      printf("result: %s\n", re_str.c_str());
+      return 0;
+    }
+
+
 LICENSE
 -------
 
