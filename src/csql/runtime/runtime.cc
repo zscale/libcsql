@@ -13,7 +13,7 @@
 
 namespace csql {
 
-ScopedPtr<Transaction> Runtime::newContext() {
+ScopedPtr<Transaction> Runtime::newTransaction() {
   return mkScoped(new Transaction());
 }
 
