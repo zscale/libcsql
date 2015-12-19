@@ -18,7 +18,7 @@
 namespace csql {
 
 DrawStatement::DrawStatement(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<DrawStatementNode> node,
     Vector<ScopedPtr<TableExpression>> sources,
     Runtime* runtime) :

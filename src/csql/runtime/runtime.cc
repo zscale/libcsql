@@ -13,8 +13,8 @@
 
 namespace csql {
 
-ScopedPtr<SContext> Runtime::newContext() {
-  return mkScoped(new SContext());
+ScopedPtr<Transaction> Runtime::newContext() {
+  return mkScoped(new Transaction());
 }
 
 RefPtr<Runtime> Runtime::getDefaultRuntime() {
@@ -41,7 +41,7 @@ Runtime::Runtime(
     query_plan_builder_(query_plan_builder) {}
 
 RefPtr<QueryPlan> Runtime::buildQueryPlan(
-    SContext* ctx,
+    Transaction* ctx,
     const String& query,
     RefPtr<ExecutionStrategy> execution_strategy) {
   /* parse query */
@@ -60,7 +60,7 @@ RefPtr<QueryPlan> Runtime::buildQueryPlan(
 }
 
 RefPtr<QueryPlan> Runtime::buildQueryPlan(
-    SContext* ctx,
+    Transaction* ctx,
     Vector<RefPtr<QueryTreeNode>> statements,
     RefPtr<ExecutionStrategy> execution_strategy) {
   for (auto& stmt : statements) {
@@ -99,7 +99,7 @@ RefPtr<QueryPlan> Runtime::buildQueryPlan(
 }
 
 void Runtime::executeQuery(
-    SContext* ctx,
+    Transaction* ctx,
     const String& query,
     RefPtr<ExecutionStrategy> execution_strategy,
     RefPtr<ResultFormat> result_format) {
@@ -110,7 +110,7 @@ void Runtime::executeQuery(
 }
 
 void Runtime::executeQuery(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<QueryPlan> query_plan,
     RefPtr<ResultFormat> result_format) {
   /* execute query and format results */
@@ -127,7 +127,7 @@ void Runtime::executeQuery(
 }
 
 void Runtime::executeStatement(
-    SContext* ctx,
+    Transaction* ctx,
     Statement* statement,
     ResultList* result) {
   auto table_expr = dynamic_cast<TableExpression*>(statement);
@@ -146,7 +146,7 @@ void Runtime::executeStatement(
 }
 
 void Runtime::executeStatement(
-    SContext* ctx,
+    Transaction* ctx,
     TableExpression* statement,
     Function<bool (int argc, const SValue* argv)> fn) {
   csql::ExecutionContext context(&tpool_);
@@ -159,7 +159,7 @@ void Runtime::executeStatement(
 }
 
 void Runtime::executeAggregate(
-    SContext* ctx,
+    Transaction* ctx,
     const RemoteAggregateParams& query,
     RefPtr<ExecutionStrategy> execution_strategy,
     OutputStream* os) {
@@ -269,7 +269,7 @@ void Runtime::executeAggregate(
 }
 
 SValue Runtime::evaluateScalarExpression(
-    SContext* ctx,
+    Transaction* ctx,
     ASTNode* expr,
     int argc,
     const SValue* argv) {
@@ -282,7 +282,7 @@ SValue Runtime::evaluateScalarExpression(
 }
 
 SValue Runtime::evaluateScalarExpression(
-    SContext* ctx,
+    Transaction* ctx,
     const String& expr,
     int argc,
     const SValue* argv) {
@@ -305,7 +305,7 @@ SValue Runtime::evaluateScalarExpression(
 }
 
 SValue Runtime::evaluateScalarExpression(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<ValueExpressionNode> expr,
     int argc,
     const SValue* argv) {
@@ -317,7 +317,7 @@ SValue Runtime::evaluateScalarExpression(
 }
 
 SValue Runtime::evaluateScalarExpression(
-    SContext* ctx,
+    Transaction* ctx,
     const ValueExpression& expr,
     int argc,
     const SValue* argv) {
@@ -326,7 +326,7 @@ SValue Runtime::evaluateScalarExpression(
   return out;
 }
 
-SValue Runtime::evaluateConstExpression(SContext* ctx, ASTNode* expr) {
+SValue Runtime::evaluateConstExpression(Transaction* ctx, ASTNode* expr) {
   auto val_expr = mkRef(query_plan_builder_->buildValueExpression(expr));
   auto compiled = query_builder_->buildValueExpression(ctx, val_expr);
 
@@ -335,7 +335,7 @@ SValue Runtime::evaluateConstExpression(SContext* ctx, ASTNode* expr) {
   return out;
 }
 
-SValue Runtime::evaluateConstExpression(SContext* ctx, const String& expr) {
+SValue Runtime::evaluateConstExpression(Transaction* ctx, const String& expr) {
   csql::Parser parser;
   parser.parseValueExpression(expr.data(), expr.size());
 
@@ -355,7 +355,7 @@ SValue Runtime::evaluateConstExpression(SContext* ctx, const String& expr) {
 }
 
 SValue Runtime::evaluateConstExpression(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<ValueExpressionNode> expr) {
   auto compiled = query_builder_->buildValueExpression(ctx, expr);
 
@@ -365,7 +365,7 @@ SValue Runtime::evaluateConstExpression(
 }
 
 SValue Runtime::evaluateConstExpression(
-    SContext* ctx,
+    Transaction* ctx,
     const ValueExpression& expr) {
   SValue out;
   VM::evaluate(ctx, expr.program(), 0, nullptr, &out);

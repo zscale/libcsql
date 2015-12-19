@@ -19,7 +19,7 @@ class GroupByExpression : public TableExpression {
 public:
 
   GroupByExpression(
-      SContext* ctx,
+      Transaction* ctx,
       const Vector<String>& column_names,
       Vector<ValueExpression> select_expressions);
 
@@ -63,7 +63,7 @@ protected:
       ScratchMemory* scratch,
       InputStream* is) const;
 
-  SContext* ctx_;
+  Transaction* ctx_;
   Vector<String> column_names_;
   Vector<ValueExpression> select_exprs_;
 };
@@ -72,7 +72,7 @@ class GroupBy : public GroupByExpression {
 public:
 
   GroupBy(
-      SContext* ctx,
+      Transaction* ctx,
       ScopedPtr<TableExpression> source,
       const Vector<String>& column_names,
       Vector<ValueExpression> select_expressions,
@@ -108,7 +108,7 @@ public:
       RemoteExecuteFn;
 
   RemoteGroupBy(
-      SContext* ctx,
+      Transaction* ctx,
       const Vector<String>& column_names,
       Vector<ValueExpression> select_expressions,
       const RemoteAggregateParams& params,

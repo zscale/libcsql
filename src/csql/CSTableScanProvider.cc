@@ -23,7 +23,7 @@ CSTableScanProvider::CSTableScanProvider(
 
 Option<ScopedPtr<TableExpression>>
     CSTableScanProvider::buildSequentialScan(
-        SContext* ctx,
+        Transaction* ctx,
         RefPtr<SequentialScanNode> node,
         QueryBuilder* runtime) const {
   return Option<ScopedPtr<TableExpression>>(

@@ -15,7 +15,7 @@
 namespace csql {
 
 OrderBy::OrderBy(
-    SContext* ctx,
+    Transaction* ctx,
     Vector<OrderByNode::SortSpec> sort_specs,
     size_t max_output_column_index,
     ScopedPtr<TableExpression> child) :
@@ -73,15 +73,15 @@ void OrderBy::execute(
       args[0] = left[sort.column];
       args[1] = right[sort.column];
 
-      expressions::eqExpr(SContext::get(ctx_), 2, args, &res);
+      expressions::eqExpr(Transaction::get(ctx_), 2, args, &res);
       if (res.getBool()) {
         continue;
       }
 
       if (sort.descending) {
-        expressions::gtExpr(SContext::get(ctx_), 2, args, &res);
+        expressions::gtExpr(Transaction::get(ctx_), 2, args, &res);
       } else {
-        expressions::ltExpr(SContext::get(ctx_), 2, args, &res);
+        expressions::ltExpr(Transaction::get(ctx_), 2, args, &res);
       }
 
       return res.getBool();

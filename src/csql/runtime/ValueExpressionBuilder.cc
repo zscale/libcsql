@@ -18,7 +18,7 @@ ValueExpressionBuilder::ValueExpressionBuilder(
     symbol_table_(symbol_table) {}
 
 ValueExpression ValueExpressionBuilder::compile(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<ValueExpressionNode> node) {
   return ValueExpression(Compiler::compile(ctx, node, symbol_table_));
 }

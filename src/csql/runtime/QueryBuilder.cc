@@ -21,13 +21,13 @@ QueryBuilder::QueryBuilder(
     table_exp_builder_(table_exp_builder) {}
 
 ValueExpression QueryBuilder::buildValueExpression(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<ValueExpressionNode> node) {
   return scalar_exp_builder_->compile(ctx, node);
 }
 
 ScopedPtr<TableExpression> QueryBuilder::buildTableExpression(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<TableExpressionNode> node,
     RefPtr<TableProvider> tables,
     Runtime* runtime) {
@@ -35,7 +35,7 @@ ScopedPtr<TableExpression> QueryBuilder::buildTableExpression(
 }
 
 ScopedPtr<ChartStatement> QueryBuilder::buildChartStatement(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<ChartStatementNode> node,
     RefPtr<TableProvider> tables,
     Runtime* runtime) {

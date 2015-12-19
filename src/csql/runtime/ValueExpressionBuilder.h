@@ -24,7 +24,7 @@ public:
   ValueExpressionBuilder(SymbolTable* symbol_table);
 
   ValueExpression compile(
-      SContext* ctx,
+      Transaction* ctx,
       RefPtr<ValueExpressionNode> node);
 
   SymbolTable* symbolTable() { return symbol_table_; }

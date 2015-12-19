@@ -23,7 +23,7 @@
 namespace csql {
 
 ScopedPtr<VM::Program> Compiler::compile(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<ValueExpressionNode> node,
     SymbolTable* symbol_table) {
   ScratchMemory static_storage;

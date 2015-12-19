@@ -13,7 +13,7 @@
 #include <stx/util/binarymessagereader.h>
 #include <stx/util/binarymessagewriter.h>
 #include <csql/svalue.h>
-#include <csql/SContext.h>
+#include <csql/Transaction.h>
 
 using namespace stx;
 
@@ -29,8 +29,8 @@ enum kFunctionType {
  */
 struct PureFunction {
   PureFunction();
-  PureFunction(void (*_call)(sql_ctx* ctx, int argc, SValue* in, SValue* out));
-  void (*call)(sql_ctx* ctx, int argc, SValue* in, SValue* out);
+  PureFunction(void (*_call)(sql_txn* ctx, int argc, SValue* in, SValue* out));
+  void (*call)(sql_txn* ctx, int argc, SValue* in, SValue* out);
 };
 
 /**
@@ -38,14 +38,14 @@ struct PureFunction {
  */
 struct AggregateFunction {
   size_t scratch_size;
-  void (*accumulate)(sql_ctx*, void* scratch, int argc, SValue* in);
-  void (*get)(sql_ctx*, void* scratch, SValue* out);
-  void (*reset)(sql_ctx*, void* scratch);
-  void (*init)(sql_ctx*, void* scratch);
-  void (*free)(sql_ctx*, void* scratch);
-  void (*merge)(sql_ctx*, void* scratch, const void* other);
-  void (*savestate)(sql_ctx*, void* scratch, OutputStream* os);
-  void (*loadstate)(sql_ctx*, void* scratch, InputStream* is);
+  void (*accumulate)(sql_txn*, void* scratch, int argc, SValue* in);
+  void (*get)(sql_txn*, void* scratch, SValue* out);
+  void (*reset)(sql_txn*, void* scratch);
+  void (*init)(sql_txn*, void* scratch);
+  void (*free)(sql_txn*, void* scratch);
+  void (*merge)(sql_txn*, void* scratch, const void* other);
+  void (*savestate)(sql_txn*, void* scratch, OutputStream* os);
+  void (*loadstate)(sql_txn*, void* scratch, InputStream* is);
 };
 
 struct SFunction {

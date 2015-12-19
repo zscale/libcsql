@@ -14,7 +14,7 @@
 namespace csql {
 
 GroupByExpression::GroupByExpression(
-    SContext* ctx,
+    Transaction* ctx,
     const Vector<String>& column_names,
     Vector<ValueExpression> select_expressions) :
     ctx_(ctx),
@@ -57,7 +57,7 @@ void GroupByExpression::execute(
 }
 
 GroupBy::GroupBy(
-    SContext* ctx,
+    Transaction* ctx,
     ScopedPtr<TableExpression> source,
     const Vector<String>& column_names,
     Vector<ValueExpression> select_expressions,
@@ -249,7 +249,7 @@ Option<SHA1Hash> GroupBy::cacheKey() const {
 }
 
 RemoteGroupBy::RemoteGroupBy(
-    SContext* ctx,
+    Transaction* ctx,
     const Vector<String>& column_names,
     Vector<ValueExpression> select_expressions,
     const RemoteAggregateParams& params,

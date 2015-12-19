@@ -19,7 +19,7 @@ using namespace stx;
 namespace csql {
 
 CSTableScan::CSTableScan(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<SequentialScanNode> stmt,
     const String& cstable_filename,
     QueryBuilder* runtime) :
@@ -473,7 +473,7 @@ CSTableScan::ColumnRef::ColumnRef(
     index(i) {}
 
 CSTableScan::ExpressionRef::ExpressionRef(
-    SContext* _ctx,
+    Transaction* _ctx,
     size_t _rep_level,
     ValueExpression _compiled,
     ScratchMemory* smem) :

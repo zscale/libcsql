@@ -12,7 +12,7 @@
 namespace csql {
 
 SelectExpression::SelectExpression(
-    SContext* ctx,
+    Transaction* ctx,
     const Vector<String>& column_names,
     Vector<ValueExpression> select_expressions) :
     ctx_(ctx),
