@@ -51,7 +51,9 @@ enum class ScanConstraintType : uint8_t {
   EQUAL_TO,
   NOT_EQUAL_TO,
   LESS_THAN,
-  GREATER_THAN
+  LESS_THAN_OR_EQUAL_TO,
+  GREATER_THAN,
+  GREATER_THAN_OR_EQUAL_TO
 };
 
 /**
@@ -59,10 +61,11 @@ enum class ScanConstraintType : uint8_t {
  * derived from the WHERE clause and can be used by the executing storage engine
  * to limit the search over rows.
  *
- * There are currently 4 types of constraints implemented. All follow the same
+ * There are currently 6 types of constraints implemented. All follow the same
  * schema: "column <OP> value" where `column` is a reference to a real column in
  * the underlying table, `value` is any SValue and `OP` is one of "EQUAL_TO",
- * "NOT_EQUAL_TO", "LESS_THAN", "GREATER_THAN"
+ * "NOT_EQUAL_TO", "LESS_THAN", "LESS_THAN_OR_EQUAL_TO", "GREATER_THAN",
+ * "GREATER_THAN_OR_EQUAL_TO"
  */
 struct ScanConstraint {
   String column_name;
