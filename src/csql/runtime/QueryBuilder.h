@@ -27,17 +27,17 @@ public:
       RefPtr<TableExpressionBuilder> table_exp_builder);
 
   ValueExpression buildValueExpression(
-      SContext* ctx,
+      Transaction* ctx,
       RefPtr<ValueExpressionNode> expression);
 
   ScopedPtr<TableExpression> buildTableExpression(
-      SContext* ctx,
+      Transaction* ctx,
       RefPtr<TableExpressionNode> expression,
       RefPtr<TableProvider> tables,
       Runtime* runtime);
 
   ScopedPtr<ChartStatement> buildChartStatement(
-      SContext* ctx,
+      Transaction* ctx,
       RefPtr<ChartStatementNode> node,
       RefPtr<TableProvider> tables,
       Runtime* runtime);

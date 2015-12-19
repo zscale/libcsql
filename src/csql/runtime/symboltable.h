@@ -21,16 +21,16 @@ public:
 
   SymbolTableEntry(
       const std::string& symbol,
-      void (*method)(sql_ctx*, void*, int, SValue*, SValue*));
+      void (*method)(sql_txn*, void*, int, SValue*, SValue*));
 
   SymbolTableEntry(
       const std::string& symbol,
-      void (*method)(sql_ctx*, void*, int, SValue*, SValue*),
+      void (*method)(sql_txn*, void*, int, SValue*, SValue*),
       size_t scratchpad_size,
-      void (*free_method)(sql_ctx*, void*));
+      void (*free_method)(sql_txn*, void*));
 
   inline void call(
-      sql_ctx* ctx,
+      sql_txn* ctx,
       void* scratchpad,
       int argc,
       SValue* argv,
@@ -39,11 +39,11 @@ public:
   }
 
   bool isAggregate() const;
-  void (*getFnPtr() const)(sql_ctx* ctx, void*, int, SValue*, SValue*);
+  void (*getFnPtr() const)(sql_txn* ctx, void*, int, SValue*, SValue*);
   size_t getScratchpadSize() const;
 
 protected:
-  void (*call_)(sql_ctx*, void*, int, SValue*, SValue*);
+  void (*call_)(sql_txn*, void*, int, SValue*, SValue*);
   const size_t scratchpad_size_;
 };
 
@@ -58,17 +58,17 @@ public:
 
   void registerSymbol(
       const std::string& symbol,
-      void (*method)(sql_ctx*, void*, int, SValue*, SValue*));
+      void (*method)(sql_txn*, void*, int, SValue*, SValue*));
 
   void registerSymbol(
       const std::string& symbol,
-      void (*method)(sql_ctx* ctx, void*, int, SValue*, SValue*),
+      void (*method)(sql_txn* ctx, void*, int, SValue*, SValue*),
       size_t scratchpad_size,
-      void (*free_method)(sql_ctx* ctx, void*));
+      void (*free_method)(sql_txn* ctx, void*));
 
   void registerFunction(
       const String& symbol,
-      void (*fn)(sql_ctx*, int, SValue*, SValue*));
+      void (*fn)(sql_txn*, int, SValue*, SValue*));
 
   void registerFunction(
       const String& symbol,

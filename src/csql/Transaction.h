@@ -15,19 +15,19 @@ using namespace stx;
 
 namespace csql {
 
-class SContext {
+class Transaction {
 public:
 
-  static inline sql_ctx* get(SContext* ctx) {
-    return (sql_ctx*)((char*) ctx + offsetof(SContext, ctx_));
+  static inline sql_txn* get(Transaction* ctx) {
+    return (sql_txn*)((char*) ctx + offsetof(Transaction, ctx_));
   }
 
 protected:
-  sql_ctx ctx_;
+  sql_txn ctx_;
 };
 
 static_assert(
-    sizeof(SContext) == sizeof(sql_ctx),
+    sizeof(Transaction) == sizeof(sql_txn),
     "libcsql requires the c++ compiler to produce classes without overhead");
 
 } // namespace csql

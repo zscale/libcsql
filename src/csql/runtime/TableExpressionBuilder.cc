@@ -22,7 +22,7 @@ using namespace stx;
 namespace csql {
 
 ScopedPtr<TableExpression> TableExpressionBuilder::build(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<QueryTreeNode> node,
     QueryBuilder* runtime,
     TableProvider* tables) {
@@ -92,7 +92,7 @@ ScopedPtr<TableExpression> TableExpressionBuilder::build(
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildGroupBy(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<GroupByNode> node,
     QueryBuilder* runtime,
     TableProvider* tables) {
@@ -124,7 +124,7 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildGroupBy(
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildSequentialScan(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<SequentialScanNode> node,
     QueryBuilder* runtime,
     TableProvider* tables) {
@@ -158,7 +158,7 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildSequentialScan(
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildGroupMerge(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<GroupByMergeNode> node,
     QueryBuilder* runtime,
     TableProvider* tables) {
@@ -180,7 +180,7 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildGroupMerge(
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildUnion(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<UnionNode> node,
     QueryBuilder* runtime,
     TableProvider* tables) {
@@ -194,7 +194,7 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildUnion(
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildLimit(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<LimitNode> node,
     QueryBuilder* runtime,
     TableProvider* tables) {
@@ -206,7 +206,7 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildLimit(
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildOrderBy(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<OrderByNode> node,
     QueryBuilder* runtime,
     TableProvider* tables) {
@@ -219,7 +219,7 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildOrderBy(
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildSelectExpression(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<SelectExpressionNode> node,
     QueryBuilder* runtime,
     TableProvider* tables) {
@@ -240,7 +240,7 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildSelectExpression(
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildDescribeTableStatment(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<DescribeTableNode> node,
     QueryBuilder* runtime,
     TableProvider* tables) {
@@ -253,7 +253,7 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildDescribeTableStatment(
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildRemoteAggregate(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<RemoteAggregateNode> node,
     QueryBuilder* runtime) {
 

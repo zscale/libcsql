@@ -24,7 +24,7 @@
 namespace csql {
 
 VM::Program::Program(
-    SContext* ctx,
+    Transaction* ctx,
     Instruction* entry,
     ScratchMemory&& static_storage,
     size_t dynamic_storage_size) :
@@ -41,7 +41,7 @@ VM::Program::~Program() {
 }
 
 VM::Instance VM::allocInstance(
-    SContext* ctx,
+    Transaction* ctx,
     const Program* program,
     ScratchMemory* scratch) {
   Instance that;
@@ -57,7 +57,7 @@ VM::Instance VM::allocInstance(
 }
 
 void VM::freeInstance(
-    SContext* ctx,
+    Transaction* ctx,
     const Program* program,
     Instance* instance) {
   if (program->has_aggregate_) {
@@ -68,7 +68,7 @@ void VM::freeInstance(
 }
 
 void VM::reset(
-    SContext* ctx,
+    Transaction* ctx,
     const Program* program,
     Instance* instance) {
   if (program->has_aggregate_) {
@@ -79,7 +79,7 @@ void VM::reset(
 }
 
 void VM::result(
-    SContext* ctx,
+    Transaction* ctx,
     const Program* program,
     const Instance* instance,
     SValue* out) {
@@ -98,7 +98,7 @@ void VM::result(
 }
 
 void VM::accumulate(
-    SContext* ctx,
+    Transaction* ctx,
     const Program* program,
     Instance* instance,
     int argc,
@@ -118,7 +118,7 @@ void VM::accumulate(
 }
 
 void VM::evaluate(
-    SContext* ctx,
+    Transaction* ctx,
     const Program* program,
     int argc,
     const SValue* argv,
@@ -127,7 +127,7 @@ void VM::evaluate(
 }
 
 void VM::merge(
-    SContext* ctx,
+    Transaction* ctx,
     const Program* program,
     Instance* dst,
     const Instance* src) {
@@ -139,7 +139,7 @@ void VM::merge(
 }
 
 void VM::mergeInstance(
-    SContext* ctx,
+    Transaction* ctx,
     const Program* program,
     Instruction* e,
     Instance* dst,
@@ -147,7 +147,7 @@ void VM::mergeInstance(
   switch (e->type) {
     case X_CALL_AGGREGATE:
       e->vtable.t_aggregate.merge(
-          SContext::get(ctx),
+          Transaction::get(ctx),
           (char *) dst->scratch + (size_t) e->arg0,
           (char *) src->scratch + (size_t) e->arg0);
       break;
@@ -162,7 +162,7 @@ void VM::mergeInstance(
 }
 
 void VM::initInstance(
-    SContext* ctx,
+    Transaction* ctx,
     const Program* program,
     Instruction* e,
     Instance* instance) {
@@ -170,7 +170,7 @@ void VM::initInstance(
     case X_CALL_AGGREGATE:
       if (e->vtable.t_aggregate.init) {
         e->vtable.t_aggregate.init(
-            SContext::get(ctx),
+            Transaction::get(ctx),
             (char *) instance->scratch + (size_t) e->arg0);
       }
       break;
@@ -185,7 +185,7 @@ void VM::initInstance(
 }
 
 void VM::freeInstance(
-    SContext* ctx,
+    Transaction* ctx,
     const Program* program,
     Instruction* e,
     Instance* instance) {
@@ -193,7 +193,7 @@ void VM::freeInstance(
     case X_CALL_AGGREGATE:
       if (e->vtable.t_aggregate.free) {
         e->vtable.t_aggregate.free(
-            SContext::get(ctx),
+            Transaction::get(ctx),
             (char *) instance->scratch + (size_t) e->arg0);
       }
       break;
@@ -208,14 +208,14 @@ void VM::freeInstance(
 }
 
 void VM::resetInstance(
-    SContext* ctx,
+    Transaction* ctx,
     const Program* program,
     Instruction* e,
     Instance* instance) {
   switch (e->type) {
     case X_CALL_AGGREGATE:
       e->vtable.t_aggregate.reset(
-          SContext::get(ctx),
+          Transaction::get(ctx),
           (char *) instance->scratch + (size_t) e->arg0);
       break;
 
@@ -229,7 +229,7 @@ void VM::resetInstance(
 }
 
 void VM::initProgram(
-    SContext* ctx,
+    Transaction* ctx,
     Program* program,
     Instruction* e) {
   switch (e->type) {
@@ -247,7 +247,7 @@ void VM::initProgram(
 }
 
 void VM::freeProgram(
-    SContext* ctx,
+    Transaction* ctx,
     const Program* program,
     Instruction* e) {
   switch (e->type) {
@@ -273,7 +273,7 @@ void VM::freeProgram(
 }
 
 void VM::evaluate(
-    SContext* ctx,
+    Transaction* ctx,
     const Program* program,
     Instance* instance,
     Instruction* expr,
@@ -313,7 +313,7 @@ void VM::evaluate(
             evaluate(ctx, program, instance, cur, argc, argv, stackp++);
           }
 
-          expr->vtable.t_pure.call(SContext::get(ctx), stackn, stackv, out);
+          expr->vtable.t_pure.call(Transaction::get(ctx), stackn, stackv, out);
         } catch (...) {
           for (int i = 0; i < stackn; ++i) {
             (stackv + i)->~SValue();
@@ -338,7 +338,7 @@ void VM::evaluate(
       }
 
       auto scratch = (char *) instance->scratch + (size_t) expr->arg0;
-      expr->vtable.t_aggregate.get(SContext::get(ctx), scratch, out);
+      expr->vtable.t_aggregate.get(Transaction::get(ctx), scratch, out);
       return;
     }
 
@@ -385,7 +385,7 @@ void VM::evaluate(
 }
 
 void VM::accumulate(
-    SContext* ctx,
+    Transaction* ctx,
     const Program* program,
     Instance* instance,
     Instruction* expr,
@@ -420,7 +420,7 @@ void VM::accumulate(
 
       auto scratch = (char *) instance->scratch + (size_t) expr->arg0;
       expr->vtable.t_aggregate.accumulate(
-          SContext::get(ctx),
+          Transaction::get(ctx),
           scratch,
           stackn,
           stackv);
@@ -439,7 +439,7 @@ void VM::accumulate(
 }
 
 void VM::saveState(
-    SContext* ctx,
+    Transaction* ctx,
     const Program* program,
     const Instance* instance,
     OutputStream* os) {
@@ -451,7 +451,7 @@ void VM::saveState(
 }
 
 void VM::loadState(
-    SContext* ctx,
+    Transaction* ctx,
     const Program* program,
     Instance* instance,
     InputStream* is) {
@@ -463,7 +463,7 @@ void VM::loadState(
 }
 
 void VM::saveInstance(
-    SContext* ctx,
+    Transaction* ctx,
     const Program* program,
     Instruction* e,
     const Instance* instance,
@@ -471,7 +471,7 @@ void VM::saveInstance(
   switch (e->type) {
     case X_CALL_AGGREGATE:
       e->vtable.t_aggregate.savestate(
-          SContext::get(ctx),
+          Transaction::get(ctx),
           (char *) instance->scratch + (size_t) e->arg0,
           os);
       break;
@@ -486,7 +486,7 @@ void VM::saveInstance(
 }
 
 void VM::loadInstance(
-    SContext* ctx,
+    Transaction* ctx,
     const Program* program,
     Instruction* e,
     Instance* instance,
@@ -494,7 +494,7 @@ void VM::loadInstance(
   switch (e->type) {
     case X_CALL_AGGREGATE:
       e->vtable.t_aggregate.loadstate(
-          SContext::get(ctx),
+          Transaction::get(ctx),
           (char *) instance->scratch + (size_t) e->arg0,
           os);
       break;

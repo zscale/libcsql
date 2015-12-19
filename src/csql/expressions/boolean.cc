@@ -17,7 +17,7 @@
 namespace csql {
 namespace expressions {
 
-void eqExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
+void eqExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   if (argc != 2) {
     RAISE(
         kRuntimeError,
@@ -93,13 +93,13 @@ void eqExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
       rhs->getTypeName());
 }
 
-void neqExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
+void neqExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   SValue ret;
   eqExpr(ctx, argc, argv, &ret);
   *out = SValue(!ret.getValue<bool>());
 }
 
-void andExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
+void andExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   if (argc != 2) {
     RAISE(
         kRuntimeError,
@@ -111,7 +111,7 @@ void andExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   *out = SValue(lhs->toBool() && rhs->toBool());
 }
 
-void orExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
+void orExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   if (argc != 2) {
     RAISE(
         kRuntimeError,
@@ -123,7 +123,7 @@ void orExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
   *out = SValue(lhs->toBool() || rhs->toBool());
 }
 
-void negExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
+void negExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   if (argc != 1) {
     RAISE(
         kRuntimeError,
@@ -153,7 +153,7 @@ void negExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
       val->getTypeName());
 }
 
-void ltExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
+void ltExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   if (argc != 2) {
     RAISE(
         kRuntimeError,
@@ -223,7 +223,7 @@ void ltExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
       rhs->getTypeName());
 }
 
-void lteExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
+void lteExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   if (argc != 2) {
     RAISE(
         kRuntimeError,
@@ -293,7 +293,7 @@ void lteExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
       rhs->getTypeName());
 }
 
-void gtExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
+void gtExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   if (argc != 2) {
     RAISE(
         kRuntimeError,
@@ -363,7 +363,7 @@ void gtExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
       rhs->getTypeName());
 }
 
-void gteExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
+void gteExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   if (argc != 2) {
     RAISE(
         kRuntimeError,
@@ -433,7 +433,7 @@ void gteExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
       rhs->getTypeName());
 }
 
-void isNullExpr(sql_ctx* ctx, int argc, SValue* argv, SValue* out) {
+void isNullExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   if (argc != 1) {
     RAISEF(
         kRuntimeError,

@@ -17,35 +17,35 @@ namespace expressions {
 /**
  * COUNT() expression
  */
-void repeatValueExprAcc(sql_ctx* ctx, void* scratchpad, int argc, SValue* argv) {
+void repeatValueExprAcc(sql_txn* ctx, void* scratchpad, int argc, SValue* argv) {
   *static_cast<SValue*>(scratchpad) = *argv;
 }
 
-void repeatValueExprGet(sql_ctx* ctx, void* scratchpad, SValue* out) {
+void repeatValueExprGet(sql_txn* ctx, void* scratchpad, SValue* out) {
   *out = *static_cast<SValue*>(scratchpad);
 }
 
-void repeatValueExprInit(sql_ctx* ctx, void* scratchpad) {
+void repeatValueExprInit(sql_txn* ctx, void* scratchpad) {
   new (scratchpad) SValue();
 }
 
-void repeatValueExprFree(sql_ctx* ctx, void* scratchpad) {
+void repeatValueExprFree(sql_txn* ctx, void* scratchpad) {
   static_cast<SValue*>(scratchpad)->~SValue();
 }
 
-void repeatValueExprReset(sql_ctx* ctx, void* scratchpad) {
+void repeatValueExprReset(sql_txn* ctx, void* scratchpad) {
  // do nothing
 }
 
-void repeatValueExprMerge(sql_ctx* ctx, void* scratchpad, const void* other) {
+void repeatValueExprMerge(sql_txn* ctx, void* scratchpad, const void* other) {
   *static_cast<SValue*>(scratchpad) = *static_cast<const SValue*>(other);
 }
 
-void repeatValueExprSave(sql_ctx* ctx, void* scratchpad, OutputStream* os) {
+void repeatValueExprSave(sql_txn* ctx, void* scratchpad, OutputStream* os) {
   static_cast<SValue*>(scratchpad)->encode(os);
 }
 
-void repeatValueExprLoad(sql_ctx* ctx, void* scratchpad, InputStream* is) {
+void repeatValueExprLoad(sql_txn* ctx, void* scratchpad, InputStream* is) {
   static_cast<SValue*>(scratchpad)->decode(is);
 }
 

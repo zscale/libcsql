@@ -12,7 +12,7 @@
 #include <csql/runtime/TableExpression.h>
 #include <csql/qtree/DrawStatementNode.h>
 #include <csql/parser/token.h>
-#include <csql/SContext.h>
+#include <csql/Transaction.h>
 #include <stx/exception.h>
 #include <stx/autoref.h>
 #include <cplot/canvas.h>
@@ -25,7 +25,7 @@ class DrawStatement : public Statement {
 public:
 
   DrawStatement(
-      SContext* ctx,
+      Transaction* ctx,
       RefPtr<DrawStatementNode> node,
       Vector<ScopedPtr<TableExpression>> sources,
       Runtime* runtime);
@@ -58,7 +58,7 @@ protected:
   void applyLegend(stx::chart::Drawable* chart) const;
   void applyTitle(stx::chart::Drawable* chart) const;
 
-  SContext* ctx_;
+  Transaction* ctx_;
   RefPtr<DrawStatementNode> node_;
   Vector<ScopedPtr<TableExpression>> sources_;
   Runtime* runtime_;

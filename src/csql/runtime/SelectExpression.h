@@ -18,7 +18,7 @@ class SelectExpression : public TableExpression {
 public:
 
   SelectExpression(
-      SContext* ctx,
+      Transaction* ctx,
       const Vector<String>& column_names,
       Vector<ValueExpression> select_expressions);
 
@@ -33,7 +33,7 @@ public:
   size_t numColumns() const override;
 
 protected:
-  SContext* ctx_;
+  Transaction* ctx_;
   Vector<String> column_names_;
   Vector<ValueExpression> select_exprs_;
 };

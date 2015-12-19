@@ -24,7 +24,7 @@ enum sql_type : uint8_t {
 
 typedef struct {
   uint64_t now_unixmicros_;
-} sql_ctx;
+} sql_txn;
 
 typedef struct {
   sql_type type;

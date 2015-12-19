@@ -68,7 +68,7 @@ void TableRepository::import(
 }
 
 Option<ScopedPtr<TableExpression>> TableRepository::buildSequentialScan(
-    SContext* ctx,
+    Transaction* ctx,
     RefPtr<SequentialScanNode> seqscan,
     QueryBuilder* runtime) const {
   for (const auto& p : providers_) {

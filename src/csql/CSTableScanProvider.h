@@ -24,7 +24,7 @@ public:
       const String& cstable_file);
 
   Option<ScopedPtr<TableExpression>> buildSequentialScan(
-        SContext* ctx,
+        Transaction* ctx,
         RefPtr<SequentialScanNode> node,
         QueryBuilder* runtime) const override;
 
