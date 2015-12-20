@@ -23,10 +23,12 @@
 #include <csql/qtree/DescribeTableNode.h>
 #include <csql/qtree/RegexExpressionNode.h>
 #include <csql/qtree/LikeExpressionNode.h>
+#include <csql/qtree/QueryTreeUtil.h>
 
 namespace csql {
 
 QueryPlanBuilder::QueryPlanBuilder(
+    QueryPlanBuilderOptions opts,
     SymbolTable* symbol_table) :
     symbol_table_(symbol_table) {}
 
@@ -982,7 +984,19 @@ QueryTreeNode* QueryPlanBuilder::buildSelectExpression(ASTNode* ast) {
   return new SelectExpressionNode(select_list_expressions);
 }
 
-ValueExpressionNode* QueryPlanBuilder::buildValueExpression(ASTNode* ast) {
+RefPtr<ValueExpressionNode> QueryPlanBuilder::buildValueExpression(
+    ASTNode* ast) {
+  auto valexpr = buildUnoptimizedValueExpression(ast);
+
+  if (opts_.enable_constant_folding) {
+    valexpr = QueryTreeUtil::foldConstants(valexpr);
+  }
+
+  return valexpr;
+}
+
+RefPtr<ValueExpressionNode> QueryPlanBuilder::buildUnoptimizedValueExpression(
+    ASTNode* ast) {
   if (ast == nullptr) {
     RAISE(kNullPointerError, "can't build nullptr");
   }
@@ -1194,7 +1208,7 @@ ValueExpressionNode* QueryPlanBuilder::buildRegex(ASTNode* ast) {
   }
 
   auto pattern = args[1]->getToken()->getString();
-  auto subject = mkRef(buildValueExpression(args[0]));
+  auto subject = buildValueExpression(args[0]);
 
   return new RegexExpressionNode(subject, pattern);
 }
@@ -1214,7 +1228,7 @@ ValueExpressionNode* QueryPlanBuilder::buildLike(ASTNode* ast) {
   }
 
   auto pattern = args[1]->getToken()->getString();
-  auto subject = mkRef(buildValueExpression(args[0]));
+  auto subject = buildValueExpression(args[0]);
 
   return new LikeExpressionNode(subject, pattern);
 }

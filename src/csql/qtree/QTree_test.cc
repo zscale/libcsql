@@ -295,3 +295,34 @@ TEST_CASE(QTreeTest, TestExtractMultipleConstraints, [] () {
     EXPECT_EQ(constraint.value.toString(), "6666");
   }
 });
+
+TEST_CASE(QTreeTest, TestSimpleConstantFolding, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new CSTableScanProvider(
+          "testtable",
+          "src/csql/testdata/testtbl.cst"));
+
+  String query = "select 1 + 2 + 3 from testtable where time > ucase('fu') + lcase('Bar');";
+
+  csql::Parser parser;
+  parser.parse(query.data(), query.size());
+
+  auto qtree_builder = runtime->queryPlanBuilder();
+  auto qtrees = qtree_builder->build(
+      parser.getStatements(),
+      estrat->tableProvider());
+
+  EXPECT_EQ(qtrees.size(), 1);
+  auto qtree = qtrees[0];
+  EXPECT_TRUE(dynamic_cast<SequentialScanNode*>(qtree.get()) != nullptr);
+  auto seqscan = qtree.asInstanceOf<SequentialScanNode>();
+  EXPECT_EQ(seqscan->tableName(), "testtable");
+
+  auto where_expr = seqscan->whereExpression();
+  EXPECT_FALSE(where_expr.isEmpty());
+  EXPECT_EQ(where_expr.get()->toSQL(), "gt(`time`, \"FUbar\")");
+
+});

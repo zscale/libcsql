@@ -28,4 +28,9 @@ void QueryTreeUtil::resolveColumns(
   }
 }
 
+RefPtr<ValueExpressionNode> QueryTreeUtil::foldConstants(
+    RefPtr<ValueExpressionNode> expr) {
+  return expr;
+}
+
 } // namespace csql

@@ -20,10 +20,19 @@ class QueryPlanNode;
 class TableRepository;
 class Runtime;
 
+struct QueryPlanBuilderOptions {
+  QueryPlanBuilderOptions() :
+      enable_constant_folding(true) {}
+
+  bool enable_constant_folding;
+};
+
 class QueryPlanBuilder : public RefCounted {
 public:
 
-  QueryPlanBuilder(SymbolTable* symbol_table);
+  QueryPlanBuilder(
+      QueryPlanBuilderOptions opts,
+      SymbolTable* symbol_table);
 
   RefPtr<QueryTreeNode> build(ASTNode* ast, RefPtr<TableProvider> tables);
 
@@ -31,7 +40,10 @@ public:
       const Vector<ASTNode*>& ast,
       RefPtr<TableProvider> tables);
 
-  ValueExpressionNode* buildValueExpression(ASTNode* ast);
+  RefPtr<ValueExpressionNode> buildValueExpression(ASTNode* ast);
+
+  RefPtr<ValueExpressionNode> buildUnoptimizedValueExpression(
+      ASTNode* ast);
 
   /**
    * Returns true if the ast is a SELECT statement that has columns in its
@@ -156,6 +168,7 @@ public:
   SelectListNode* buildSelectList(ASTNode* select_list);
 
 protected:
+  QueryPlanBuilderOptions opts_;
   SymbolTable* symbol_table_;
 };
 
