@@ -30,6 +30,13 @@ public:
       RefPtr<ValueExpressionNode> expr,
       Function<size_t (const String&)> resolver);
 
+  /**
+   * Walks the provided value expression and folds all constant subexpressions
+   * into a literal (by evaluating them)
+   */
+  static RefPtr<ValueExpressionNode> foldConstants(
+      RefPtr<ValueExpressionNode> expr);
+
 };
 
 

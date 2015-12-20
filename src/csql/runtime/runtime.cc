@@ -27,7 +27,9 @@ RefPtr<Runtime> Runtime::getDefaultRuntime() {
       new QueryBuilder(
           new ValueExpressionBuilder(symbols.get()),
           new TableExpressionBuilder()),
-      new QueryPlanBuilder(symbols.get()));
+      new QueryPlanBuilder(
+          QueryPlanBuilderOptions{},
+          symbols.get()));
 }
 
 Runtime::Runtime(
@@ -235,8 +237,7 @@ void Runtime::executeAggregate(
       RAISE(kIllegalArgumentError);
     }
 
-    where_expr = Some(mkRef(
-        query_plan_builder_->buildValueExpression(stmts[0])));
+    where_expr = Some(query_plan_builder_->buildValueExpression(stmts[0]));
   }
 
   auto qtree = mkRef(
@@ -273,7 +274,7 @@ SValue Runtime::evaluateScalarExpression(
     ASTNode* expr,
     int argc,
     const SValue* argv) {
-  auto val_expr = mkRef(query_plan_builder_->buildValueExpression(expr));
+  auto val_expr = query_plan_builder_->buildValueExpression(expr);
   auto compiled = query_builder_->buildValueExpression(ctx, val_expr);
 
   SValue out;
@@ -296,7 +297,7 @@ SValue Runtime::evaluateScalarExpression(
         "static expression must consist of exactly one statement");
   }
 
-  auto val_expr = mkRef(query_plan_builder_->buildValueExpression(stmts[0]));
+  auto val_expr = query_plan_builder_->buildValueExpression(stmts[0]);
   auto compiled = query_builder_->buildValueExpression(ctx, val_expr);
 
   SValue out;
@@ -327,7 +328,7 @@ SValue Runtime::evaluateScalarExpression(
 }
 
 SValue Runtime::evaluateConstExpression(Transaction* ctx, ASTNode* expr) {
-  auto val_expr = mkRef(query_plan_builder_->buildValueExpression(expr));
+  auto val_expr = query_plan_builder_->buildValueExpression(expr);
   auto compiled = query_builder_->buildValueExpression(ctx, val_expr);
 
   SValue out;
@@ -346,7 +347,7 @@ SValue Runtime::evaluateConstExpression(Transaction* ctx, const String& expr) {
         "static expression must consist of exactly one statement");
   }
 
-  auto val_expr = mkRef(query_plan_builder_->buildValueExpression(stmts[0]));
+  auto val_expr = query_plan_builder_->buildValueExpression(stmts[0]);
   auto compiled = query_builder_->buildValueExpression(ctx, val_expr);
 
   SValue out;
