@@ -7,14 +7,26 @@
  * copy of the GNU General Public License along with this program. If not, see
  * <http://www.gnu.org/licenses/>.
  */
-#include <csql/Transaction.h>
 #include <stx/wallclock.h>
+#include <csql/Transaction.h>
+#include <csql/runtime/runtime.h>
 
 using namespace stx;
 
 namespace csql {
 
-Transaction::Transaction() : now_(WallClock::now()) {}
+Transaction::Transaction(
+    Runtime* runtime) :
+    runtime_(runtime),
+    now_(WallClock::now()) {}
+
+Runtime* Transaction::getRuntime() const {
+  return runtime_;
+}
+
+SymbolTable* Transaction::getSymbolTable() const {
+  return runtime_->symbols();
+}
 
 UnixTime Transaction::now() const {
   return now_;

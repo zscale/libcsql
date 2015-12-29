@@ -7,6 +7,7 @@
  * copy of the GNU General Public License along with this program. If not, see
  * <http://www.gnu.org/licenses/>.
  */
+#include <csql/runtime/runtime.h>
 #include <csql/qtree/QueryTreeUtil.h>
 #include <csql/qtree/ColumnReferenceNode.h>
 #include <stx/logging.h>
@@ -31,20 +32,33 @@ void QueryTreeUtil::resolveColumns(
 RefPtr<ValueExpressionNode> QueryTreeUtil::foldConstants(
     Transaction* txn,
     RefPtr<ValueExpressionNode> expr) {
-  if (isConstantExpression(expr)) {
-    RAISE(kNotYetImplementedError);
-  }
+  if (isConstantExpression(txn, expr)) {
+    auto runtime = txn->getRuntime();
+    auto const_val = runtime->evaluateConstExpression(txn, expr);
 
-  return expr;
+    return new LiteralExpressionNode(const_val);
+  } else {
+    return expr;
+  }
 }
 
-bool QueryTreeUtil::isConstantExpression(RefPtr<ValueExpressionNode> expr) {
+bool QueryTreeUtil::isConstantExpression(
+    Transaction* txn,
+    RefPtr<ValueExpressionNode> expr) {
   if (dynamic_cast<ColumnReferenceNode*>(expr.get())) {
     return false;
   }
 
+  auto call_expr = dynamic_cast<CallExpressionNode*>(expr.get());
+  if (call_expr) {
+    auto symbol = txn->getSymbolTable()->lookup(call_expr->symbol());
+    if (symbol.isAggregate()) {
+      return false;
+    }
+  }
+
   for (const auto& arg : expr->arguments()) {
-    if (!isConstantExpression(arg)) {
+    if (!isConstantExpression(txn, arg)) {
       return false;
     }
   }

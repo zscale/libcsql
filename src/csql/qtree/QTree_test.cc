@@ -339,6 +339,5 @@ TEST_CASE(QTreeTest, TestSimpleConstantFolding, [] () {
 
   auto where_expr = seqscan->whereExpression();
   EXPECT_FALSE(where_expr.isEmpty());
-  EXPECT_EQ(where_expr.get()->toSQL(), "gt(`time`, \"FUbar\")");
-
+  EXPECT_EQ(where_expr.get()->toSQL(), "gt(`time`,\"FUbar\")");
 });

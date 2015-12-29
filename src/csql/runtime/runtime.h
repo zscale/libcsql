@@ -113,6 +113,7 @@ public:
   RefPtr<QueryPlanBuilder> queryPlanBuilder() const;
 
   TaskScheduler* scheduler();
+  SymbolTable* symbols();
 
 protected:
   thread::ThreadPool tpool_;
