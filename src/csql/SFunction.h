@@ -53,6 +53,8 @@ struct SFunction {
   SFunction(PureFunction fn);
   SFunction(AggregateFunction fn);
 
+  bool isAggregate() const;
+
   kFunctionType type;
   union {
     PureFunction t_pure;

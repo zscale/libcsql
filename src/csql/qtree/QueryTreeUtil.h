@@ -40,6 +40,7 @@ public:
       RefPtr<ValueExpressionNode> expr);
 
   static bool isConstantExpression(
+      Transaction* txn,
       RefPtr<ValueExpressionNode> expr);
 
 };

@@ -33,4 +33,11 @@ SFunction::SFunction(
     type(FN_AGGREGATE),
     vtable{ .t_aggregate = fn } {}
 
+bool SFunction::isAggregate() const {
+  switch (type) {
+    case FN_PURE: return false;
+    case FN_AGGREGATE: return true;
+  }
+}
+
 }

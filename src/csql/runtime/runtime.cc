@@ -14,7 +14,7 @@
 namespace csql {
 
 ScopedPtr<Transaction> Runtime::newTransaction() {
-  return mkScoped(new Transaction());
+  return mkScoped(new Transaction(this));
 }
 
 RefPtr<Runtime> Runtime::getDefaultRuntime() {
@@ -392,6 +392,10 @@ RefPtr<QueryPlanBuilder> Runtime::queryPlanBuilder() const {
 
 TaskScheduler* Runtime::scheduler() {
   return &tpool_;
+}
+
+SymbolTable* Runtime::symbols() {
+  return symbol_table_.get();
 }
 
 

@@ -15,6 +15,8 @@
 using namespace stx;
 
 namespace csql {
+class Runtime;
+class SymbolTable;
 
 class Transaction {
 public:
@@ -23,11 +25,16 @@ public:
     return (sql_txn*) ctx;
   }
 
-  Transaction();
+  Transaction(Runtime* runtime);
 
   UnixTime now() const;
 
+  Runtime* getRuntime() const;
+
+  SymbolTable* getSymbolTable() const;
+
 protected:
+  Runtime* runtime_;
   UnixTime now_;
 };
 
