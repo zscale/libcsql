@@ -37,6 +37,8 @@ TEST_CASE(QTreeTest, TestExtractEqualsConstraint, [] () {
   Vector<String> queries;
   queries.push_back("select 1 from testtable where time = 1234;");
   queries.push_back("select 1 from testtable where 1234 = time;");
+  queries.push_back("select 1 from testtable where time = 1000 + 234;");
+  queries.push_back("select 1 from testtable where 1000 + 234 = time;");
   for (const auto& query : queries) {
     csql::Parser parser;
     parser.parse(query.data(), query.size());
@@ -75,7 +77,9 @@ TEST_CASE(QTreeTest, TestExtractNotEqualsConstraint, [] () {
 
   Vector<String> queries;
   queries.push_back("select 1 from testtable where time != 1234;");
+  queries.push_back("select 1 from testtable where time != 1000 + 234;");
   queries.push_back("select 1 from testtable where 1234 != time;");
+  queries.push_back("select 1 from testtable where 1000 + 234 != time;");
   for (const auto& query : queries) {
     csql::Parser parser;
     parser.parse(query.data(), query.size());
@@ -114,7 +118,9 @@ TEST_CASE(QTreeTest, TestExtractLessThanConstraint, [] () {
 
   Vector<String> queries;
   queries.push_back("select 1 from testtable where time < 1234;");
+  queries.push_back("select 1 from testtable where time < 1000 + 234;");
   queries.push_back("select 1 from testtable where 1234 > time;");
+  queries.push_back("select 1 from testtable where 1000 + 234 > time;");
   for (const auto& query : queries) {
     csql::Parser parser;
     parser.parse(query.data(), query.size());
@@ -153,7 +159,9 @@ TEST_CASE(QTreeTest, TestExtractLessThanOrEqualToConstraint, [] () {
 
   Vector<String> queries;
   queries.push_back("select 1 from testtable where time <= 1234;");
+  queries.push_back("select 1 from testtable where time <= 1000 + 234;");
   queries.push_back("select 1 from testtable where 1234 >= time;");
+  queries.push_back("select 1 from testtable where 1000 + 234 >= time;");
   for (const auto& query : queries) {
     csql::Parser parser;
     parser.parse(query.data(), query.size());
@@ -192,7 +200,9 @@ TEST_CASE(QTreeTest, TestExtractGreaterThanConstraint, [] () {
 
   Vector<String> queries;
   queries.push_back("select 1 from testtable where time > 1234;");
+  queries.push_back("select 1 from testtable where time > 1000 + 234;");
   queries.push_back("select 1 from testtable where 1234 < time;");
+  queries.push_back("select 1 from testtable where 1000 + 234 < time;");
   for (const auto& query : queries) {
     csql::Parser parser;
     parser.parse(query.data(), query.size());
@@ -231,7 +241,9 @@ TEST_CASE(QTreeTest, TestExtractGreaterThanOrEqualToConstraint, [] () {
 
   Vector<String> queries;
   queries.push_back("select 1 from testtable where time >= 1234;");
+  queries.push_back("select 1 from testtable where time >= 1000 + 234;");
   queries.push_back("select 1 from testtable where 1234 <= time;");
+  queries.push_back("select 1 from testtable where 1000 + 234 <= time;");
   for (const auto& query : queries) {
     csql::Parser parser;
     parser.parse(query.data(), query.size());
@@ -268,7 +280,7 @@ TEST_CASE(QTreeTest, TestExtractMultipleConstraints, [] () {
           "testtable",
           "src/csql/testdata/testtbl.cst"));
 
-  String query = "select 1 from testtable where 1234 > time AND session_id != 444 AND time >= 6666;";
+  String query = "select 1 from testtable where 1000 + 200 + 30 + 4 > time AND session_id != 400 + 44 AND time >= 1111 * 6;";
 
   csql::Parser parser;
   parser.parse(query.data(), query.size());
