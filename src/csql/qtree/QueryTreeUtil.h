@@ -11,6 +11,7 @@
 #include <stx/stdtypes.h>
 #include <stx/autoref.h>
 #include <csql/qtree/ValueExpressionNode.h>
+#include <csql/Transaction.h>
 
 using namespace stx;
 
@@ -35,6 +36,10 @@ public:
    * into a literal (by evaluating them)
    */
   static RefPtr<ValueExpressionNode> foldConstants(
+      Transaction* txn,
+      RefPtr<ValueExpressionNode> expr);
+
+  static bool isConstantExpression(
       RefPtr<ValueExpressionNode> expr);
 
 };

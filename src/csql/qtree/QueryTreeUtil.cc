@@ -29,8 +29,27 @@ void QueryTreeUtil::resolveColumns(
 }
 
 RefPtr<ValueExpressionNode> QueryTreeUtil::foldConstants(
+    Transaction* txn,
     RefPtr<ValueExpressionNode> expr) {
+  if (isConstantExpression(expr)) {
+    RAISE(kNotYetImplementedError);
+  }
+
   return expr;
+}
+
+bool QueryTreeUtil::isConstantExpression(RefPtr<ValueExpressionNode> expr) {
+  if (dynamic_cast<ColumnReferenceNode*>(expr.get())) {
+    return false;
+  }
+
+  for (const auto& arg : expr->arguments()) {
+    if (!isConstantExpression(arg)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 } // namespace csql

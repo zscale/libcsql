@@ -33,27 +33,28 @@ QueryPlanBuilder::QueryPlanBuilder(
     symbol_table_(symbol_table) {}
 
 RefPtr<QueryTreeNode> QueryPlanBuilder::build(
+    Transaction* txn,
     ASTNode* ast,
     RefPtr<TableProvider> tables) {
   QueryTreeNode* node = nullptr;
 
   /* expand all column names + wildcard to tablename->columnanme */
   if (hasUnexpandedColumns(ast)) {
-    expandColumns(ast, tables);
+    expandColumns(txn, ast, tables);
   }
 
   /* assign explicit column names to all output columns */
   if (hasImplicitlyNamedColumns(ast)) {
-    assignExplicitColumnNames(ast, tables);
+    assignExplicitColumnNames(txn, ast, tables);
   }
 
   /* internal nodes: multi table query (joins), order, aggregation, limit */
-  if ((node = buildLimitClause(ast, tables)) != nullptr) {
+  if ((node = buildLimitClause(txn, ast, tables)) != nullptr) {
     return node;
   }
 
   if (hasOrderByClause(ast)) {
-    return buildOrderByClause(ast, tables);
+    return buildOrderByClause(txn, ast, tables);
   }
 
 //  if (hasGroupOverTimewindowClause(ast)) {
@@ -61,24 +62,24 @@ RefPtr<QueryTreeNode> QueryPlanBuilder::build(
 //  }
 
   if (hasGroupByClause(ast) || hasAggregationInSelectList(ast)) {
-    return buildGroupBy(ast, tables);
+    return buildGroupBy(txn, ast, tables);
   }
 
   /* leaf nodes: table scan, tableless select */
-  if ((node = buildSequentialScan(ast)) != nullptr) {
+  if ((node = buildSequentialScan(txn, ast)) != nullptr) {
     return node;
   }
 
-  if ((node = buildSelectExpression(ast)) != nullptr) {
+  if ((node = buildSelectExpression(txn, ast)) != nullptr) {
     return node;
   }
 
   /* other statments */
-  if ((node = buildShowTables(ast)) != nullptr) {
+  if ((node = buildShowTables(txn, ast)) != nullptr) {
     return node;
   }
 
-  if ((node = buildDescribeTable(ast)) != nullptr) {
+  if ((node = buildDescribeTable(txn, ast)) != nullptr) {
     return node;
   }
 
@@ -87,6 +88,7 @@ RefPtr<QueryTreeNode> QueryPlanBuilder::build(
 }
 
 Vector<RefPtr<QueryTreeNode>> QueryPlanBuilder::build(
+    Transaction* txn,
     const Vector<ASTNode*>& statements,
     RefPtr<TableProvider> tables) {
   Vector<RefPtr<QueryTreeNode>> nodes;
@@ -98,7 +100,7 @@ Vector<RefPtr<QueryTreeNode>> QueryPlanBuilder::build(
       case ASTNode::T_SELECT_DEEP:
       case ASTNode::T_SHOW_TABLES:
       case ASTNode::T_DESCRIBE_TABLE:
-        nodes.emplace_back(build(statements[i], tables));
+        nodes.emplace_back(build(txn, statements[i], tables));
         break;
 
       case ASTNode::T_DRAW: {
@@ -113,7 +115,7 @@ Vector<RefPtr<QueryTreeNode>> QueryPlanBuilder::build(
             switch (statements[i]->getType()) {
               case ASTNode::T_SELECT:
               case ASTNode::T_SELECT_DEEP:
-                subselects.emplace_back(build(statements[i++], tables));
+                subselects.emplace_back(build(txn, statements[i++], tables));
                 continue;
               case ASTNode::T_DRAW:
                 break;
@@ -362,6 +364,7 @@ bool QueryPlanBuilder::hasAggregationWithinRecord(ASTNode* ast) const {
 }
 
 void QueryPlanBuilder::expandColumns(
+    Transaction* txn,
     ASTNode* ast,
     RefPtr<TableProvider> tables) {
   if (ast->getChildren().size() < 2) {
@@ -424,6 +427,7 @@ void QueryPlanBuilder::expandColumns(
 }
 
 void QueryPlanBuilder::assignExplicitColumnNames(
+    Transaction* txn,
     ASTNode* ast,
     RefPtr<TableProvider> tables) {
   if (ast->getChildren().size() < 1) {
@@ -448,6 +452,7 @@ void QueryPlanBuilder::assignExplicitColumnNames(
 }
 
 QueryTreeNode* QueryPlanBuilder::buildGroupBy(
+    Transaction* txn,
     ASTNode* ast,
     RefPtr<TableProvider> tables) {
   /* copy own select list */
@@ -489,7 +494,7 @@ QueryTreeNode* QueryPlanBuilder::buildGroupBy(
         RAISE(kRuntimeError, "GROUP clause can only contain pure functions");
       }
 
-      group_expressions.emplace_back(buildValueExpression(e));
+      group_expressions.emplace_back(buildValueExpression(txn, e));
     }
 
     /* remove group by clause from child ast */
@@ -499,13 +504,13 @@ QueryTreeNode* QueryPlanBuilder::buildGroupBy(
   /* select list  */
   Vector<RefPtr<SelectListNode>> select_list_expressions;
   for (const auto& select_expr : select_list->getChildren()) {
-    select_list_expressions.emplace_back(buildSelectList(select_expr));
+    select_list_expressions.emplace_back(buildSelectList(txn, select_expr));
   }
 
   return new GroupByNode(
       select_list_expressions,
       group_expressions,
-      build(child_ast, tables));
+      build(txn, child_ast, tables));
 }
 
 //QueryPlanNode* QueryPlanBuilder::buildGroupOverTimewindow(
@@ -709,6 +714,7 @@ bool QueryPlanBuilder::buildInternalSelectList(
 }
 
 QueryTreeNode* QueryPlanBuilder::buildLimitClause(
+    Transaction* txn,
     ASTNode* ast,
     RefPtr<TableProvider> tables) {
   if (!(*ast == ASTNode::T_SELECT || *ast == ASTNode::T_SELECT_DEEP) ||
@@ -758,13 +764,14 @@ QueryTreeNode* QueryPlanBuilder::buildLimitClause(
     return new LimitNode(
         limit,
         offset,
-        build(new_ast, tables));
+        build(txn, new_ast, tables));
   }
 
   return nullptr;
 }
 
 QueryTreeNode* QueryPlanBuilder::buildOrderByClause(
+    Transaction* txn,
     ASTNode* ast,
     RefPtr<TableProvider> tables) {
   Vector<OrderByNode::SortSpec> sort_specs;
@@ -835,10 +842,12 @@ QueryTreeNode* QueryPlanBuilder::buildOrderByClause(
   return new OrderByNode(
       sort_specs,
       ast->getChildren()[0]->getChildren().size(),
-      build(child_ast, tables));
+      build(txn, child_ast, tables));
 }
 
-QueryTreeNode* QueryPlanBuilder::buildSequentialScan(ASTNode* ast) {
+QueryTreeNode* QueryPlanBuilder::buildSequentialScan(
+    Transaction* txn,
+    ASTNode* ast) {
   if (!(*ast == ASTNode::T_SELECT || *ast == ASTNode::T_SELECT_DEEP)) {
     return nullptr;
   }
@@ -914,7 +923,7 @@ QueryTreeNode* QueryPlanBuilder::buildSequentialScan(ASTNode* ast) {
           "where expressions can only contain pure functions\n");
     }
 
-    where_expr = Some(RefPtr<ValueExpressionNode>(buildValueExpression(e)));
+    where_expr = Some(RefPtr<ValueExpressionNode>(buildValueExpression(txn, e)));
   }
 
   bool has_aggregation = false;
@@ -931,7 +940,7 @@ QueryTreeNode* QueryPlanBuilder::buildSequentialScan(ASTNode* ast) {
       has_aggregation_within_record = true;
     }
 
-    select_list_expressions.emplace_back(buildSelectList(select_expr));
+    select_list_expressions.emplace_back(buildSelectList(txn, select_expr));
   }
 
   if (has_aggregation && has_aggregation_within_record) {
@@ -960,7 +969,9 @@ QueryTreeNode* QueryPlanBuilder::buildSequentialScan(ASTNode* ast) {
   return seqscan;
 }
 
-QueryTreeNode* QueryPlanBuilder::buildSelectExpression(ASTNode* ast) {
+QueryTreeNode* QueryPlanBuilder::buildSelectExpression(
+    Transaction* txn,
+    ASTNode* ast) {
   if (!(*ast == ASTNode::T_SELECT || *ast == ASTNode::T_SELECT_DEEP)
       || ast->getChildren().size() != 1) {
     return nullptr;
@@ -978,24 +989,26 @@ QueryTreeNode* QueryPlanBuilder::buildSelectExpression(ASTNode* ast) {
           "a SELECT without any tables can only contain pure functions");
     }
 
-    select_list_expressions.emplace_back(buildSelectList(select_expr));
+    select_list_expressions.emplace_back(buildSelectList(txn, select_expr));
   }
 
   return new SelectExpressionNode(select_list_expressions);
 }
 
 RefPtr<ValueExpressionNode> QueryPlanBuilder::buildValueExpression(
+    Transaction* txn,
     ASTNode* ast) {
-  auto valexpr = buildUnoptimizedValueExpression(ast);
+  auto valexpr = buildUnoptimizedValueExpression(txn, ast);
 
   if (opts_.enable_constant_folding) {
-    valexpr = QueryTreeUtil::foldConstants(valexpr);
+    valexpr = QueryTreeUtil::foldConstants(txn, valexpr);
   }
 
   return valexpr;
 }
 
 RefPtr<ValueExpressionNode> QueryPlanBuilder::buildUnoptimizedValueExpression(
+    Transaction* txn,
     ASTNode* ast) {
   if (ast == nullptr) {
     RAISE(kNullPointerError, "can't build nullptr");
@@ -1004,78 +1017,78 @@ RefPtr<ValueExpressionNode> QueryPlanBuilder::buildUnoptimizedValueExpression(
   switch (ast->getType()) {
 
     case ASTNode::T_EQ_EXPR:
-      return buildOperator("eq", ast);
+      return buildOperator(txn, "eq", ast);
 
     case ASTNode::T_NEQ_EXPR:
-      return buildOperator("neq", ast);
+      return buildOperator(txn, "neq", ast);
 
     case ASTNode::T_AND_EXPR:
-      return buildOperator("logical_and", ast);
+      return buildOperator(txn, "logical_and", ast);
 
     case ASTNode::T_OR_EXPR:
-      return buildOperator("logical_or", ast);
+      return buildOperator(txn, "logical_or", ast);
 
     case ASTNode::T_NEGATE_EXPR:
-      return buildOperator("neg", ast);
+      return buildOperator(txn, "neg", ast);
 
     case ASTNode::T_LT_EXPR:
-      return buildOperator("lt", ast);
+      return buildOperator(txn, "lt", ast);
 
     case ASTNode::T_LTE_EXPR:
-      return buildOperator("lte", ast);
+      return buildOperator(txn, "lte", ast);
 
     case ASTNode::T_GT_EXPR:
-      return buildOperator("gt", ast);
+      return buildOperator(txn, "gt", ast);
 
     case ASTNode::T_GTE_EXPR:
-      return buildOperator("gte", ast);
+      return buildOperator(txn, "gte", ast);
 
     case ASTNode::T_ADD_EXPR:
-      return buildOperator("add", ast);
+      return buildOperator(txn, "add", ast);
 
     case ASTNode::T_SUB_EXPR:
-      return buildOperator("sub", ast);
+      return buildOperator(txn, "sub", ast);
 
     case ASTNode::T_MUL_EXPR:
-      return buildOperator("mul", ast);
+      return buildOperator(txn, "mul", ast);
 
     case ASTNode::T_DIV_EXPR:
-      return buildOperator("div", ast);
+      return buildOperator(txn, "div", ast);
 
     case ASTNode::T_MOD_EXPR:
-      return buildOperator("mod", ast);
+      return buildOperator(txn, "mod", ast);
 
     case ASTNode::T_POW_EXPR:
-      return buildOperator("pow", ast);
+      return buildOperator(txn, "pow", ast);
 
     case ASTNode::T_REGEX_EXPR:
-      return buildRegex(ast);
+      return buildRegex(txn, ast);
 
     case ASTNode::T_LIKE_EXPR:
-      return buildLike(ast);
+      return buildLike(txn, ast);
 
     case ASTNode::T_LITERAL:
-      return buildLiteral(ast);
+      return buildLiteral(txn, ast);
 
     case ASTNode::T_VOID:
       return new LiteralExpressionNode(SValue("void"));
 
     case ASTNode::T_IF_EXPR:
-      return buildIfStatement(ast);
+      return buildIfStatement(txn, ast);
 
     case ASTNode::T_RESOLVED_COLUMN:
     case ASTNode::T_COLUMN_NAME:
-      return buildColumnReference(ast);
+      return buildColumnReference(txn, ast);
 
     case ASTNode::T_COLUMN_INDEX:
-      return buildColumnIndex(ast);
+      return buildColumnIndex(txn, ast);
 
     case ASTNode::T_TABLE_NAME:
-      return buildColumnReference(ast->getChildren()[0]);
+      return buildColumnReference(txn, ast->getChildren()[0]);
 
     case ASTNode::T_METHOD_CALL:
     case ASTNode::T_METHOD_CALL_WITHIN_RECORD:
-      return buildMethodCall(ast);
+      return buildMethodCall(txn, ast);
 
     default:
       ast->debugPrint();
@@ -1083,7 +1096,9 @@ RefPtr<ValueExpressionNode> QueryPlanBuilder::buildUnoptimizedValueExpression(
   }
 }
 
-ValueExpressionNode* QueryPlanBuilder::buildLiteral(ASTNode* ast) {
+ValueExpressionNode* QueryPlanBuilder::buildLiteral(
+    Transaction* txn,
+    ASTNode* ast) {
   if (ast->getToken() == nullptr) {
     RAISE(kRuntimeError, "internal error: corrupt ast");
   }
@@ -1119,17 +1134,20 @@ ValueExpressionNode* QueryPlanBuilder::buildLiteral(ASTNode* ast) {
 }
 
 ValueExpressionNode* QueryPlanBuilder::buildOperator(
+    Transaction* txn,
     const std::string& name,
     ASTNode* ast) {
   Vector<RefPtr<ValueExpressionNode>> args;
   for (auto e : ast->getChildren()) {
-    args.emplace_back(buildValueExpression(e));
+    args.emplace_back(buildValueExpression(txn, e));
   }
 
   return new CallExpressionNode(name, args);
 }
 
-ValueExpressionNode* QueryPlanBuilder::buildMethodCall(ASTNode* ast) {
+ValueExpressionNode* QueryPlanBuilder::buildMethodCall(
+    Transaction* txn,
+    ASTNode* ast) {
   if (ast->getToken() == nullptr ||
       ast->getToken()->getType() != Token::T_IDENTIFIER) {
     RAISE(kRuntimeError, "corrupt AST");
@@ -1139,16 +1157,18 @@ ValueExpressionNode* QueryPlanBuilder::buildMethodCall(ASTNode* ast) {
 
   Vector<RefPtr<ValueExpressionNode>> args;
   for (auto e : ast->getChildren()) {
-    args.emplace_back(buildValueExpression(e));
+    args.emplace_back(buildValueExpression(txn, e));
   }
 
   return new CallExpressionNode(symbol, args);
 }
 
-ValueExpressionNode* QueryPlanBuilder::buildIfStatement(ASTNode* ast) {
+ValueExpressionNode* QueryPlanBuilder::buildIfStatement(
+    Transaction* txn,
+    ASTNode* ast) {
   Vector<RefPtr<ValueExpressionNode>> args;
   for (auto e : ast->getChildren()) {
-    args.emplace_back(buildValueExpression(e));
+    args.emplace_back(buildValueExpression(txn, e));
   }
 
   if (args.size() != 3) {
@@ -1158,7 +1178,9 @@ ValueExpressionNode* QueryPlanBuilder::buildIfStatement(ASTNode* ast) {
   return new IfExpressionNode(args[0], args[1], args[2]);
 }
 
-ValueExpressionNode* QueryPlanBuilder::buildColumnReference(ASTNode* ast) {
+ValueExpressionNode* QueryPlanBuilder::buildColumnReference(
+    Transaction* txn,
+    ASTNode* ast) {
   String column_name;
 
   for (
@@ -1180,7 +1202,9 @@ ValueExpressionNode* QueryPlanBuilder::buildColumnReference(ASTNode* ast) {
   return colref;
 }
 
-ValueExpressionNode* QueryPlanBuilder::buildColumnIndex(ASTNode* ast) {
+ValueExpressionNode* QueryPlanBuilder::buildColumnIndex(
+    Transaction* txn,
+    ASTNode* ast) {
   if (ast->getChildren().size() != 1) {
     RAISE(kRuntimeError, "internal error: invalid column index reference");
   }
@@ -1193,7 +1217,9 @@ ValueExpressionNode* QueryPlanBuilder::buildColumnIndex(ASTNode* ast) {
   return new ColumnReferenceNode(token->getInteger());
 }
 
-ValueExpressionNode* QueryPlanBuilder::buildRegex(ASTNode* ast) {
+ValueExpressionNode* QueryPlanBuilder::buildRegex(
+    Transaction* txn,
+    ASTNode* ast) {
   const auto& args = ast->getChildren();
   if (args.size() != 2) {
     RAISE(kRuntimeError, "internal error: corrupt ast");
@@ -1208,12 +1234,14 @@ ValueExpressionNode* QueryPlanBuilder::buildRegex(ASTNode* ast) {
   }
 
   auto pattern = args[1]->getToken()->getString();
-  auto subject = buildValueExpression(args[0]);
+  auto subject = buildValueExpression(txn, args[0]);
 
   return new RegexExpressionNode(subject, pattern);
 }
 
-ValueExpressionNode* QueryPlanBuilder::buildLike(ASTNode* ast) {
+ValueExpressionNode* QueryPlanBuilder::buildLike(
+    Transaction* txn,
+    ASTNode* ast) {
   const auto& args = ast->getChildren();
   if (args.size() != 2) {
     RAISE(kRuntimeError, "internal error: corrupt ast");
@@ -1228,17 +1256,20 @@ ValueExpressionNode* QueryPlanBuilder::buildLike(ASTNode* ast) {
   }
 
   auto pattern = args[1]->getToken()->getString();
-  auto subject = buildValueExpression(args[0]);
+  auto subject = buildValueExpression(txn, args[0]);
 
   return new LikeExpressionNode(subject, pattern);
 }
 
-SelectListNode* QueryPlanBuilder::buildSelectList(ASTNode* ast) {
+SelectListNode* QueryPlanBuilder::buildSelectList(
+    Transaction* txn,
+    ASTNode* ast) {
   if (ast->getChildren().size() == 0) {
     RAISE(kRuntimeError, "internal error: corrupt ast");
   }
 
-  auto slnode = new SelectListNode(buildValueExpression(ast->getChildren()[0]));
+  auto slnode = new SelectListNode(
+      buildValueExpression(txn, ast->getChildren()[0]));
 
   /* .. AS alias */
   if (ast->getType() == ASTNode::T_DERIVED_COLUMN &&
@@ -1250,7 +1281,9 @@ SelectListNode* QueryPlanBuilder::buildSelectList(ASTNode* ast) {
   return slnode;
 }
 
-QueryTreeNode* QueryPlanBuilder::buildShowTables(ASTNode* ast) {
+QueryTreeNode* QueryPlanBuilder::buildShowTables(
+    Transaction* txn,
+    ASTNode* ast) {
   if (!(*ast == ASTNode::T_SHOW_TABLES)) {
     return nullptr;
   }
@@ -1258,7 +1291,9 @@ QueryTreeNode* QueryPlanBuilder::buildShowTables(ASTNode* ast) {
   return new ShowTablesNode();
 }
 
-QueryTreeNode* QueryPlanBuilder::buildDescribeTable(ASTNode* ast) {
+QueryTreeNode* QueryPlanBuilder::buildDescribeTable(
+    Transaction* txn,
+    ASTNode* ast) {
   if (!(*ast == ASTNode::T_DESCRIBE_TABLE) || ast->getChildren().size() != 1) {
     return nullptr;
   }
