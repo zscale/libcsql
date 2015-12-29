@@ -26,6 +26,7 @@ UNIT_TEST(QTreeTest);
 
 TEST_CASE(QTreeTest, TestExtractEqualsConstraint, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto txn = runtime->newTransaction();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -42,6 +43,7 @@ TEST_CASE(QTreeTest, TestExtractEqualsConstraint, [] () {
 
     auto qtree_builder = runtime->queryPlanBuilder();
     auto qtrees = qtree_builder->build(
+        txn.get(),
         parser.getStatements(),
         estrat->tableProvider());
 
@@ -63,6 +65,7 @@ TEST_CASE(QTreeTest, TestExtractEqualsConstraint, [] () {
 
 TEST_CASE(QTreeTest, TestExtractNotEqualsConstraint, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto txn = runtime->newTransaction();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -79,6 +82,7 @@ TEST_CASE(QTreeTest, TestExtractNotEqualsConstraint, [] () {
 
     auto qtree_builder = runtime->queryPlanBuilder();
     auto qtrees = qtree_builder->build(
+        txn.get(),
         parser.getStatements(),
         estrat->tableProvider());
 
@@ -100,6 +104,7 @@ TEST_CASE(QTreeTest, TestExtractNotEqualsConstraint, [] () {
 
 TEST_CASE(QTreeTest, TestExtractLessThanConstraint, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto txn = runtime->newTransaction();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -116,6 +121,7 @@ TEST_CASE(QTreeTest, TestExtractLessThanConstraint, [] () {
 
     auto qtree_builder = runtime->queryPlanBuilder();
     auto qtrees = qtree_builder->build(
+        txn.get(),
         parser.getStatements(),
         estrat->tableProvider());
 
@@ -137,6 +143,7 @@ TEST_CASE(QTreeTest, TestExtractLessThanConstraint, [] () {
 
 TEST_CASE(QTreeTest, TestExtractLessThanOrEqualToConstraint, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto txn = runtime->newTransaction();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -153,6 +160,7 @@ TEST_CASE(QTreeTest, TestExtractLessThanOrEqualToConstraint, [] () {
 
     auto qtree_builder = runtime->queryPlanBuilder();
     auto qtrees = qtree_builder->build(
+        txn.get(),
         parser.getStatements(),
         estrat->tableProvider());
 
@@ -174,6 +182,7 @@ TEST_CASE(QTreeTest, TestExtractLessThanOrEqualToConstraint, [] () {
 
 TEST_CASE(QTreeTest, TestExtractGreaterThanConstraint, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto txn = runtime->newTransaction();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -190,6 +199,7 @@ TEST_CASE(QTreeTest, TestExtractGreaterThanConstraint, [] () {
 
     auto qtree_builder = runtime->queryPlanBuilder();
     auto qtrees = qtree_builder->build(
+        txn.get(),
         parser.getStatements(),
         estrat->tableProvider());
 
@@ -211,6 +221,7 @@ TEST_CASE(QTreeTest, TestExtractGreaterThanConstraint, [] () {
 
 TEST_CASE(QTreeTest, TestExtractGreaterThanOrEqualToConstraint, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto txn = runtime->newTransaction();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -227,6 +238,7 @@ TEST_CASE(QTreeTest, TestExtractGreaterThanOrEqualToConstraint, [] () {
 
     auto qtree_builder = runtime->queryPlanBuilder();
     auto qtrees = qtree_builder->build(
+        txn.get(),
         parser.getStatements(),
         estrat->tableProvider());
 
@@ -248,6 +260,7 @@ TEST_CASE(QTreeTest, TestExtractGreaterThanOrEqualToConstraint, [] () {
 
 TEST_CASE(QTreeTest, TestExtractMultipleConstraints, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto txn = runtime->newTransaction();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -262,6 +275,7 @@ TEST_CASE(QTreeTest, TestExtractMultipleConstraints, [] () {
 
   auto qtree_builder = runtime->queryPlanBuilder();
   auto qtrees = qtree_builder->build(
+      txn.get(),
       parser.getStatements(),
       estrat->tableProvider());
 
@@ -298,6 +312,7 @@ TEST_CASE(QTreeTest, TestExtractMultipleConstraints, [] () {
 
 TEST_CASE(QTreeTest, TestSimpleConstantFolding, [] () {
   auto runtime = Runtime::getDefaultRuntime();
+  auto txn = runtime->newTransaction();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
@@ -312,6 +327,7 @@ TEST_CASE(QTreeTest, TestSimpleConstantFolding, [] () {
 
   auto qtree_builder = runtime->queryPlanBuilder();
   auto qtrees = qtree_builder->build(
+      txn.get(),
       parser.getStatements(),
       estrat->tableProvider());
 
