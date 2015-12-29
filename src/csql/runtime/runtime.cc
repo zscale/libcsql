@@ -43,7 +43,7 @@ Runtime::Runtime(
     query_plan_builder_(query_plan_builder) {}
 
 RefPtr<QueryPlan> Runtime::buildQueryPlan(
-    Transaction* ctx,
+    Transaction* txn,
     const String& query,
     RefPtr<ExecutionStrategy> execution_strategy) {
   /* parse query */
@@ -52,17 +52,18 @@ RefPtr<QueryPlan> Runtime::buildQueryPlan(
 
   /* build query plan */
   auto statements = query_plan_builder_->build(
+      txn,
       parser.getStatements(),
       execution_strategy->tableProvider());
 
   return buildQueryPlan(
-      ctx,
+      txn,
       statements,
       execution_strategy);
 }
 
 RefPtr<QueryPlan> Runtime::buildQueryPlan(
-    Transaction* ctx,
+    Transaction* txn,
     Vector<RefPtr<QueryTreeNode>> statements,
     RefPtr<ExecutionStrategy> execution_strategy) {
   for (auto& stmt : statements) {
@@ -73,7 +74,7 @@ RefPtr<QueryPlan> Runtime::buildQueryPlan(
   for (const auto& stmt : statements) {
     if (dynamic_cast<TableExpressionNode*>(stmt.get())) {
       stmt_exprs.emplace_back(query_builder_->buildTableExpression(
-          ctx,
+          txn,
           stmt.asInstanceOf<TableExpressionNode>(),
           execution_strategy->tableProvider(),
           this));
@@ -83,7 +84,7 @@ RefPtr<QueryPlan> Runtime::buildQueryPlan(
 
     if (dynamic_cast<ChartStatementNode*>(stmt.get())) {
       stmt_exprs.emplace_back(query_builder_->buildChartStatement(
-          ctx,
+          txn,
           stmt.asInstanceOf<ChartStatementNode>(),
           execution_strategy->tableProvider(),
           this));
@@ -101,18 +102,18 @@ RefPtr<QueryPlan> Runtime::buildQueryPlan(
 }
 
 void Runtime::executeQuery(
-    Transaction* ctx,
+    Transaction* txn,
     const String& query,
     RefPtr<ExecutionStrategy> execution_strategy,
     RefPtr<ResultFormat> result_format) {
   executeQuery(
-      ctx,
-      buildQueryPlan(ctx, query, execution_strategy),
+      txn,
+      buildQueryPlan(txn, query, execution_strategy),
       result_format);
 }
 
 void Runtime::executeQuery(
-    Transaction* ctx,
+    Transaction* txn,
     RefPtr<QueryPlan> query_plan,
     RefPtr<ResultFormat> result_format) {
   /* execute query and format results */
@@ -129,7 +130,7 @@ void Runtime::executeQuery(
 }
 
 void Runtime::executeStatement(
-    Transaction* ctx,
+    Transaction* txn,
     Statement* statement,
     ResultList* result) {
   auto table_expr = dynamic_cast<TableExpression*>(statement);
@@ -139,7 +140,7 @@ void Runtime::executeStatement(
 
   result->addHeader(table_expr->columnNames());
   executeStatement(
-      ctx,
+      txn,
       table_expr,
       [result] (int argc, const csql::SValue* argv) -> bool {
     result->addRow(argv, argc);
@@ -148,7 +149,7 @@ void Runtime::executeStatement(
 }
 
 void Runtime::executeStatement(
-    Transaction* ctx,
+    Transaction* txn,
     TableExpression* statement,
     Function<bool (int argc, const SValue* argv)> fn) {
   csql::ExecutionContext context(&tpool_);
@@ -161,7 +162,7 @@ void Runtime::executeStatement(
 }
 
 void Runtime::executeAggregate(
-    Transaction* ctx,
+    Transaction* txn,
     const RemoteAggregateParams& query,
     RefPtr<ExecutionStrategy> execution_strategy,
     OutputStream* os) {
@@ -179,7 +180,7 @@ void Runtime::executeAggregate(
 
     auto slnode = mkRef(
         new SelectListNode(
-            query_plan_builder_->buildValueExpression(stmts[0])));
+            query_plan_builder_->buildValueExpression(txn, stmts[0])));
 
     if (e.has_alias()) {
       slnode->setAlias(e.alias());
@@ -202,7 +203,7 @@ void Runtime::executeAggregate(
 
     auto slnode = mkRef(
         new SelectListNode(
-            query_plan_builder_->buildValueExpression(stmts[0])));
+            query_plan_builder_->buildValueExpression(txn, stmts[0])));
 
     if (e.has_alias()) {
       slnode->setAlias(e.alias());
@@ -222,7 +223,7 @@ void Runtime::executeAggregate(
     }
 
     group_exprs.emplace_back(
-        query_plan_builder_->buildValueExpression(stmts[0]));
+        query_plan_builder_->buildValueExpression(txn, stmts[0]));
   }
 
   Option<RefPtr<ValueExpressionNode>> where_expr;
@@ -237,7 +238,7 @@ void Runtime::executeAggregate(
       RAISE(kIllegalArgumentError);
     }
 
-    where_expr = Some(query_plan_builder_->buildValueExpression(stmts[0]));
+    where_expr = Some(query_plan_builder_->buildValueExpression(txn, stmts[0]));
   }
 
   auto qtree = mkRef(
@@ -251,7 +252,7 @@ void Runtime::executeAggregate(
                 (AggregationStrategy) query.aggregation_strategy())));
 
   auto expr = query_builder_->buildTableExpression(
-      ctx,
+      txn,
       qtree.get(),
       execution_strategy->tableProvider(),
       this);
@@ -270,20 +271,20 @@ void Runtime::executeAggregate(
 }
 
 SValue Runtime::evaluateScalarExpression(
-    Transaction* ctx,
+    Transaction* txn,
     ASTNode* expr,
     int argc,
     const SValue* argv) {
-  auto val_expr = query_plan_builder_->buildValueExpression(expr);
-  auto compiled = query_builder_->buildValueExpression(ctx, val_expr);
+  auto val_expr = query_plan_builder_->buildValueExpression(txn, expr);
+  auto compiled = query_builder_->buildValueExpression(txn, val_expr);
 
   SValue out;
-  VM::evaluate(ctx, compiled.program(), argc, argv, &out);
+  VM::evaluate(txn, compiled.program(), argc, argv, &out);
   return out;
 }
 
 SValue Runtime::evaluateScalarExpression(
-    Transaction* ctx,
+    Transaction* txn,
     const String& expr,
     int argc,
     const SValue* argv) {
@@ -297,46 +298,46 @@ SValue Runtime::evaluateScalarExpression(
         "static expression must consist of exactly one statement");
   }
 
-  auto val_expr = query_plan_builder_->buildValueExpression(stmts[0]);
-  auto compiled = query_builder_->buildValueExpression(ctx, val_expr);
+  auto val_expr = query_plan_builder_->buildValueExpression(txn, stmts[0]);
+  auto compiled = query_builder_->buildValueExpression(txn, val_expr);
 
   SValue out;
-  VM::evaluate(ctx, compiled.program(), argc, argv, &out);
+  VM::evaluate(txn, compiled.program(), argc, argv, &out);
   return out;
 }
 
 SValue Runtime::evaluateScalarExpression(
-    Transaction* ctx,
+    Transaction* txn,
     RefPtr<ValueExpressionNode> expr,
     int argc,
     const SValue* argv) {
-  auto compiled = query_builder_->buildValueExpression(ctx, expr);
+  auto compiled = query_builder_->buildValueExpression(txn, expr);
 
   SValue out;
-  VM::evaluate(ctx, compiled.program(), argc, argv, &out);
+  VM::evaluate(txn, compiled.program(), argc, argv, &out);
   return out;
 }
 
 SValue Runtime::evaluateScalarExpression(
-    Transaction* ctx,
+    Transaction* txn,
     const ValueExpression& expr,
     int argc,
     const SValue* argv) {
   SValue out;
-  VM::evaluate(ctx, expr.program(), argc, argv, &out);
+  VM::evaluate(txn, expr.program(), argc, argv, &out);
   return out;
 }
 
-SValue Runtime::evaluateConstExpression(Transaction* ctx, ASTNode* expr) {
-  auto val_expr = query_plan_builder_->buildValueExpression(expr);
-  auto compiled = query_builder_->buildValueExpression(ctx, val_expr);
+SValue Runtime::evaluateConstExpression(Transaction* txn, ASTNode* expr) {
+  auto val_expr = query_plan_builder_->buildValueExpression(txn,expr);
+  auto compiled = query_builder_->buildValueExpression(txn, val_expr);
 
   SValue out;
-  VM::evaluate(ctx, compiled.program(), 0, nullptr, &out);
+  VM::evaluate(txn, compiled.program(), 0, nullptr, &out);
   return out;
 }
 
-SValue Runtime::evaluateConstExpression(Transaction* ctx, const String& expr) {
+SValue Runtime::evaluateConstExpression(Transaction* txn, const String& expr) {
   csql::Parser parser;
   parser.parseValueExpression(expr.data(), expr.size());
 
@@ -347,29 +348,29 @@ SValue Runtime::evaluateConstExpression(Transaction* ctx, const String& expr) {
         "static expression must consist of exactly one statement");
   }
 
-  auto val_expr = query_plan_builder_->buildValueExpression(stmts[0]);
-  auto compiled = query_builder_->buildValueExpression(ctx, val_expr);
+  auto val_expr = query_plan_builder_->buildValueExpression(txn, stmts[0]);
+  auto compiled = query_builder_->buildValueExpression(txn, val_expr);
 
   SValue out;
-  VM::evaluate(ctx, compiled.program(), 0, nullptr, &out);
+  VM::evaluate(txn, compiled.program(), 0, nullptr, &out);
   return out;
 }
 
 SValue Runtime::evaluateConstExpression(
-    Transaction* ctx,
+    Transaction* txn,
     RefPtr<ValueExpressionNode> expr) {
-  auto compiled = query_builder_->buildValueExpression(ctx, expr);
+  auto compiled = query_builder_->buildValueExpression(txn, expr);
 
   SValue out;
-  VM::evaluate(ctx, compiled.program(), 0, nullptr, &out);
+  VM::evaluate(txn, compiled.program(), 0, nullptr, &out);
   return out;
 }
 
 SValue Runtime::evaluateConstExpression(
-    Transaction* ctx,
+    Transaction* txn,
     const ValueExpression& expr) {
   SValue out;
-  VM::evaluate(ctx, expr.program(), 0, nullptr, &out);
+  VM::evaluate(txn, expr.program(), 0, nullptr, &out);
   return out;
 }
 

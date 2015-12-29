@@ -34,15 +34,22 @@ public:
       QueryPlanBuilderOptions opts,
       SymbolTable* symbol_table);
 
-  RefPtr<QueryTreeNode> build(ASTNode* ast, RefPtr<TableProvider> tables);
+  RefPtr<QueryTreeNode> build(
+      Transaction* txn,
+      ASTNode* ast,
+      RefPtr<TableProvider> tables);
 
   Vector<RefPtr<QueryTreeNode>> build(
+      Transaction* txn,
       const Vector<ASTNode*>& ast,
       RefPtr<TableProvider> tables);
 
-  RefPtr<ValueExpressionNode> buildValueExpression(ASTNode* ast);
+  RefPtr<ValueExpressionNode> buildValueExpression(
+      Transaction* txn,
+      ASTNode* ast);
 
   RefPtr<ValueExpressionNode> buildUnoptimizedValueExpression(
+      Transaction* txn,
       ASTNode* ast);
 
   /**
@@ -102,7 +109,10 @@ public:
    * Build a group by query plan node for a SELECT statement that has a GROUP
    * BY clause
    */
-  QueryTreeNode* buildGroupBy(ASTNode* ast, RefPtr<TableProvider> tables);
+  QueryTreeNode* buildGroupBy(
+      Transaction* txn,
+      ASTNode* ast,
+      RefPtr<TableProvider> tables);
 
   ///**
   // * Build a group over timewindow query plan node for a SELECT statement that
@@ -111,46 +121,87 @@ public:
   //QueryPlanNode* buildGroupOverTimewindow(ASTNode* ast, TableRepository* repo);
 
 
-  QueryTreeNode* buildSequentialScan(ASTNode* ast);
+  QueryTreeNode* buildSequentialScan(
+      Transaction* txn,
+      ASTNode* ast);
 
-  QueryTreeNode* buildLimitClause(ASTNode* ast, RefPtr<TableProvider> tables);
+  QueryTreeNode* buildLimitClause(
+      Transaction* txn,
+      ASTNode* ast,
+      RefPtr<TableProvider> tables);
 
-  QueryTreeNode* buildOrderByClause(ASTNode* ast, RefPtr<TableProvider> tables);
+  QueryTreeNode* buildOrderByClause(
+      Transaction* txn,
+      ASTNode* ast,
+      RefPtr<TableProvider> tables);
 
   /**
    * Builds a standalone SELECT expression (A SELECT without any tables)
    */
-  QueryTreeNode* buildSelectExpression(ASTNode* ast);
+  QueryTreeNode* buildSelectExpression(
+      Transaction* txn,
+      ASTNode* ast);
 
-  QueryTreeNode* buildShowTables(ASTNode* ast);
+  QueryTreeNode* buildShowTables(
+      Transaction* txn,
+      ASTNode* ast);
 
-  QueryTreeNode* buildDescribeTable(ASTNode* ast);
+  QueryTreeNode* buildDescribeTable(
+      Transaction* txn,
+      ASTNode* ast);
 
-  ValueExpressionNode* buildOperator(const std::string& name, ASTNode* ast);
+  ValueExpressionNode* buildOperator(
+      Transaction* txn,
+      const std::string& name,
+      ASTNode* ast);
 
-  ValueExpressionNode* buildLiteral(ASTNode* ast);
+  ValueExpressionNode* buildLiteral(
+      Transaction* txn,
+      ASTNode* ast);
 
-  ValueExpressionNode* buildColumnReference(ASTNode* ast);
+  ValueExpressionNode* buildColumnReference(
+      Transaction* txn,
+      ASTNode* ast);
 
-  ValueExpressionNode* buildColumnIndex(ASTNode* ast);
+  ValueExpressionNode* buildColumnIndex(
+      Transaction* txn,
+      ASTNode* ast);
 
-  ValueExpressionNode* buildIfStatement(ASTNode* ast);
+  ValueExpressionNode* buildIfStatement(
+      Transaction* txn,
+      ASTNode* ast);
 
-  ValueExpressionNode* buildMethodCall(ASTNode* ast);
+  ValueExpressionNode* buildMethodCall(
+      Transaction* txn,
+      ASTNode* ast);
 
-  ValueExpressionNode* buildRegex(ASTNode* ast);
+  ValueExpressionNode* buildRegex(
+      Transaction* txn,
+      ASTNode* ast);
 
-  ValueExpressionNode* buildLike(ASTNode* ast);
+  ValueExpressionNode* buildLike(
+      Transaction* txn,
+      ASTNode* ast);
 
   /**
    * expand all column names + wildcard to tablename->columnanme
    */
-  void expandColumns(ASTNode* ast, RefPtr<TableProvider> tables);
+  void expandColumns(
+      Transaction* txn,
+      ASTNode* ast,
+      RefPtr<TableProvider> tables);
 
   /**
    * assign explicit column names to all output columns
    */
-  void assignExplicitColumnNames(ASTNode* ast, RefPtr<TableProvider> tables);
+  void assignExplicitColumnNames(
+      Transaction* txn,
+      ASTNode* ast,
+      RefPtr<TableProvider> tables);
+
+  SelectListNode* buildSelectList(
+      Transaction* txn,
+      ASTNode* select_list);
 
   /**
    * Recursively walk the provided ast and search for column references. For
@@ -164,8 +215,6 @@ public:
       ASTNode* ast,
       ASTNode* select_list,
       bool in_aggregation = false);
-
-  SelectListNode* buildSelectList(ASTNode* select_list);
 
 protected:
   QueryPlanBuilderOptions opts_;
