@@ -1006,10 +1006,24 @@ QueryTreeNode* QueryPlanBuilder::buildSubquery(
     return nullptr;
   }
 
+  String subquery_alias;
+  /* .. AS alias */
+  if (from_list->getChildren().size() > 1 &&
+      from_list->getChildren()[1]->getType() == ASTNode::T_TABLE_ALIAS) {
+    subquery_alias = from_list->getChildren()[1]->getToken()->getString();
+  }
+
   auto subquery = build(txn, subquery_ast, tables);
   auto subquery_tbl = subquery.asInstanceOf<TableExpressionNode>();
-  auto resolver = [&subquery_tbl] (const String& name) {
-    return subquery_tbl->getColumnIndex(name);
+  auto resolver = [&subquery_tbl, &subquery_alias] (const String& name) {
+    auto col = name;
+    if (!subquery_alias.empty()) {
+      if (StringUtil::beginsWith(col, subquery_alias + ".")) {
+        col = col.substr(subquery_alias.size() + 1);
+      }
+    }
+
+    return subquery_tbl->getColumnIndex(col);
   };
 
   /* get select list */
@@ -1055,11 +1069,13 @@ QueryTreeNode* QueryPlanBuilder::buildSubquery(
     where_expr = Some(RefPtr<ValueExpressionNode>(buildValueExpression(txn, e)));
   }
 
-  /* aggregation type */
-  return new SubqueryNode(
+  auto subqnode = new SubqueryNode(
       subquery,
       select_list_expressions,
       where_expr);
+  subqnode->setTableAlias(subquery_alias);
+
+  return subqnode;
 }
 
 QueryTreeNode* QueryPlanBuilder::buildSelectExpression(

@@ -29,21 +29,26 @@ public:
 
   SubqueryNode(const SubqueryNode& other);
 
+  RefPtr<QueryTreeNode> subquery() const;
+
+  Vector<RefPtr<SelectListNode>> selectList() const;
   Vector<String> columnNames() const override;
 
-  RefPtr<QueryTreeNode> subquery()  const;
-  Vector<RefPtr<SelectListNode>> selectList() const;
   Option<RefPtr<ValueExpressionNode>> whereExpression() const;
 
   RefPtr<QueryTreeNode> deepCopy() const override;
 
   String toString() const override;
 
+  const String& tableAlias() const;
+  void setTableAlias(const String& alias);
+
 protected:
   RefPtr<QueryTreeNode> subquery_;
   Vector<String> column_names_;
   Vector<RefPtr<SelectListNode>> select_list_;
   Option<RefPtr<ValueExpressionNode>> where_expr_;
+  String alias_;
 };
 
 } // namespace csql

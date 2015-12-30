@@ -43,7 +43,8 @@ SequentialScanNode::SequentialScanNode(
 SequentialScanNode::SequentialScanNode(
     const SequentialScanNode& other) :
     table_name_(other.table_name_),
-    aggr_strategy_(other.aggr_strategy_) {
+    aggr_strategy_(other.aggr_strategy_),
+    constraints_(other.constraints_) {
   for (const auto& e : other.select_list_) {
     select_list_.emplace_back(e->deepCopyAs<SelectListNode>());
   }
