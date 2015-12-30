@@ -39,6 +39,7 @@ add_library(chartsql STATIC
     qtree/CallExpressionNode.cc
     qtree/ColumnReferenceNode.cc
     qtree/SequentialScanNode.cc
+    qtree/SubqueryNode.cc
     qtree/SelectExpressionNode.cc
     qtree/LiteralExpressionNode.cc
     qtree/IfExpressionNode.cc

@@ -1194,3 +1194,22 @@ TEST_CASE(RuntimeTest, TestEscaping, [] () {
     EXPECT_EQ(v.toString(), "fnord\\\\'fnord");
   }
 });
+
+TEST_CASE(RuntimeTest, TestSimpleSubSelect, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newTransaction();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+
+  ResultList result;
+  auto query = R"(select t1.a from (select 123 as a, 435 as b) as t1)";
+  auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+  runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+  result.debugPrint();
+  //EXPECT_EQ(result.getNumColumns(), 1);
+  //EXPECT_EQ(result.getNumRows(), 1);
+  //EXPECT_EQ(result.getRow(0)[0], "213");
+});
+
+
+
