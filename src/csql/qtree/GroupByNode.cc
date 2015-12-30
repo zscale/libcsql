@@ -27,6 +27,19 @@ GroupByNode::GroupByNode(
   }
 }
 
+GroupByNode::GroupByNode(
+    const GroupByNode& other) :
+    column_names_(other.column_names_),
+    table_(table_->deepCopyAs<QueryTreeNode>()) {
+  for (const auto& e : other.select_list_) {
+    select_list_.emplace_back(e->deepCopyAs<SelectListNode>());
+  }
+
+  for (const auto& e : other.group_exprs_) {
+    group_exprs_.emplace_back(e->deepCopyAs<ValueExpressionNode>());
+  }
+}
+
 Vector<RefPtr<SelectListNode>> GroupByNode::selectList() const {
   return select_list_;
 }
@@ -36,7 +49,13 @@ Vector<String> GroupByNode::outputColumns() const {
 }
 
 size_t GroupByNode::getColumnIndex(const String& column_name) {
-  RAISE(kNotYetImplementedError);
+  for (int i = 0; i < column_names_.size(); ++i) {
+    if (column_names_[i] == column_name) {
+      return i;
+    }
+  }
+
+  return -1;
 }
 
 Vector<RefPtr<ValueExpressionNode>> GroupByNode::groupExpressions() const {
@@ -48,20 +67,7 @@ RefPtr<QueryTreeNode> GroupByNode::inputTable() const {
 }
 
 RefPtr<QueryTreeNode> GroupByNode::deepCopy() const {
-  Vector<RefPtr<SelectListNode>> select_list;
-  for (const auto& e : select_list_) {
-    select_list.emplace_back(e->deepCopyAs<SelectListNode>());
-  }
-
-  Vector<RefPtr<ValueExpressionNode>> group_exprs;
-  for (const auto& e : group_exprs_) {
-    group_exprs.emplace_back(e->deepCopyAs<ValueExpressionNode>());
-  }
-
-  return new GroupByNode(
-      select_list,
-      group_exprs,
-      table_->deepCopyAs<QueryTreeNode>());
+  return new GroupByNode(*this);
 }
 
 String GroupByNode::toString() const {

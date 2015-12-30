@@ -44,7 +44,23 @@ Vector<String> GroupByMergeNode::outputColumns() const {
 }
 
 size_t GroupByMergeNode::getColumnIndex(const String& column_name) {
-  RAISE(kNotYetImplementedError);
+  size_t idx = -1;
+
+  for (auto& tbl : tables_) {
+    auto tidx = tbl.asInstanceOf<TableExpressionNode>()->getColumnIndex(
+        column_name);
+
+    if (idx != size_t(-1) && tidx != idx) {
+      RAISEF(
+          kRuntimeError,
+          "column not found in GROUP BY tables: '$0'",
+          column_name);
+    }
+
+    idx = tidx;
+  }
+
+  return idx;
 }
 
 RefPtr<QueryTreeNode> GroupByMergeNode::deepCopy() const {
