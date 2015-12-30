@@ -334,9 +334,14 @@ ASTNode* Parser::selectStatement() {
   }
 
   /* FROM clause */
-  if (!(*cur_token_ == Token::T_SEMICOLON)) {
-    select->appendChild(fromClause());
-  }
+  switch (cur_token_->getType()) {
+    case Token::T_SEMICOLON:
+    case Token::T_RPAREN:
+      break;
+    default:
+      select->appendChild(fromClause());
+      break;
+  };
 
   /* WHERE clause */
   auto where = whereClause();
@@ -685,19 +690,48 @@ ASTNode* Parser::fromClause() {
     return nullptr;
   }
 
+  consumeToken();
+
+  auto tbl = tableReference();
+
+  if (!(*cur_token_ == Token::T_COMMA)) {
+    return tbl;
+  }
+
+  //do {
+  //} while (*cur_token_ == Token::T_COMMA);
+  return tbl;
+}
+
+ASTNode* Parser::tableReference() {
   auto clause = new ASTNode(ASTNode::T_FROM);
 
-  do {
+  if (*cur_token_ == Token::T_LPAREN) {
     consumeToken();
-    clause->appendChild(tableName());
-
-    if (consumeIf(Token::T_AS)) {
-      assertExpectation(Token::T_IDENTIFIER);
-      auto table_alias = clause->appendChild(ASTNode::T_TABLE_ALIAS);
-      table_alias->setToken(cur_token_);
-      consumeToken();
+    if (*cur_token_ == Token::T_SELECT) {
+      // subquery
+      clause->appendChild(selectStatement());
+      expectAndConsume(Token::T_RPAREN);
+    } else {
+      // (  table_reference )
+      auto table_ref = tableReference();
+      expectAndConsume(Token::T_RPAREN);
+      return table_ref;
     }
-  } while (*cur_token_ == Token::T_COMMA);
+  } else {
+    // table_name
+    clause->appendChild(tableName());
+  }
+
+  // [ AS ]
+  consumeIf(Token::T_AS);
+
+  // alias
+  if (*cur_token_ == Token::T_IDENTIFIER) {
+    auto table_alias = clause->appendChild(ASTNode::T_TABLE_ALIAS);
+    table_alias->setToken(cur_token_);
+    consumeToken();
+  }
 
   return clause;
 }

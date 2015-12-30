@@ -376,19 +376,6 @@ TEST_CASE(ParserTest, TestSelectMustBeFirstAssert, [] () {
   });
 });
 
-TEST_CASE(ParserTest, TestFromList, [] () {
-  auto parser = parseTestQuery("SELECT a FROM tbl1, tbl2;");
-  EXPECT(parser.getStatements().size() == 1);
-  const auto& stmt = parser.getStatements()[0];
-  const auto& from = stmt->getChildren()[1];
-  EXPECT(*from == ASTNode::T_FROM);
-  EXPECT(from->getChildren().size() == 2);
-  EXPECT(*from->getChildren()[0] == ASTNode::T_TABLE_NAME);
-  EXPECT(*from->getChildren()[0]->getToken() == "tbl1");
-  EXPECT(*from->getChildren()[1] == ASTNode::T_TABLE_NAME);
-  EXPECT(*from->getChildren()[1]->getToken() == "tbl2");
-});
-
 TEST_CASE(ParserTest, TestWhereClause, [] () {
   auto parser = parseTestQuery("SELECT x FROM t WHERE a=1 AND a+1=2 OR b=3;");
   EXPECT(parser.getStatements().size() == 1);
@@ -672,4 +659,19 @@ TEST_CASE(ParserTest, TestTableReferenceWithAlias, [] () {
   EXPECT(*alias == ASTNode::T_TABLE_ALIAS);
   EXPECT(*alias->getToken() == Token::T_IDENTIFIER);
   EXPECT(*alias->getToken() == "t2");
+});
+
+TEST_CASE(ParserTest, TestParseSimpleSubquery, [] () {
+  auto parser = parseTestQuery("select t1.a from (select 123 as a, 435 as b) as t1;");
+  EXPECT(parser.getStatements().size() == 1);
+  const auto& stmt = parser.getStatements()[0];
+  EXPECT(stmt->getChildren().size() == 2);
+  const auto& from = stmt->getChildren()[1];
+  EXPECT(*from == ASTNode::T_FROM);
+  EXPECT(from->getChildren().size() == 2);
+  EXPECT(*from->getChildren()[0] == ASTNode::T_SELECT);
+  auto alias = from->getChildren()[1];
+  EXPECT(*alias == ASTNode::T_TABLE_ALIAS);
+  EXPECT(*alias->getToken() == Token::T_IDENTIFIER);
+  EXPECT(*alias->getToken() == "t1");
 });
