@@ -28,6 +28,7 @@ public:
   size_t columnIndex() const;
 
   void setColumnIndex(size_t index);
+  bool hasColumnIndex() const;
 
   Vector<RefPtr<ValueExpressionNode>> arguments() const override;
 

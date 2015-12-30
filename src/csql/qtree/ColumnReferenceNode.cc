@@ -46,6 +46,10 @@ size_t ColumnReferenceNode::columnIndex() const {
   return column_index_.get();
 }
 
+bool ColumnReferenceNode::hasColumnIndex() const {
+  return !column_index_.isEmpty();
+}
+
 void ColumnReferenceNode::setColumnIndex(size_t index) {
   column_index_ = Some(index);
 }

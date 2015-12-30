@@ -657,6 +657,46 @@ TEST_CASE(RuntimeTest, TestWildcardSelectWithOrderLimit, [] () {
   }
 });
 
+TEST_CASE(RuntimeTest, TestSelectWithInternalGroupColumns, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newTransaction();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new CSTableScanProvider(
+          "testtable",
+          "src/csql/testdata/testtbl.cst"));
+
+  {
+    ResultList result;
+    auto query = R"(select count(1) from testtable group by TRUNCATE(time / 60000000);)";
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 1);
+    EXPECT_EQ(result.getNumRows(), 129);
+  }
+});
+
+TEST_CASE(RuntimeTest, TestSelectWithInternalOrderColumns, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newTransaction();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new CSTableScanProvider(
+          "testtable",
+          "src/csql/testdata/testtbl.cst"));
+
+  {
+    ResultList result;
+    auto query = R"(select user_id from testtable order by time desc limit 10;)";
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 1);
+    EXPECT_EQ(result.getNumRows(), 10);
+  }
+});
+
 TEST_CASE(RuntimeTest, TestStringStartsWithExpression, [] () {
   auto runtime = Runtime::getDefaultRuntime();
   auto ctx = runtime->newTransaction();
@@ -1227,7 +1267,6 @@ TEST_CASE(RuntimeTest, TestSimpleSubSelect, [] () {
   auto query = R"(select t1.b, a from (select 123 as a, 435 as b) as t1)";
   auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
   runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
-  result.debugPrint();
   EXPECT_EQ(result.getNumColumns(), 2);
   EXPECT_EQ(result.getNumRows(), 1);
   EXPECT_EQ(result.getRow(0)[0], "435");
@@ -1244,7 +1283,6 @@ TEST_CASE(RuntimeTest, TestWildcardOnSubselect, [] () {
   auto query = R"(select * from (select 123 as a, 435 as b) as t1)";
   auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
   runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
-  result.debugPrint();
   EXPECT_EQ(result.getNumColumns(), 2);
   EXPECT_EQ(result.getNumRows(), 1);
   EXPECT_EQ(result.getRow(0)[0], "123");

@@ -110,8 +110,6 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildGroupBy(
   Vector<ValueExpression> group_expressions;
 
   for (const auto& slnode : node->selectList()) {
-    column_names.emplace_back(slnode->columnName());
-
     select_expressions.emplace_back(
         runtime->buildValueExpression(ctx, slnode->expression()));
   }
@@ -126,7 +124,7 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildGroupBy(
       new GroupBy(
           ctx,
           std::move(next),
-          column_names,
+          node->outputColumns(),
           std::move(select_expressions),
           std::move(group_expressions),
           SHA1::compute(node->toString())));

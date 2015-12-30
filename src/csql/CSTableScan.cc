@@ -30,9 +30,7 @@ CSTableScan::CSTableScan(
     colindex_(0),
     aggr_strategy_(stmt_->aggregationStrategy()),
     rows_scanned_(0) {
-  for (const auto& slnode : stmt_->selectList()) {
-    column_names_.emplace_back(slnode->columnName());
-  }
+  column_names_ = stmt_->outputColumns();
 }
 
 void CSTableScan::prepare(ExecutionContext* context) {

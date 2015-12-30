@@ -110,7 +110,10 @@ size_t SequentialScanNode::getColumnIndex(const String& column_name) {
     }
   }
 
-  return -1;
+  auto slnode = new SelectListNode(new ColumnReferenceNode(column_name));
+  slnode->setAlias(column_name);
+  select_list_.emplace_back(slnode);
+  return select_list_.size() - 1;
 }
 
 AggregationStrategy SequentialScanNode::aggregationStrategy() const {
