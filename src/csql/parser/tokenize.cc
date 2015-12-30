@@ -538,6 +538,36 @@ next:
     goto next;
   }
 
+  if (token == "JOIN") {
+    token_list->emplace_back(Token::T_JOIN);
+    goto next;
+  }
+
+  if (token == "CROSS") {
+    token_list->emplace_back(Token::T_CROSS);
+    goto next;
+  }
+
+  if (token == "NATURAL") {
+    token_list->emplace_back(Token::T_NATURAL);
+    goto next;
+  }
+
+  if (token == "INNER") {
+    token_list->emplace_back(Token::T_INNER);
+    goto next;
+  }
+
+  if (token == "OUTER") {
+    token_list->emplace_back(Token::T_OUTER);
+    goto next;
+  }
+
+  if (token == "USING") {
+    token_list->emplace_back(Token::T_USING);
+    goto next;
+  }
+
   if (token == "XDOMAIN") {
     token_list->emplace_back(Token::T_XDOMAIN);
     goto next;

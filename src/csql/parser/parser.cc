@@ -690,6 +690,13 @@ ASTNode* Parser::fromClause() {
   do {
     consumeToken();
     clause->appendChild(tableName());
+
+    if (consumeIf(Token::T_AS)) {
+      assertExpectation(Token::T_IDENTIFIER);
+      auto table_alias = clause->appendChild(ASTNode::T_TABLE_ALIAS);
+      table_alias->setToken(cur_token_);
+      consumeToken();
+    }
   } while (*cur_token_ == Token::T_COMMA);
 
   return clause;
