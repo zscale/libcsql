@@ -8,6 +8,7 @@
  * <http://www.gnu.org/licenses/>.
  */
 #include <csql/qtree/TableExpressionNode.h>
+#include <stx/inspect.h>
 
 using namespace stx;
 

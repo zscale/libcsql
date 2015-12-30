@@ -50,6 +50,14 @@ RefPtr<QueryTreeNode> SubqueryNode::subquery() const {
   return subquery_;
 }
 
+const String& SubqueryNode::tableAlias() const {
+  return alias_;
+}
+
+void SubqueryNode::setTableAlias(const String& alias) {
+  alias_ = alias;
+}
+
 Vector<RefPtr<SelectListNode>> SubqueryNode::selectList() const {
   return select_list_;
 }

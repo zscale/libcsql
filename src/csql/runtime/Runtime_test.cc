@@ -1202,7 +1202,7 @@ TEST_CASE(RuntimeTest, TestSimpleSubSelect, [] () {
   auto estrat = mkRef(new DefaultExecutionStrategy());
 
   ResultList result;
-  auto query = R"(select b, a from (select 123 as a, 435 as b) as t1)";
+  auto query = R"(select t1.b, a from (select 123 as a, 435 as b) as t1)";
   auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
   runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
   result.debugPrint();
