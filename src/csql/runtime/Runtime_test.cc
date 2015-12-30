@@ -657,7 +657,7 @@ TEST_CASE(RuntimeTest, TestWildcardSelectWithOrderLimit, [] () {
   }
 });
 
-TEST_CASE(RuntimeTest, TestSelectWithInternalGroupColumns, [] () {
+TEST_CASE(RuntimeTest, TestSelectWithInternalAggrGroupColumns, [] () {
   auto runtime = Runtime::getDefaultRuntime();
   auto ctx = runtime->newTransaction();
 
@@ -670,6 +670,26 @@ TEST_CASE(RuntimeTest, TestSelectWithInternalGroupColumns, [] () {
   {
     ResultList result;
     auto query = R"(select count(1) from testtable group by TRUNCATE(time / 60000000);)";
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 1);
+    EXPECT_EQ(result.getNumRows(), 129);
+  }
+});
+
+TEST_CASE(RuntimeTest, TestSelectWithInternalGroupColumns, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newTransaction();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new CSTableScanProvider(
+          "testtable",
+          "src/csql/testdata/testtbl.cst"));
+
+  {
+    ResultList result;
+    auto query = R"(select time from testtable group by TRUNCATE(time / 60000000);)";
     auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
     runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 1);
