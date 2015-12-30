@@ -11,6 +11,7 @@
 #include <stx/stdtypes.h>
 #include <csql/Transaction.h>
 #include <csql/runtime/TableExpression.h>
+#include <csql/runtime/ValueExpression.h>
 #include <csql/qtree/OrderByNode.h>
 
 namespace csql {
@@ -18,9 +19,14 @@ namespace csql {
 class OrderBy : public TableExpression {
 public:
 
+  struct SortExpr {
+    ValueExpression expr;
+    bool descending; // false == ASCENDING, true == DESCENDING
+  };
+
   OrderBy(
       Transaction* ctx,
-      Vector<OrderByNode::SortSpec> sort_specs,
+      Vector<SortExpr> sort_specs,
       size_t max_output_column_index,
       ScopedPtr<TableExpression> child);
 
@@ -36,7 +42,7 @@ public:
 
 protected:
   Transaction* ctx_;
-  Vector<OrderByNode::SortSpec> sort_specs_;
+  Vector<SortExpr> sort_specs_;
   size_t max_output_column_index_;
   ScopedPtr<TableExpression> child_;
 };

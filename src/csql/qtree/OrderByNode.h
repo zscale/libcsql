@@ -10,6 +10,7 @@
 #pragma once
 #include <stx/stdtypes.h>
 #include <csql/qtree/TableExpressionNode.h>
+#include <csql/qtree/ValueExpressionNode.h>
 
 using namespace stx;
 
@@ -19,13 +20,12 @@ class OrderByNode : public TableExpressionNode {
 public:
 
   struct SortSpec {
-    size_t column;
+    RefPtr<ValueExpressionNode> expr;
     bool descending; // false == ASCENDING, true == DESCENDING
   };
 
   OrderByNode(
       Vector<SortSpec> sort_specs,
-      size_t max_output_column_index,
       RefPtr<QueryTreeNode> table);
 
   RefPtr<QueryTreeNode> inputTable() const;

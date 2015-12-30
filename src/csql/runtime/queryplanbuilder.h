@@ -52,11 +52,6 @@ public:
       Transaction* txn,
       ASTNode* ast);
 
-  /**
-   * Returns true if the ast is a SELECT statement that has columns in its
-   * select list that are not of the form T_TABLE_NAME -> T_COLUMN_NAME
-   */
-  bool hasUnexpandedColumns(ASTNode* ast) const;
 
   /**
    * Returns true if the ast is a SELECT statement that has columns in its
@@ -123,7 +118,8 @@ public:
 
   QueryTreeNode* buildSequentialScan(
       Transaction* txn,
-      ASTNode* ast);
+      ASTNode* ast,
+      RefPtr<TableProvider> tables);
 
   QueryTreeNode* buildSubquery(
       Transaction* txn,
@@ -187,14 +183,6 @@ public:
   ValueExpressionNode* buildLike(
       Transaction* txn,
       ASTNode* ast);
-
-  /**
-   * expand all column names + wildcard to tablename->columnanme
-   */
-  void expandColumns(
-      Transaction* txn,
-      ASTNode* ast,
-      RefPtr<TableProvider> tables);
 
   /**
    * assign explicit column names to all output columns

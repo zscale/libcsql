@@ -7,38 +7,25 @@
  * copy of the GNU General Public License along with this program. If not, see
  * <http://www.gnu.org/licenses/>.
  */
+#include <algorithm>
 #include <csql/runtime/orderby.h>
 #include <csql/expressions/boolean.h>
-#include <algorithm>
+#include <csql/runtime/runtime.h>
 #include <stx/inspect.h>
 
 namespace csql {
 
 OrderBy::OrderBy(
     Transaction* ctx,
-    Vector<OrderByNode::SortSpec> sort_specs,
+    Vector<SortExpr> sort_specs,
     size_t max_output_column_index,
     ScopedPtr<TableExpression> child) :
     ctx_(ctx),
-    sort_specs_(sort_specs),
+    sort_specs_(std::move(sort_specs)),
     max_output_column_index_(max_output_column_index),
     child_(std::move(child)) {
   if (sort_specs_.size() == 0) {
     RAISE(kIllegalArgumentError, "can't execute ORDER BY: no sort specs");
-  }
-
-  size_t max_sort_idx = 0;
-  for (const auto& sspec : sort_specs_) {
-    if (sspec.column > max_sort_idx) {
-      max_sort_idx = sspec.column;
-    }
-  }
-
-  const auto& child_columns = child_->numColumns();
-  if (child_columns <= max_sort_idx) {
-    RAISE(
-        kRuntimeError,
-        "can't execute ORDER BY: not enough columns in virtual table");
   }
 }
 
@@ -63,15 +50,24 @@ void OrderBy::execute(
     return true;
   });
 
+  auto rt = ctx_->getRuntime();
   std::sort(
       rows.begin(),
       rows.end(),
-      [this] (const Vector<SValue>& left, const Vector<SValue>& right) -> bool {
+      [this, rt] (const Vector<SValue>& left, const Vector<SValue>& right) -> bool {
     for (const auto& sort : sort_specs_) {
       SValue args[2];
       SValue res(false);
-      args[0] = left[sort.column];
-      args[1] = right[sort.column];
+      args[0] = rt->evaluateScalarExpression(
+          ctx_,
+          sort.expr,
+          left.size(),
+          left.data());
+      args[1] = rt->evaluateScalarExpression(
+          ctx_,
+          sort.expr,
+          right.size(),
+          right.data());
 
       expressions::eqExpr(Transaction::get(ctx_), 2, args, &res);
       if (res.getBool()) {
