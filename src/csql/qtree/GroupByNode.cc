@@ -21,17 +21,17 @@ GroupByNode::GroupByNode(
     select_list_(select_list),
     group_exprs_(group_exprs),
     table_(table) {
-  addChild(&table_);
-
   for (const auto& sl : select_list_) {
     column_names_.emplace_back(sl->columnName());
   }
+
+  addChild(&table_);
 }
 
 GroupByNode::GroupByNode(
     const GroupByNode& other) :
     column_names_(other.column_names_),
-    table_(table_->deepCopyAs<QueryTreeNode>()) {
+    table_(other.table_->deepCopyAs<QueryTreeNode>()) {
   for (const auto& e : other.select_list_) {
     select_list_.emplace_back(e->deepCopyAs<SelectListNode>());
   }
@@ -39,6 +39,8 @@ GroupByNode::GroupByNode(
   for (const auto& e : other.group_exprs_) {
     group_exprs_.emplace_back(e->deepCopyAs<ValueExpressionNode>());
   }
+
+  addChild(&table_);
 }
 
 Vector<RefPtr<SelectListNode>> GroupByNode::selectList() const {
