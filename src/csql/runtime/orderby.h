@@ -27,7 +27,6 @@ public:
   OrderBy(
       Transaction* ctx,
       Vector<SortExpr> sort_specs,
-      size_t max_output_column_index,
       ScopedPtr<TableExpression> child);
 
   void prepare(ExecutionContext* context) override;
@@ -43,7 +42,6 @@ public:
 protected:
   Transaction* ctx_;
   Vector<SortExpr> sort_specs_;
-  size_t max_output_column_index_;
   ScopedPtr<TableExpression> child_;
 };
 

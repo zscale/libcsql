@@ -27,8 +27,12 @@ RefPtr<QueryTreeNode> LimitNode::inputTable() const {
   return table_;
 }
 
-Vector<String> LimitNode::columnNames() const {
-  return table_.asInstanceOf<TableExpressionNode>()->columnNames();
+Vector<String> LimitNode::outputColumns() const {
+  return table_.asInstanceOf<TableExpressionNode>()->outputColumns();
+}
+
+size_t LimitNode::getColumnIndex(const String& column_name) {
+  return table_.asInstanceOf<TableExpressionNode>()->getColumnIndex(column_name);
 }
 
 RefPtr<QueryTreeNode> LimitNode::deepCopy() const {

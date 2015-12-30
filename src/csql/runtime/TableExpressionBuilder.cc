@@ -255,7 +255,6 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildOrderBy(
       new OrderBy(
           ctx,
           std::move(sort_exprs),
-          node->maxOutputColumnIndex(),
           build(ctx, node->inputTable(), runtime, tables)));
 }
 

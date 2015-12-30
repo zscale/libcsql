@@ -94,7 +94,10 @@ public:
 
   Vector<RefPtr<SelectListNode>> selectList() const;
   Set<String> selectedColumns() const;
-  Vector<String> columnNames() const override;
+
+  Vector<String> outputColumns() const override;
+
+  size_t getColumnIndex(const String& column_name) override;
 
   Option<RefPtr<ValueExpressionNode>> whereExpression() const;
 
@@ -117,6 +120,7 @@ protected:
 
   String table_name_;
   Vector<RefPtr<SelectListNode>> select_list_;
+  Vector<String> output_columns_;
   Option<RefPtr<ValueExpressionNode>> where_expr_;
   AggregationStrategy aggr_strategy_;
   Vector<ScanConstraint> constraints_;

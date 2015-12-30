@@ -38,12 +38,17 @@ SequentialScanNode::SequentialScanNode(
   if (!where_expr_.isEmpty()) {
     findConstraints(where_expr_.get());
   }
+
+  for (const auto& sl : select_list_) {
+    output_columns_.emplace_back(sl->columnName());
+  }
 }
 
 SequentialScanNode::SequentialScanNode(
     const SequentialScanNode& other) :
     table_name_(other.table_name_),
     aggr_strategy_(other.aggr_strategy_),
+    output_columns_(other.output_columns_),
     constraints_(other.constraints_) {
   for (const auto& e : other.select_list_) {
     select_list_.emplace_back(e->deepCopyAs<SelectListNode>());
@@ -67,8 +72,7 @@ void SequentialScanNode::setTableName(const String& table_name) {
   table_name_ = table_name;
 }
 
-Vector<RefPtr<SelectListNode>> SequentialScanNode::selectList()
-    const {
+Vector<RefPtr<SelectListNode>> SequentialScanNode::selectList() const {
   return select_list_;
 }
 
@@ -95,14 +99,18 @@ Set<String> SequentialScanNode::selectedColumns() const {
   return columns;
 }
 
-Vector<String> SequentialScanNode::columnNames() const {
-  Vector<String> columns;
+Vector<String> SequentialScanNode::outputColumns() const {
+  return output_columns_;
+}
 
-  for (const auto& sl : select_list_) {
-    columns.emplace_back(sl->columnName());
+size_t SequentialScanNode::getColumnIndex(const String& column_name) {
+  for (size_t i = 0; i < select_list_.size(); ++i) {
+    if (select_list_[i]->columnName() == column_name) {
+      return i;
+    }
   }
 
-  return columns;
+  return -1;
 }
 
 AggregationStrategy SequentialScanNode::aggregationStrategy() const {

@@ -29,8 +29,12 @@ const String& DescribeTableNode::tableName() const {
   return table_name_;
 }
 
-Vector<String> DescribeTableNode::columnNames() const {
+Vector<String> DescribeTableNode::outputColumns() const {
   return Vector<String>{};
+}
+
+size_t DescribeTableNode::getColumnIndex(const String& column_name) {
+  return -1;
 }
 
 String DescribeTableNode::toString() const {

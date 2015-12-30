@@ -18,11 +18,9 @@ namespace csql {
 OrderBy::OrderBy(
     Transaction* ctx,
     Vector<SortExpr> sort_specs,
-    size_t max_output_column_index,
     ScopedPtr<TableExpression> child) :
     ctx_(ctx),
     sort_specs_(std::move(sort_specs)),
-    max_output_column_index_(max_output_column_index),
     child_(std::move(child)) {
   if (sort_specs_.size() == 0) {
     RAISE(kIllegalArgumentError, "can't execute ORDER BY: no sort specs");
@@ -90,26 +88,18 @@ void OrderBy::execute(
   context->incrNumSubtasksCompleted(1);
 
   for (auto& row : rows) {
-    if (!fn(std::min(row.size(), max_output_column_index_), row.data())) {
+    if (!fn(row.size(), row.data())) {
       return;
     }
   }
 }
 
 Vector<String> OrderBy::columnNames() const {
-  auto col_names = child_->columnNames();
-
-  if (col_names.size() > max_output_column_index_) {
-    col_names.erase(
-        col_names.begin() + max_output_column_index_,
-        col_names.end());
-  }
-
-  return col_names;
+  return child_->columnNames();
 }
 
 size_t OrderBy::numColumns() const {
-  return std::min(child_->numColumns(), max_output_column_index_);
+  return child_->numColumns();
 }
 
 } // namespace csql
