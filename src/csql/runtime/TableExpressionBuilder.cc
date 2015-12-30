@@ -243,10 +243,18 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildOrderBy(
     RefPtr<OrderByNode> node,
     QueryBuilder* runtime,
     TableProvider* tables) {
+  Vector<OrderBy::SortExpr> sort_exprs;
+  for (const auto& ss : node->sortSpecs()) {
+    OrderBy::SortExpr se;
+    se.descending = ss.descending;
+    se.expr = runtime->buildValueExpression(ctx, ss.expr);
+    sort_exprs.emplace_back(std::move(se));
+  }
+
   return mkScoped(
       new OrderBy(
           ctx,
-          node->sortSpecs(),
+          std::move(sort_exprs),
           node->maxOutputColumnIndex(),
           build(ctx, node->inputTable(), runtime, tables)));
 }

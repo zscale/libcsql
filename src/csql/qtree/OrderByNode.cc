@@ -15,10 +15,9 @@ namespace csql {
 
 OrderByNode::OrderByNode(
     Vector<SortSpec> sort_specs,
-    size_t max_output_column_index,
     RefPtr<QueryTreeNode> table) :
     sort_specs_(sort_specs),
-    max_output_column_index_(max_output_column_index),
+    max_output_column_index_(table.asInstanceOf<TableExpressionNode>()->numColumns()),
     table_(table) {
   addChild(&table_);
 }
@@ -42,7 +41,6 @@ size_t OrderByNode::maxOutputColumnIndex() const {
 RefPtr<QueryTreeNode> OrderByNode::deepCopy() const {
   return new OrderByNode(
       sort_specs_,
-      max_output_column_index_,
       table_->deepCopy().asInstanceOf<QueryTreeNode>());
 }
 
@@ -51,7 +49,7 @@ String OrderByNode::toString() const {
   for (const auto& spec : sort_specs_) {
     str += StringUtil::format(
         " (sort-spec $0 $1)",
-        spec.column,
+        spec.expr->toSQL(),
         spec.descending ? "DESC" : "ASC");
   }
 

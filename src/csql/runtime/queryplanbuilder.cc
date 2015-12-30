@@ -25,6 +25,7 @@
 #include <csql/qtree/LikeExpressionNode.h>
 #include <csql/qtree/SubQueryNode.h>
 #include <csql/qtree/QueryTreeUtil.h>
+#include <csql/qtree/ValueExpressionNode.h>
 
 namespace csql {
 
@@ -38,11 +39,6 @@ RefPtr<QueryTreeNode> QueryPlanBuilder::build(
     ASTNode* ast,
     RefPtr<TableProvider> tables) {
   QueryTreeNode* node = nullptr;
-
-  /* expand all column names + wildcard to tablename->columnanme */
-  if (hasUnexpandedColumns(ast)) {
-    expandColumns(txn, ast, tables);
-  }
 
   /* assign explicit column names to all output columns */
   if (hasImplicitlyNamedColumns(ast)) {
@@ -71,7 +67,7 @@ RefPtr<QueryTreeNode> QueryPlanBuilder::build(
     return node;
   }
 
-  if ((node = buildSequentialScan(txn, ast)) != nullptr) {
+  if ((node = buildSequentialScan(txn, ast, tables)) != nullptr) {
     return node;
   }
 
@@ -197,35 +193,6 @@ Vector<RefPtr<QueryTreeNode>> QueryPlanBuilder::build(
 //  return nullptr;
 //}
 //
-
-bool QueryPlanBuilder::hasUnexpandedColumns(ASTNode* ast) const {
-  if (ast->getType() != ASTNode::T_SELECT &&
-      ast->getType() != ASTNode::T_SELECT_DEEP) {
-    return false;
-  }
-
-  if (ast->getChildren().size() < 1 ||
-      ast->getChildren()[0]->getType() != ASTNode::T_SELECT_LIST) {
-    RAISE(kRuntimeError, "corrupt AST");
-  }
-
-  if (ast->getChildren().size() == 1) {
-    return false;
-  }
-
-  for (const auto& col : ast->getChildren()[0]->getChildren()) {
-    if (col->getType() != ASTNode::T_DERIVED_COLUMN ||
-        col->getChildren().size() != 1 ||
-        col->getChildren()[0]->getType() != ASTNode::T_TABLE_NAME ||
-        col->getChildren()[0]->getChildren().size() != 1 ||
-        col->getChildren()[0]->getChildren()[0]->getType() !=
-        ASTNode::T_COLUMN_NAME) {
-      return true;
-    }
-  }
-
-  return false;
-}
 
 bool QueryPlanBuilder::hasImplicitlyNamedColumns(ASTNode* ast) const {
   if (ast->getType() != ASTNode::T_SELECT &&
@@ -366,69 +333,6 @@ bool QueryPlanBuilder::hasAggregationWithinRecord(ASTNode* ast) const {
   }
 
   return false;
-}
-
-void QueryPlanBuilder::expandColumns(
-    Transaction* txn,
-    ASTNode* ast,
-    RefPtr<TableProvider> tables) {
-  if (ast->getChildren().size() < 2) {
-    RAISE(kRuntimeError, "corrupt AST");
-  }
-
-  auto select_list = ast->getChildren()[0];
-  if (select_list->getType() != ASTNode::T_SELECT_LIST) {
-    RAISE(kRuntimeError, "corrupt AST");
-  }
-
-  auto from_list = ast->getChildren()[1];
-  if (from_list->getType() != ASTNode::T_FROM ||
-      from_list->getChildren().size() < 1) {
-    RAISE(kRuntimeError, "corrupt AST");
-  }
-
-  for (const auto& node : select_list->getChildren()) {
-    /* expand wildcard select (SELECT * FROM ...) */
-    if (node->getType() == ASTNode::T_ALL) {
-      if (hasJoin(ast) || from_list->getChildren().size() != 1) {
-        RAISE(
-            kRuntimeError,
-            "can't use wilcard select (SELECT * FROM ...) when selecting from "
-            "multiple tables");
-      }
-
-      auto table_name = from_list->getChildren()[0];
-      if (table_name->getType() != ASTNode::T_TABLE_NAME ||
-          table_name->getToken() == nullptr) {
-        RAISE(kRuntimeError, "corrupt AST");
-      }
-
-      select_list->removeChild(node);
-
-      auto tbl_info = tables->describe(table_name->getToken()->getString());
-      if (tbl_info.isEmpty()) {
-        RAISEF(
-            kNotFoundError,
-            "table not found: $0",
-            table_name->getToken()->getString());
-      }
-
-      for (const auto& column : tbl_info.get().columns) {
-        auto derived_col = new ASTNode(ASTNode::T_DERIVED_COLUMN);
-        auto derived_table_name = new ASTNode(ASTNode::T_TABLE_NAME);
-        derived_table_name->setToken(table_name->getToken());
-        auto column_name = new ASTNode(ASTNode::T_COLUMN_NAME);
-        column_name->setToken(new Token(Token::T_IDENTIFIER, column.column_name));
-        derived_col->appendChild(derived_table_name);
-        derived_table_name->appendChild(column_name);
-        auto column_alias = derived_col->appendChild(ASTNode::T_COLUMN_ALIAS);
-        column_alias->setToken(new Token(Token::T_IDENTIFIER, column.column_name));
-        select_list->appendChild(derived_col);
-      }
-
-      continue;
-    }
-  }
 }
 
 void QueryPlanBuilder::assignExplicitColumnNames(
@@ -781,11 +685,15 @@ QueryTreeNode* QueryPlanBuilder::buildOrderByClause(
     RefPtr<TableProvider> tables) {
   Vector<OrderByNode::SortSpec> sort_specs;
 
-  /* copy select list for child */
-  if (!(ast->getChildren()[0]->getType() == ASTNode::T_SELECT_LIST)) {
-    RAISE(kRuntimeError, "corrupt AST");
-  }
-  auto child_sl = ast->getChildren()[0]->deepCopy();
+  /* copy ast for child and remove order by clause */
+  auto child_ast = ast->deepCopy();
+  child_ast->removeChildrenByType(ASTNode::T_ORDER_BY);
+  auto subtree = build(txn, child_ast, tables);
+  auto subtree_tbl = subtree.asInstanceOf<TableExpressionNode>();
+
+  auto resolver = [&subtree_tbl] (const String& name) -> size_t {
+    return subtree_tbl->getColumnIndex(name);
+  };
 
   /* search for the order by clause */
   for (const auto& child : ast->getChildren()) {
@@ -797,62 +705,28 @@ QueryTreeNode* QueryPlanBuilder::buildOrderByClause(
     auto sort_specs_asts = child->getChildren();
     for (int i = 0; i < sort_specs_asts.size(); ++i) {
       auto sort = sort_specs_asts[i];
-      auto col = sort->getChildren()[0];
-      size_t col_index;
-      bool col_found = false;
-
-      /* check if sort spec is referencing a column alias from the select list */
-      auto child_sllist = child_sl->getChildren();
-      for (int n = 0; n < child_sllist.size(); ++n) {
-        const auto& derived = child_sllist[n];
-
-        if (derived->getType() == ASTNode::T_DERIVED_COLUMN &&
-            derived->getChildren().size() > 1 &&
-            derived->getChildren()[1]->getType() == ASTNode::T_COLUMN_ALIAS) {
-
-          auto this_alias = derived->getChildren()[1]->getToken()->getString();
-          if (this_alias == col->getToken()->getString()) { // FIXPAUL case insensitive match
-            col_index = n;
-            col_found = true;
-            break;
-          }
-        }
-      }
-
-      /* otherwise add the column to the child select list */
-      if (!col_found) {
-        auto new_derived = new ASTNode(ASTNode::T_DERIVED_COLUMN);
-        new_derived->appendChild(col);
-        child_sl->appendChild(new_derived);
-        col_index = child_sl->getChildren().size() - 1;
-      }
 
       auto sort_descending = sort->getToken() != nullptr &&
           sort->getToken()->getType() == Token::T_DESC;
 
       /* create the sort spec */
       OrderByNode::SortSpec sort_spec;
-      sort_spec.column = col_index;
+      sort_spec.expr = buildValueExpression(txn, sort->getChildren()[0]);
+      QueryTreeUtil::resolveColumns(sort_spec.expr, resolver);
       sort_spec.descending = sort_descending;
       sort_specs.emplace_back(sort_spec);
     }
   }
 
-  /* copy ast for child and swap out select lists, remove order by clause */
-  auto child_ast = ast->deepCopy();
-  child_ast->removeChildByIndex(0);
-  child_ast->appendChild(child_sl, 0);
-  child_ast->removeChildrenByType(ASTNode::T_ORDER_BY);
-
   return new OrderByNode(
       sort_specs,
-      ast->getChildren()[0]->getChildren().size(),
-      build(txn, child_ast, tables));
+      subtree);
 }
 
 QueryTreeNode* QueryPlanBuilder::buildSequentialScan(
     Transaction* txn,
-    ASTNode* ast) {
+    ASTNode* ast,
+    RefPtr<TableProvider> tables) {
   if (!(*ast == ASTNode::T_SELECT || *ast == ASTNode::T_SELECT_DEEP)) {
     return nullptr;
   }
@@ -937,15 +811,28 @@ QueryTreeNode* QueryPlanBuilder::buildSequentialScan(
   /* select list  */
   Vector<RefPtr<SelectListNode>> select_list_expressions;
   for (const auto& select_expr : select_list->getChildren()) {
-    if (hasAggregationExpression(select_expr)) {
-      has_aggregation = true;
-    }
+    if (*select_expr == ASTNode::T_ALL) {
+      auto tbl_info = tables->describe(table_name);
+      if (tbl_info.isEmpty()) {
+        RAISEF(kNotFoundError, "table not found: $0", table_name);
+      }
 
-    if (hasAggregationWithinRecord(select_expr)) {
-      has_aggregation_within_record = true;
-    }
+      for (const auto& col : tbl_info.get().columns) {
+        auto sl = new SelectListNode(new ColumnReferenceNode(col.column_name));
+        sl->setAlias(col.column_name);
+        select_list_expressions.emplace_back(sl);
+      }
+    } else {
+      if (hasAggregationExpression(select_expr)) {
+        has_aggregation = true;
+      }
 
-    select_list_expressions.emplace_back(buildSelectList(txn, select_expr));
+      if (hasAggregationWithinRecord(select_expr)) {
+        has_aggregation_within_record = true;
+      }
+
+      select_list_expressions.emplace_back(buildSelectList(txn, select_expr));
+    }
   }
 
   if (has_aggregation && has_aggregation_within_record) {
@@ -1026,6 +913,8 @@ QueryTreeNode* QueryPlanBuilder::buildSubquery(
     return subquery_tbl->getColumnIndex(col);
   };
 
+  ast->debugPrint();
+
   /* get select list */
   if (!(*ast->getChildren()[0] == ASTNode::T_SELECT_LIST)) {
     RAISE(kRuntimeError, "corrupt AST");
@@ -1033,9 +922,18 @@ QueryTreeNode* QueryPlanBuilder::buildSubquery(
   auto select_list = ast->getChildren()[0];
   Vector<RefPtr<SelectListNode>> select_list_expressions;
   for (const auto& select_expr : select_list->getChildren()) {
-    auto sl = buildSelectList(txn, select_expr);
-    QueryTreeUtil::resolveColumns(sl->expression(), resolver);
-    select_list_expressions.emplace_back(sl);
+    if (*select_expr == ASTNode::T_ALL) {
+      for (const auto& col : subquery_tbl->columnNames()) {
+        auto sl = new SelectListNode(new ColumnReferenceNode(col));
+        sl->setAlias(col);
+        QueryTreeUtil::resolveColumns(sl->expression(), resolver);
+        select_list_expressions.emplace_back(sl);
+      }
+    } else {
+      auto sl = buildSelectList(txn, select_expr);
+      QueryTreeUtil::resolveColumns(sl->expression(), resolver);
+      select_list_expressions.emplace_back(sl);
+    }
   }
 
   /* get where expression */
@@ -1091,6 +989,12 @@ QueryTreeNode* QueryPlanBuilder::buildSelectExpression(
   /* select list  */
   Vector<RefPtr<SelectListNode>> select_list_expressions;
   for (const auto& select_expr : select_list->getChildren()) {
+    if (*select_expr == ASTNode::T_ALL) {
+      RAISE(
+          kRuntimeError,
+          "Illegal use of wildcard * in free SELECT expression");
+    }
+
     if (hasAggregationExpression(select_expr) ||
         hasAggregationWithinRecord(select_expr)) {
       RAISE(

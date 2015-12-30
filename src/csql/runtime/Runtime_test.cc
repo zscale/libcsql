@@ -625,13 +625,35 @@ TEST_CASE(RuntimeTest, TestWildcardSelect, [] () {
 
   {
     ResultList result;
-    auto query = R"(select * from testtable order by time desc limit 1;)";
+    auto query = R"(select * from testtable;)";
     auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
     runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 63);
     EXPECT_EQ(result.getColumns()[0], "attr.ab_test_group");
     EXPECT_EQ(result.getColumns()[62], "user_id");
-    EXPECT_EQ(result.getNumRows(), 1);
+    EXPECT_EQ(result.getNumRows(), 24883);
+  }
+});
+
+TEST_CASE(RuntimeTest, TestWildcardSelectWithOrderLimit, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newTransaction();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new CSTableScanProvider(
+          "testtable",
+          "src/csql/testdata/testtbl.cst"));
+
+  {
+    ResultList result;
+    auto query = R"(select * from testtable order by time desc;)";
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 63);
+    EXPECT_EQ(result.getColumns()[0], "attr.ab_test_group");
+    EXPECT_EQ(result.getColumns()[62], "user_id");
+    EXPECT_EQ(result.getNumRows(), 24883);
   }
 });
 
