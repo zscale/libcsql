@@ -20,6 +20,10 @@ SubqueryNode::SubqueryNode(
     subquery_(subquery),
     select_list_(select_list),
     where_expr_(where_expr) {
+  for (const auto& sl : select_list_) {
+    column_names_.emplace_back(sl->columnName());
+  }
+
   addChild(&subquery_);
 }
 
@@ -34,6 +38,28 @@ SubqueryNode::SubqueryNode(
     where_expr_ = Some(
         other.where_expr_.get()->deepCopyAs<ValueExpressionNode>());
   }
+
+  for (const auto& sl : select_list_) {
+    column_names_.emplace_back(sl->columnName());
+  }
+
+  addChild(&subquery_);
+}
+
+RefPtr<QueryTreeNode> SubqueryNode::subquery() const {
+  return subquery_;
+}
+
+Vector<RefPtr<SelectListNode>> SubqueryNode::selectList() const {
+  return select_list_;
+}
+
+Vector<String> SubqueryNode::columnNames() const {
+  return column_names_;
+}
+
+Option<RefPtr<ValueExpressionNode>> SubqueryNode::whereExpression() const {
+  return where_expr_;
 }
 
 RefPtr<QueryTreeNode> SubqueryNode::deepCopy() const {

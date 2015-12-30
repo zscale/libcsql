@@ -27,6 +27,10 @@ RefPtr<QueryTreeNode> OrderByNode::inputTable() const {
   return table_;
 }
 
+Vector<String> OrderByNode::columnNames() const {
+  return table_.asInstanceOf<TableExpressionNode>()->columnNames();
+}
+
 const Vector<OrderByNode::SortSpec>& OrderByNode::sortSpecs() const {
   return sort_specs_;
 }

@@ -35,6 +35,14 @@ Vector<RefPtr<QueryTreeNode>> UnionNode::inputTables() const {
   return tables_;
 }
 
+Vector<String> UnionNode::columnNames() const {
+  if (tables_.empty()) {
+    return Vector<String>{};
+  } else {
+    return tables_[0].asInstanceOf<TableExpressionNode>()->columnNames();
+  }
+}
+
 RefPtr<QueryTreeNode> UnionNode::deepCopy() const {
   return new UnionNode(*this);
 }

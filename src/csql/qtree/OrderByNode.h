@@ -30,6 +30,8 @@ public:
 
   RefPtr<QueryTreeNode> inputTable() const;
 
+  Vector<String> columnNames() const override;
+
   const Vector<SortSpec>& sortSpecs() const;
 
   size_t maxOutputColumnIndex() const;

@@ -27,6 +27,8 @@ public:
 
   Vector<RefPtr<SelectListNode>> selectList() const;
 
+  Vector<String> columnNames() const override;
+
   Vector<RefPtr<ValueExpressionNode>> groupExpressions() const;
 
   RefPtr<QueryTreeNode> inputTable() const;
@@ -37,6 +39,7 @@ public:
 
 protected:
   Vector<RefPtr<SelectListNode>> select_list_;
+  Vector<String> column_names_;
   Vector<RefPtr<ValueExpressionNode>> group_exprs_;
   RefPtr<QueryTreeNode> table_;
 };

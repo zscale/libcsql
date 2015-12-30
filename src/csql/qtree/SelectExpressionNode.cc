@@ -15,11 +15,19 @@ namespace csql {
 
 SelectExpressionNode::SelectExpressionNode(
     Vector<RefPtr<SelectListNode>> select_list) :
-    select_list_(select_list) {}
+    select_list_(select_list) {
+  for (const auto& sl : select_list_) {
+    column_names_.emplace_back(sl->columnName());
+  }
+}
 
 Vector<RefPtr<SelectListNode>> SelectExpressionNode::selectList()
     const {
   return select_list_;
+}
+
+Vector<String> SelectExpressionNode::columnNames() const {
+  return column_names_;
 }
 
 RefPtr<QueryTreeNode> SelectExpressionNode::deepCopy() const {

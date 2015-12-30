@@ -29,6 +29,8 @@ public:
 
   SubqueryNode(const SubqueryNode& other);
 
+  Vector<String> columnNames() const override;
+
   RefPtr<QueryTreeNode> subquery()  const;
   Vector<RefPtr<SelectListNode>> selectList() const;
   Option<RefPtr<ValueExpressionNode>> whereExpression() const;
@@ -39,6 +41,7 @@ public:
 
 protected:
   RefPtr<QueryTreeNode> subquery_;
+  Vector<String> column_names_;
   Vector<RefPtr<SelectListNode>> select_list_;
   Option<RefPtr<ValueExpressionNode>> where_expr_;
 };

@@ -84,6 +84,7 @@ add_library(chartsql STATIC
     runtime/GroupByMerge.cc
     runtime/Union.cc
     runtime/SelectExpression.cc
+    runtime/SubqueryExpression.cc
     runtime/EmptyTable.cc
     runtime/groupovertimewindow.cc
     runtime/ShowTablesStatement.cc

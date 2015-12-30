@@ -29,6 +29,10 @@ const String& DescribeTableNode::tableName() const {
   return table_name_;
 }
 
+Vector<String> DescribeTableNode::columnNames() const {
+  return Vector<String>{};
+}
+
 String DescribeTableNode::toString() const {
   return StringUtil::format("(describe-table $0)", table_name_);;
 }

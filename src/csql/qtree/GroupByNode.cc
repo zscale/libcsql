@@ -21,10 +21,18 @@ GroupByNode::GroupByNode(
     group_exprs_(group_exprs),
     table_(table) {
   addChild(&table_);
+
+  for (const auto& sl : select_list_) {
+    column_names_.emplace_back(sl->columnName());
+  }
 }
 
 Vector<RefPtr<SelectListNode>> GroupByNode::selectList() const {
   return select_list_;
+}
+
+Vector<String> GroupByNode::columnNames() const {
+  return column_names_;
 }
 
 Vector<RefPtr<ValueExpressionNode>> GroupByNode::groupExpressions() const {

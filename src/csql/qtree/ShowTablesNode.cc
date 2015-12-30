@@ -21,6 +21,10 @@ RefPtr<QueryTreeNode> ShowTablesNode::deepCopy() const {
   return new ShowTablesNode();
 }
 
+Vector<String> ShowTablesNode::columnNames() const {
+  return Vector<String>{};
+}
+
 String ShowTablesNode::toString() const {
   return "(show-tables)";
 }
