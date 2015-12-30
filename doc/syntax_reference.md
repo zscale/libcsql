@@ -13,6 +13,28 @@ Syntax Reference
             [LIMIT {[offset,] row_count | row_count OFFSET offset}]]
 
 
+    table_references ::=
+        table_reference [, table_reference] ...
+
+    table_reference ::=
+        table_factor
+      | join_table
+
+    table_factor:
+        tbl_name [[AS] alias]
+      | table_subquery [AS] alias
+      | ( table_reference )
+
+    join_table:
+        table_reference [INNER | CROSS] JOIN table_factor [join_condition]
+      | table_reference {LEFT|RIGHT} [OUTER] JOIN table_reference join_condition
+      | table_reference NATURAL [{LEFT|RIGHT} [OUTER]] JOIN table_factor
+
+    join_condition:
+        ON conditional_expr
+      | USING (column_list)
+
+
 ### The DRAW statement
 
     common_chart_options ::=

@@ -647,3 +647,29 @@ TEST_CASE(ParserTest, TestCompareASTs, [] () {
   EXPECT_TRUE(a->compare(c));
   EXPECT_TRUE(c->compare(c));
 });
+
+TEST_CASE(ParserTest, TestSimpleTableReference, [] () {
+  auto parser = parseTestQuery("select x from t1;");
+  EXPECT(parser.getStatements().size() == 1);
+  const auto& stmt = parser.getStatements()[0];
+  EXPECT(stmt->getChildren().size() == 2);
+  const auto& from = stmt->getChildren()[1];
+  EXPECT(*from == ASTNode::T_FROM);
+  EXPECT(from->getChildren().size() == 1);
+  EXPECT(*from->getChildren()[0] == ASTNode::T_TABLE_NAME);
+});
+
+TEST_CASE(ParserTest, TestTableReferenceWithAlias, [] () {
+  auto parser = parseTestQuery("select x from t1 as t2;");
+  EXPECT(parser.getStatements().size() == 1);
+  const auto& stmt = parser.getStatements()[0];
+  EXPECT(stmt->getChildren().size() == 2);
+  const auto& from = stmt->getChildren()[1];
+  EXPECT(*from == ASTNode::T_FROM);
+  EXPECT(from->getChildren().size() == 2);
+  EXPECT(*from->getChildren()[0] == ASTNode::T_TABLE_NAME);
+  auto alias = from->getChildren()[1];
+  EXPECT(*alias == ASTNode::T_TABLE_ALIAS);
+  EXPECT(*alias->getToken() == Token::T_IDENTIFIER);
+  EXPECT(*alias->getToken() == "t2");
+});
