@@ -29,6 +29,10 @@ public:
 
   SubqueryNode(const SubqueryNode& other);
 
+  RefPtr<QueryTreeNode> subquery()  const;
+  Vector<RefPtr<SelectListNode>> selectList() const;
+  Option<RefPtr<ValueExpressionNode>> whereExpression() const;
+
   RefPtr<QueryTreeNode> deepCopy() const override;
 
   String toString() const override;
