@@ -20,7 +20,7 @@ void QueryTreeUtil::resolveColumns(
     RefPtr<ValueExpressionNode> expr,
     Function<size_t (const String&)> resolver) {
   auto colref = dynamic_cast<ColumnReferenceNode*>(expr.get());
-  if (colref) {
+  if (colref && !colref->fieldName().empty()) {
     auto idx = resolver(colref->fieldName());
     if (idx == size_t(-1)) {
       RAISEF(kRuntimeError, "column not found: '$0'", colref->fieldName());

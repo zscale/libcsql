@@ -8,6 +8,7 @@
  * <http://www.gnu.org/licenses/>.
  */
 #include <csql/qtree/GroupByNode.h>
+#include <csql/qtree/ColumnReferenceNode.h>
 
 using namespace stx;
 
@@ -49,10 +50,21 @@ Vector<String> GroupByNode::outputColumns() const {
 }
 
 size_t GroupByNode::getColumnIndex(const String& column_name) {
-  for (int i = 0; i < column_names_.size(); ++i) {
-    if (column_names_[i] == column_name) {
+  for (size_t i = 0; i < select_list_.size(); ++i) {
+    if (select_list_[i]->columnName() == column_name) {
       return i;
     }
+  }
+
+  auto child_idx = table_
+      .asInstanceOf<TableExpressionNode>()
+      ->getColumnIndex(column_name);
+
+  if (child_idx != size_t(-1)) {
+    auto slnode = new SelectListNode(new ColumnReferenceNode(child_idx));
+    slnode->setAlias(column_name);
+    select_list_.emplace_back(slnode);
+    return select_list_.size() - 1;
   }
 
   return -1;

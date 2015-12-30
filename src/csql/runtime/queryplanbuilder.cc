@@ -416,10 +416,24 @@ QueryTreeNode* QueryPlanBuilder::buildGroupBy(
     select_list_expressions.emplace_back(buildSelectList(txn, select_expr));
   }
 
+  auto subtree = build(txn, child_ast, tables);
+  auto subtree_tbl = subtree.asInstanceOf<TableExpressionNode>();
+  auto resolver = [&subtree_tbl] (const String& name) -> size_t {
+    return subtree_tbl->getColumnIndex(name);
+  };
+
+  for (auto& sl : select_list_expressions) {
+    QueryTreeUtil::resolveColumns(sl->expression(), resolver);
+  }
+
+  for (auto& e : group_expressions) {
+    QueryTreeUtil::resolveColumns(e, resolver);
+  }
+
   return new GroupByNode(
       select_list_expressions,
       group_expressions,
-      build(txn, child_ast, tables));
+      subtree);
 }
 
 //QueryPlanNode* QueryPlanBuilder::buildGroupOverTimewindow(
@@ -690,7 +704,6 @@ QueryTreeNode* QueryPlanBuilder::buildOrderByClause(
   child_ast->removeChildrenByType(ASTNode::T_ORDER_BY);
   auto subtree = build(txn, child_ast, tables);
   auto subtree_tbl = subtree.asInstanceOf<TableExpressionNode>();
-
   auto resolver = [&subtree_tbl] (const String& name) -> size_t {
     return subtree_tbl->getColumnIndex(name);
   };
@@ -912,8 +925,6 @@ QueryTreeNode* QueryPlanBuilder::buildSubquery(
 
     return subquery_tbl->getColumnIndex(col);
   };
-
-  ast->debugPrint();
 
   /* get select list */
   if (!(*ast->getChildren()[0] == ASTNode::T_SELECT_LIST)) {
