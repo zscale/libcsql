@@ -51,10 +51,12 @@ public:
     T_LIMIT,
     T_OFFSET,
 
-    T_JOIN_LIST,
-    T_JOIN,
-    T_JOIN_TABLE,
     T_JOIN_CONDITION,
+    T_JOIN_COLUMNLIST,
+    T_INNER_JOIN,
+    T_LEFT_JOIN,
+    T_RIGHT_JOIN,
+    T_NATURAL_JOIN,
 
     T_IF_EXPR,
     T_EQ_EXPR,

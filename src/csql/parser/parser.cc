@@ -132,41 +132,47 @@ ASTNode* Parser::unaryExpr() {
     }
 
     case Token::T_IDENTIFIER: {
-      ASTNode* expr = nullptr;
-
-      if (lookahead(1, Token::T_DOT)) {
-        /* table_name.column_name */
-        auto col_name = new ASTNode(ASTNode::T_COLUMN_NAME);
-        auto cur = col_name;
-        cur->setToken(cur_token_);
-        consumeToken();
-        do {
-          consumeToken();
-          assertExpectation(Token::T_IDENTIFIER);
-          auto next = cur->appendChild(ASTNode::T_COLUMN_NAME);
-          next->setToken(cur_token_);
-          cur = next;
-          consumeToken();
-        } while (lookahead(0, Token::T_DOT));
-
-        return col_name;
-      }
-
-      if (lookahead(1, Token::T_LPAREN)) {
-        return methodCall();
-      }
-
-      /* simple column name */
-      expr = new ASTNode(ASTNode::T_COLUMN_NAME);
-      expr->setToken(cur_token_);
-      consumeToken();
-      return expr;
+      return columnName();
     }
 
     default:
       return nullptr;
 
   }
+}
+
+ASTNode* Parser::columnName() {
+  assertExpectation(Token::T_IDENTIFIER);
+
+  ASTNode* expr = nullptr;
+
+  if (lookahead(1, Token::T_DOT)) {
+    /* table_name.column_name */
+    auto col_name = new ASTNode(ASTNode::T_COLUMN_NAME);
+    auto cur = col_name;
+    cur->setToken(cur_token_);
+    consumeToken();
+    do {
+      consumeToken();
+      assertExpectation(Token::T_IDENTIFIER);
+      auto next = cur->appendChild(ASTNode::T_COLUMN_NAME);
+      next->setToken(cur_token_);
+      cur = next;
+      consumeToken();
+    } while (lookahead(0, Token::T_DOT));
+
+    return col_name;
+  }
+
+  if (lookahead(1, Token::T_LPAREN)) {
+    return methodCall();
+  }
+
+  /* simple column name */
+  expr = new ASTNode(ASTNode::T_COLUMN_NAME);
+  expr->setToken(cur_token_);
+  consumeToken();
+  return expr;
 }
 
 ASTNode* Parser::methodCall() {
@@ -691,35 +697,125 @@ ASTNode* Parser::fromClause() {
   }
 
   consumeToken();
-
-  std::vector<std::unique_ptr<ASTNode>> tbls;
-  tbls.emplace_back(tableReference());
-  while (*cur_token_ == Token::T_COMMA) {
-    consumeToken();
-    tbls.emplace_back(tableReference());
-  }
-
-  // Simple 'SELECT FROM tbl AS alias'
-  if (tbls.size() == 1 && *tbls[0] == ASTNode::T_FROM) {
-    return tbls[0].release();
-  }
-
-  // JOIN
-  auto join = new ASTNode(ASTNode::T_JOIN_LIST);
-  for (auto& tbl : tbls) {
-    join->appendChild(tbl.release());
-  }
-  return join;
+  return tableReference();
 }
 
+
 ASTNode* Parser::tableReference() {
-  auto clause = new ASTNode(ASTNode::T_FROM);
+  auto base = tableFactor();
+  return joinExpression(base);
+}
+
+ASTNode* Parser::joinExpression(ASTNode* base) {
+  switch (cur_token_->getType()) {
+
+    // comma join (implicit inner join)
+    case Token::T_COMMA: {
+      auto join = new ASTNode(ASTNode::T_INNER_JOIN);
+      consumeToken();
+      join->appendChild(base);
+      join->appendChild(tableFactor());
+      return joinExpression(join);
+    }
+
+    // inner join
+    case Token::T_CROSS:
+    case Token::T_INNER:
+      consumeToken();
+      /* fallthrough */
+
+    case Token::T_JOIN: {
+      auto join = new ASTNode(ASTNode::T_INNER_JOIN);
+      consumeToken();
+      join->appendChild(base);
+      join->appendChild(tableFactor());
+
+      auto cond = joinCondition();
+      if (cond) {
+        join->appendChild(cond);
+      }
+
+      return joinExpression(join);
+    }
+
+    // left/right join
+    case Token::T_LEFT:
+    case Token::T_RIGHT: {
+      auto join_type =
+          *cur_token_ == Token::T_LEFT ?
+          ASTNode::T_LEFT_JOIN :
+          ASTNode::T_RIGHT_JOIN;
+
+      consumeIf(Token::T_OUTER);
+      expectAndConsume(Token::T_JOIN);
+
+      std::unique_ptr<ASTNode> join(new ASTNode(join_type));
+
+      join->appendChild(base);
+      join->appendChild(tableFactor());
+
+      auto cond = joinCondition();
+      if (!cond) {
+        RAISE(kParseError, "LEFT/RIGHT JOIN needs a JOIN CONDITION");
+      }
+
+      join->appendChild(cond);
+
+      return joinExpression(join.release());
+    }
+
+    // natural join
+    case Token::T_NATURAL: {
+      consumeIf(Token::T_OUTER);
+      expectAndConsume(Token::T_JOIN);
+      std::unique_ptr<ASTNode> join(new ASTNode(ASTNode::T_NATURAL_JOIN));
+
+      join->appendChild(base);
+      join->appendChild(tableFactor());
+
+      return joinExpression(join.release());
+    }
+
+    default:
+      return base;
+  }
+}
+
+ASTNode* Parser::joinCondition() {
+  switch (cur_token_->getType()) {
+    case Token::T_ON: {
+      consumeToken();
+      auto cond = new ASTNode(ASTNode::T_JOIN_CONDITION);
+      cond->appendChild(expectAndConsumeValueExpr());
+      return cond;
+    }
+
+    case Token::T_USING: {
+      consumeToken();
+      expectAndConsume(Token::T_LPAREN);
+
+      auto cond = new ASTNode(ASTNode::T_JOIN_COLUMNLIST);
+      do {
+        cond->appendChild(columnName());
+      } while (consumeIf(Token::T_COMMA));
+
+      expectAndConsume(Token::T_RPAREN);
+      return cond;
+    }
+
+    default:
+      return nullptr;
+  }
+}
+
+ASTNode* Parser::tableFactor() {
+  std::unique_ptr<ASTNode> base(new ASTNode(ASTNode::T_FROM));
 
   if (*cur_token_ == Token::T_LPAREN) {
     consumeToken();
     if (*cur_token_ == Token::T_SELECT) {
       // subquery
-      clause->appendChild(selectStatement());
+      base->appendChild(selectStatement());
       expectAndConsume(Token::T_RPAREN);
     } else {
       // (  table_reference )
@@ -729,7 +825,7 @@ ASTNode* Parser::tableReference() {
     }
   } else {
     // table_name
-    clause->appendChild(tableName());
+    base->appendChild(tableName());
   }
 
   // [ AS ]
@@ -737,12 +833,12 @@ ASTNode* Parser::tableReference() {
 
   // alias
   if (*cur_token_ == Token::T_IDENTIFIER) {
-    auto table_alias = clause->appendChild(ASTNode::T_TABLE_ALIAS);
+    auto table_alias = base->appendChild(ASTNode::T_TABLE_ALIAS);
     table_alias->setToken(cur_token_);
     consumeToken();
   }
 
-  return clause;
+  return base.release();
 }
 
 ASTNode* Parser::whereClause() {

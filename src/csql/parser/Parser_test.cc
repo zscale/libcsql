@@ -681,8 +681,26 @@ TEST_CASE(ParserTest, TestCommaJoin, [] () {
   EXPECT(parser.getStatements().size() == 1);
   const auto& stmt = parser.getStatements()[0];
   EXPECT(stmt->getChildren().size() == 2);
-  const auto& from = stmt->getChildren()[1];
-  EXPECT(*from == ASTNode::T_JOIN_LIST);
-  EXPECT(from->getChildren().size() == 3);
-  //EXPECT(*from->getChildren()[0] == ASTNode::T_TABLE_NAME);
+  const auto& join1 = stmt->getChildren()[1];
+  EXPECT(*join1 == ASTNode::T_INNER_JOIN);
+  EXPECT(join1->getChildren().size() == 2);
+  const auto& join2 = join1->getChildren()[0];
+  EXPECT(*join2 == ASTNode::T_INNER_JOIN);
+  EXPECT(join2->getChildren().size() == 2);
+});
+
+TEST_CASE(ParserTest, TestInnerJoin, [] () {
+  auto parser = parseTestQuery("select x from t1 JOIN t2 ON t1.x = t2.x JOIN (select 123 as a) as t3 JOIN t4 USING (t4.a, t4.b, t4.c);");
+  EXPECT(parser.getStatements().size() == 1);
+  const auto& stmt = parser.getStatements()[0];
+  EXPECT(stmt->getChildren().size() == 2);
+  const auto& join1 = stmt->getChildren()[1];
+  EXPECT(*join1 == ASTNode::T_INNER_JOIN);
+  EXPECT(join1->getChildren().size() == 3);
+  const auto& join2 = join1->getChildren()[0];
+  EXPECT(*join2 == ASTNode::T_INNER_JOIN);
+  EXPECT(join2->getChildren().size() == 2);
+  const auto& join3 = join2->getChildren()[0];
+  EXPECT(*join3 == ASTNode::T_INNER_JOIN);
+  EXPECT(join3->getChildren().size() == 3);
 });
