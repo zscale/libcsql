@@ -23,6 +23,7 @@
 #include <csql/qtree/DescribeTableNode.h>
 #include <csql/qtree/RegexExpressionNode.h>
 #include <csql/qtree/LikeExpressionNode.h>
+#include <csql/qtree/SubQueryNode.h>
 #include <csql/qtree/QueryTreeUtil.h>
 
 namespace csql {
@@ -66,6 +67,10 @@ RefPtr<QueryTreeNode> QueryPlanBuilder::build(
   }
 
   /* leaf nodes: table scan, tableless select */
+  if ((node = buildSubquery(txn, ast, tables)) != nullptr) {
+    return node;
+  }
+
   if ((node = buildSequentialScan(txn, ast)) != nullptr) {
     return node;
   }
@@ -866,7 +871,7 @@ QueryTreeNode* QueryPlanBuilder::buildSequentialScan(
     return nullptr;
   }
 
-  if (from_list->getChildren().size() != 1) {
+  if (from_list->getChildren().size() < 1) {
     return nullptr;
   }
 
@@ -874,7 +879,7 @@ QueryTreeNode* QueryPlanBuilder::buildSequentialScan(
   auto tbl_name = from_list->getChildren()[0];
 
   if (!(*tbl_name == ASTNode::T_TABLE_NAME)) {
-    RAISE(kRuntimeError, "corrupt AST");
+    return nullptr;
   }
 
   auto tbl_name_token = tbl_name->getToken();
@@ -967,6 +972,89 @@ QueryTreeNode* QueryPlanBuilder::buildSequentialScan(
   }
 
   return seqscan;
+}
+
+QueryTreeNode* QueryPlanBuilder::buildSubquery(
+    Transaction* txn,
+    ASTNode* ast,
+    RefPtr<TableProvider> tables) {
+  if (!(*ast == ASTNode::T_SELECT || *ast == ASTNode::T_SELECT_DEEP)) {
+    return nullptr;
+  }
+
+  if (ast->getChildren().size() < 2) {
+    return nullptr;
+  }
+
+  /* get FROM clause */
+  ASTNode* from_list = ast->getChildren()[1];
+  if (!(from_list)) {
+    RAISE(kRuntimeError, "corrupt AST");
+  }
+
+  if (!(*from_list == ASTNode::T_FROM)) {
+    return nullptr;
+  }
+
+  if (from_list->getChildren().size() < 1) {
+    return nullptr;
+  }
+
+  /* get subquery */
+  auto subtree = from_list->getChildren()[0];
+
+  if (!(*subtree == ASTNode::T_SELECT)) {
+    return nullptr;
+  }
+
+  /* get select list */
+  if (!(*ast->getChildren()[0] == ASTNode::T_SELECT_LIST)) {
+    RAISE(kRuntimeError, "corrupt AST");
+  }
+  auto select_list = ast->getChildren()[0];
+  Vector<RefPtr<SelectListNode>> select_list_expressions;
+  for (const auto& select_expr : select_list->getChildren()) {
+    select_list_expressions.emplace_back(buildSelectList(txn, select_expr));
+  }
+
+  /* get where expression */
+  Option<RefPtr<ValueExpressionNode>> where_expr;
+  if (ast->getChildren().size() > 2) {
+    ASTNode* where_clause = ast->getChildren()[2];
+    if (!(where_clause)) {
+      RAISE(kRuntimeError, "corrupt AST");
+    }
+
+    if (!(*where_clause == ASTNode::T_WHERE)) {
+      return nullptr;
+    }
+
+    if (where_clause->getChildren().size() != 1) {
+      RAISE(kRuntimeError, "corrupt AST");
+    }
+
+    auto e = where_clause->getChildren()[0];
+
+    if (e == nullptr) {
+      RAISE(kRuntimeError, "corrupt AST");
+    }
+
+    if (hasAggregationExpression(e)) {
+      RAISE(
+          kRuntimeError,
+          "where expressions can only contain pure functions\n");
+    }
+
+    where_expr = Some(RefPtr<ValueExpressionNode>(buildValueExpression(txn, e)));
+  }
+
+  /* aggregation type */
+  auto subquery = new SubqueryNode(
+      build(txn, subtree, tables),
+      select_list_expressions,
+      where_expr);
+
+  return subquery;
 }
 
 QueryTreeNode* QueryPlanBuilder::buildSelectExpression(

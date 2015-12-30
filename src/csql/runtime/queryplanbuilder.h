@@ -125,6 +125,11 @@ public:
       Transaction* txn,
       ASTNode* ast);
 
+  QueryTreeNode* buildSubquery(
+      Transaction* txn,
+      ASTNode* ast,
+      RefPtr<TableProvider> tables);
+
   QueryTreeNode* buildLimitClause(
       Transaction* txn,
       ASTNode* ast,
