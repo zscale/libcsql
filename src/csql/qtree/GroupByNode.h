@@ -25,6 +25,8 @@ public:
       Vector<RefPtr<ValueExpressionNode>> group_exprs,
       RefPtr<QueryTreeNode> table);
 
+  GroupByNode(const GroupByNode& other);
+
   Vector<RefPtr<SelectListNode>> selectList() const;
 
   Vector<String> outputColumns() const override;
