@@ -173,6 +173,11 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildSubquery(
   Vector<ValueExpression> select_expressions;
   Option<ValueExpression> where_expr;
 
+  if (!node->whereExpression().isEmpty()) {
+    where_expr = std::move(Option<ValueExpression>(
+        runtime->buildValueExpression(ctx, node->whereExpression().get())));
+  }
+
   for (const auto& slnode : node->selectList()) {
     column_names.emplace_back(slnode->columnName());
 

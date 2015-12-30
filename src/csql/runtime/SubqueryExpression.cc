@@ -21,6 +21,7 @@ SubqueryExpression::SubqueryExpression(
     txn_(txn),
     column_names_(column_names),
     select_exprs_(std::move(select_expressions)),
+    where_expr_(std::move(where_expr)),
     subquery_(std::move(subquery)) {}
 
 void SubqueryExpression::prepare(ExecutionContext* context) {
@@ -33,6 +34,14 @@ void SubqueryExpression::execute(
   Vector<SValue> buf(select_exprs_.size(), SValue{});
 
   subquery_->execute(ctx, [this, &fn, &buf] (int inc, const SValue* inv) {
+    if (!where_expr_.isEmpty()) {
+      SValue pred;
+      VM::evaluate(txn_, where_expr_.get().program(), inc, inv, &pred);
+      if (!pred.toBool()) {
+        return true;
+      }
+    }
+
     for (int i = 0; i < select_exprs_.size(); ++i) {
       VM::evaluate(txn_, select_exprs_[i].program(), inc, inv, &buf[i]);
     }

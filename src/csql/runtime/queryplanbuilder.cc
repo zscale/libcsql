@@ -976,6 +976,7 @@ QueryTreeNode* QueryPlanBuilder::buildSubquery(
     }
 
     where_expr = Some(RefPtr<ValueExpressionNode>(buildValueExpression(txn, e)));
+    QueryTreeUtil::resolveColumns(where_expr.get(), resolver);
   }
 
   auto subqnode = new SubqueryNode(
