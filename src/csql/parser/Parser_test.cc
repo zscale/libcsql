@@ -675,3 +675,14 @@ TEST_CASE(ParserTest, TestParseSimpleSubquery, [] () {
   EXPECT(*alias->getToken() == Token::T_IDENTIFIER);
   EXPECT(*alias->getToken() == "t1");
 });
+
+TEST_CASE(ParserTest, TestCommaJoin, [] () {
+  auto parser = parseTestQuery("select x from t1 as t2, t3 as t4, (select 123 as a) as t5;");
+  EXPECT(parser.getStatements().size() == 1);
+  const auto& stmt = parser.getStatements()[0];
+  EXPECT(stmt->getChildren().size() == 2);
+  const auto& from = stmt->getChildren()[1];
+  EXPECT(*from == ASTNode::T_JOIN_LIST);
+  EXPECT(from->getChildren().size() == 3);
+  //EXPECT(*from->getChildren()[0] == ASTNode::T_TABLE_NAME);
+});
