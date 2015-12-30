@@ -16,6 +16,7 @@
 #include <csql/runtime/orderby.h>
 #include <csql/runtime/ShowTablesStatement.h>
 #include <csql/runtime/DescribeTableStatement.h>
+#include <csql/runtime/SubqueryExpression.h>
 
 using namespace stx;
 
@@ -55,6 +56,14 @@ ScopedPtr<TableExpression> TableExpressionBuilder::build(
     return buildSequentialScan(
         ctx,
         node.asInstanceOf<SequentialScanNode>(),
+        runtime,
+        tables);
+  }
+
+  if (dynamic_cast<SubqueryNode*>(node.get())) {
+    return buildSubquery(
+        ctx,
+        node.asInstanceOf<SubqueryNode>(),
         runtime,
         tables);
   }
@@ -155,6 +164,30 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildSequentialScan(
   }
 
   return std::move(seqscan.get());
+}
+
+ScopedPtr<TableExpression> TableExpressionBuilder::buildSubquery(
+    Transaction* ctx,
+    RefPtr<SubqueryNode> node,
+    QueryBuilder* runtime,
+    TableProvider* tables) {
+  Vector<String> column_names;
+  Vector<ValueExpression> select_expressions;
+  Option<ValueExpression> where_expr;
+
+  for (const auto& slnode : node->selectList()) {
+    column_names.emplace_back(slnode->columnName());
+
+    select_expressions.emplace_back(
+        runtime->buildValueExpression(ctx, slnode->expression()));
+  }
+
+  return mkScoped(new SubqueryExpression(
+      ctx,
+      column_names,
+      std::move(select_expressions),
+      std::move(where_expr),
+      build(ctx, node->subquery(), runtime, tables)));
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildGroupMerge(

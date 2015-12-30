@@ -22,6 +22,7 @@
 #include <csql/qtree/SelectExpressionNode.h>
 #include <csql/qtree/DescribeTableNode.h>
 #include <csql/qtree/RemoteAggregateNode.h>
+#include <csql/qtree/SubqueryNode.h>
 #include <csql/runtime/TableExpression.h>
 #include <csql/runtime/tablerepository.h>
 #include <csql/svalue.h>
@@ -75,6 +76,12 @@ protected:
   ScopedPtr<TableExpression> buildSequentialScan(
       Transaction* ctx,
       RefPtr<SequentialScanNode> node,
+      QueryBuilder* runtime,
+      TableProvider* tables);
+
+  ScopedPtr<TableExpression> buildSubquery(
+      Transaction* ctx,
+      RefPtr<SubqueryNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
