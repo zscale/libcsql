@@ -25,7 +25,9 @@ public:
 
   RefPtr<QueryTreeNode> inputTable() const;
 
-  Vector<String> columnNames() const override;
+  Vector<String> outputColumns() const override;
+
+  size_t getColumnIndex(const String& column_name) override;
 
   size_t limit() const;
 

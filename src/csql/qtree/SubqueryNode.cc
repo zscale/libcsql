@@ -62,8 +62,18 @@ Vector<RefPtr<SelectListNode>> SubqueryNode::selectList() const {
   return select_list_;
 }
 
-Vector<String> SubqueryNode::columnNames() const {
+Vector<String> SubqueryNode::outputColumns() const {
   return column_names_;
+}
+
+size_t SubqueryNode::getColumnIndex(const String& column_name) {
+  for (int i = 0; i < column_names_.size(); ++i) {
+    if (column_names_[i] == column_name) {
+      return i;
+    }
+  }
+
+  return -1;
 }
 
 Option<RefPtr<ValueExpressionNode>> SubqueryNode::whereExpression() const {

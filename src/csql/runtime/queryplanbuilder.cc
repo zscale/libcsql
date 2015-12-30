@@ -923,7 +923,7 @@ QueryTreeNode* QueryPlanBuilder::buildSubquery(
   Vector<RefPtr<SelectListNode>> select_list_expressions;
   for (const auto& select_expr : select_list->getChildren()) {
     if (*select_expr == ASTNode::T_ALL) {
-      for (const auto& col : subquery_tbl->columnNames()) {
+      for (const auto& col : subquery_tbl->outputColumns()) {
         auto sl = new SelectListNode(new ColumnReferenceNode(col));
         sl->setAlias(col);
         QueryTreeUtil::resolveColumns(sl->expression(), resolver);

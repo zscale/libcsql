@@ -26,8 +26,18 @@ Vector<RefPtr<SelectListNode>> SelectExpressionNode::selectList()
   return select_list_;
 }
 
-Vector<String> SelectExpressionNode::columnNames() const {
+Vector<String> SelectExpressionNode::outputColumns() const {
   return column_names_;
+}
+
+size_t SelectExpressionNode::getColumnIndex(const String& column_name) {
+  for (int i = 0; i < column_names_.size(); ++i) {
+    if (column_names_[i] == column_name) {
+      return i;
+    }
+  }
+
+  return -1;
 }
 
 RefPtr<QueryTreeNode> SelectExpressionNode::deepCopy() const {

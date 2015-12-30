@@ -31,8 +31,12 @@ Vector<RefPtr<SelectListNode>> GroupByNode::selectList() const {
   return select_list_;
 }
 
-Vector<String> GroupByNode::columnNames() const {
+Vector<String> GroupByNode::outputColumns() const {
   return column_names_;
+}
+
+size_t GroupByNode::getColumnIndex(const String& column_name) {
+  RAISE(kNotYetImplementedError);
 }
 
 Vector<RefPtr<ValueExpressionNode>> GroupByNode::groupExpressions() const {

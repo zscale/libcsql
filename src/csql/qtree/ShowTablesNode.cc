@@ -21,8 +21,12 @@ RefPtr<QueryTreeNode> ShowTablesNode::deepCopy() const {
   return new ShowTablesNode();
 }
 
-Vector<String> ShowTablesNode::columnNames() const {
+Vector<String> ShowTablesNode::outputColumns() const {
   return Vector<String>{};
+}
+
+size_t ShowTablesNode::getColumnIndex(const String& column_name) {
+  return -1;
 }
 
 String ShowTablesNode::toString() const {

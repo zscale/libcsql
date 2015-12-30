@@ -17,7 +17,6 @@ OrderByNode::OrderByNode(
     Vector<SortSpec> sort_specs,
     RefPtr<QueryTreeNode> table) :
     sort_specs_(sort_specs),
-    max_output_column_index_(table.asInstanceOf<TableExpressionNode>()->numColumns()),
     table_(table) {
   addChild(&table_);
 }
@@ -26,16 +25,16 @@ RefPtr<QueryTreeNode> OrderByNode::inputTable() const {
   return table_;
 }
 
-Vector<String> OrderByNode::columnNames() const {
-  return table_.asInstanceOf<TableExpressionNode>()->columnNames();
+Vector<String> OrderByNode::outputColumns() const {
+  return table_.asInstanceOf<TableExpressionNode>()->outputColumns();
+}
+
+size_t OrderByNode::getColumnIndex(const String& column_name) {
+  return table_.asInstanceOf<TableExpressionNode>()->getColumnIndex(column_name);
 }
 
 const Vector<OrderByNode::SortSpec>& OrderByNode::sortSpecs() const {
   return sort_specs_;
-}
-
-size_t OrderByNode::maxOutputColumnIndex() const {
-  return max_output_column_index_;
 }
 
 RefPtr<QueryTreeNode> OrderByNode::deepCopy() const {

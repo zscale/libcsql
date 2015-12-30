@@ -35,12 +35,32 @@ Vector<RefPtr<QueryTreeNode>> UnionNode::inputTables() const {
   return tables_;
 }
 
-Vector<String> UnionNode::columnNames() const {
+Vector<String> UnionNode::outputColumns() const {
   if (tables_.empty()) {
     return Vector<String>{};
   } else {
-    return tables_[0].asInstanceOf<TableExpressionNode>()->columnNames();
+    return tables_[0].asInstanceOf<TableExpressionNode>()->outputColumns();
   }
+}
+
+size_t UnionNode::getColumnIndex(const String& column_name) {
+  size_t idx = -1;
+
+  for (auto& tbl : tables_) {
+    auto tidx = tbl.asInstanceOf<TableExpressionNode>()->getColumnIndex(
+        column_name);
+
+    if (idx != size_t(-1) && tidx != idx) {
+      RAISEF(
+          kRuntimeError,
+          "column not found in UNION tables: '$0'",
+          column_name);
+    }
+
+    idx = tidx;
+  }
+
+  return idx;
 }
 
 RefPtr<QueryTreeNode> UnionNode::deepCopy() const {

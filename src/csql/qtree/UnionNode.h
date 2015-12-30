@@ -23,11 +23,13 @@ public:
 
   Vector<RefPtr<QueryTreeNode>> inputTables() const;
 
-  Vector<String> columnNames() const override;
+  Vector<String> outputColumns() const override;
 
   RefPtr<QueryTreeNode> deepCopy() const override;
 
   String toString() const override;
+
+  size_t getColumnIndex(const String& column_name) override;
 
 protected:
   Vector<RefPtr<QueryTreeNode>> tables_;

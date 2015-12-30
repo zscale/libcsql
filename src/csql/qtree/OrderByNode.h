@@ -30,15 +30,15 @@ public:
 
   RefPtr<QueryTreeNode> inputTable() const;
 
-  Vector<String> columnNames() const override;
+  Vector<String> outputColumns() const override;
 
   const Vector<SortSpec>& sortSpecs() const;
-
-  size_t maxOutputColumnIndex() const;
 
   RefPtr<QueryTreeNode> deepCopy() const override;
 
   String toString() const override;
+
+  size_t getColumnIndex(const String& column_name) override;
 
 protected:
   Vector<SortSpec> sort_specs_;

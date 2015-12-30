@@ -647,13 +647,13 @@ TEST_CASE(RuntimeTest, TestWildcardSelectWithOrderLimit, [] () {
 
   {
     ResultList result;
-    auto query = R"(select * from testtable order by time desc;)";
+    auto query = R"(select * from testtable order by time desc limit 10;)";
     auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
     runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 63);
     EXPECT_EQ(result.getColumns()[0], "attr.ab_test_group");
     EXPECT_EQ(result.getColumns()[62], "user_id");
-    EXPECT_EQ(result.getNumRows(), 24883);
+    EXPECT_EQ(result.getNumRows(), 10);
   }
 });
 
