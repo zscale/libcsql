@@ -692,15 +692,24 @@ ASTNode* Parser::fromClause() {
 
   consumeToken();
 
-  auto tbl = tableReference();
-
-  if (!(*cur_token_ == Token::T_COMMA)) {
-    return tbl;
+  std::vector<std::unique_ptr<ASTNode>> tbls;
+  tbls.emplace_back(tableReference());
+  while (*cur_token_ == Token::T_COMMA) {
+    consumeToken();
+    tbls.emplace_back(tableReference());
   }
 
-  //do {
-  //} while (*cur_token_ == Token::T_COMMA);
-  return tbl;
+  // Simple 'SELECT FROM tbl AS alias'
+  if (tbls.size() == 1 && *tbls[0] == ASTNode::T_FROM) {
+    return tbls[0].release();
+  }
+
+  // JOIN
+  auto join = new ASTNode(ASTNode::T_JOIN_LIST);
+  for (auto& tbl : tbls) {
+    join->appendChild(tbl.release());
+  }
+  return join;
 }
 
 ASTNode* Parser::tableReference() {
