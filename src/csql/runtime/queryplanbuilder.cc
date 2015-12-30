@@ -1001,11 +1001,16 @@ QueryTreeNode* QueryPlanBuilder::buildSubquery(
   }
 
   /* get subquery */
-  auto subtree = from_list->getChildren()[0];
-
-  if (!(*subtree == ASTNode::T_SELECT)) {
+  auto subquery_ast = from_list->getChildren()[0];
+  if (!(*subquery_ast == ASTNode::T_SELECT)) {
     return nullptr;
   }
+
+  auto subquery = build(txn, subquery_ast, tables);
+  auto subquery_tbl = subquery.asInstanceOf<TableExpressionNode>();
+  auto resolver = [&subquery_tbl] (const String& name) {
+    return subquery_tbl->getColumnIndex(name);
+  };
 
   /* get select list */
   if (!(*ast->getChildren()[0] == ASTNode::T_SELECT_LIST)) {
@@ -1014,7 +1019,9 @@ QueryTreeNode* QueryPlanBuilder::buildSubquery(
   auto select_list = ast->getChildren()[0];
   Vector<RefPtr<SelectListNode>> select_list_expressions;
   for (const auto& select_expr : select_list->getChildren()) {
-    select_list_expressions.emplace_back(buildSelectList(txn, select_expr));
+    auto sl = buildSelectList(txn, select_expr);
+    QueryTreeUtil::resolveColumns(sl->expression(), resolver);
+    select_list_expressions.emplace_back(sl);
   }
 
   /* get where expression */
@@ -1049,12 +1056,10 @@ QueryTreeNode* QueryPlanBuilder::buildSubquery(
   }
 
   /* aggregation type */
-  auto subquery = new SubqueryNode(
-      build(txn, subtree, tables),
+  return new SubqueryNode(
+      subquery,
       select_list_expressions,
       where_expr);
-
-  return subquery;
 }
 
 QueryTreeNode* QueryPlanBuilder::buildSelectExpression(

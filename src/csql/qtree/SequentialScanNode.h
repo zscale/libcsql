@@ -94,7 +94,7 @@ public:
 
   Vector<RefPtr<SelectListNode>> selectList() const;
   Set<String> selectedColumns() const;
-  Vector<String> columnNames() const;
+  Vector<String> columnNames() const override;
 
   Option<RefPtr<ValueExpressionNode>> whereExpression() const;
 

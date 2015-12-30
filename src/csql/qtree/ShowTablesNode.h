@@ -20,6 +20,8 @@ public:
 
   Vector<RefPtr<QueryTreeNode>> inputTables() const;
 
+  Vector<String> columnNames() const override;
+
   RefPtr<QueryTreeNode> deepCopy() const override;
 
   String toString() const override;

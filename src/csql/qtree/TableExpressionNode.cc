@@ -13,4 +13,20 @@ using namespace stx;
 
 namespace csql {
 
+size_t TableExpressionNode::numColumns() const {
+  return columnNames().size();
+}
+
+size_t TableExpressionNode::getColumnIndex(const String& column_name) const {
+  auto cols = columnNames();
+
+  for (int i = 0; i < cols.size(); ++i) {
+    if (cols[i] == column_name) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
 } // namespace csql

@@ -35,6 +35,14 @@ Vector<RefPtr<QueryTreeNode>> GroupByMergeNode::inputTables() const {
   return tables_;
 }
 
+Vector<String> GroupByMergeNode::columnNames() const {
+  if (tables_.empty()) {
+    return Vector<String>{};
+  } else {
+    return tables_[0].asInstanceOf<TableExpressionNode>()->columnNames();
+  }
+}
+
 RefPtr<QueryTreeNode> GroupByMergeNode::deepCopy() const {
   return new GroupByMergeNode(*this);
 }

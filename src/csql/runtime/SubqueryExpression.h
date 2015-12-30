@@ -18,7 +18,7 @@ class SubqueryExpression : public TableExpression {
 public:
 
   SubqueryExpression(
-      Transaction* ctx,
+      Transaction* txn,
       const Vector<String>& column_names,
       Vector<ValueExpression> select_expressions,
       Option<ValueExpression> where_expr,
@@ -35,9 +35,11 @@ public:
   size_t numColumns() const override;
 
 protected:
-  Transaction* ctx_;
+  Transaction* txn_;
   Vector<String> column_names_;
   Vector<ValueExpression> select_exprs_;
+  Option<ValueExpression> where_expr_;
+  ScopedPtr<TableExpression> subquery_;
 };
 
 }

@@ -25,12 +25,15 @@ public:
 
   Vector<RefPtr<SelectListNode>> selectList() const;
 
+  Vector<String> columnNames() const override;
+
   RefPtr<QueryTreeNode> deepCopy() const override;
 
   String toString() const override;
 
 protected:
   Vector<RefPtr<SelectListNode>> select_list_;
+  Vector<String> column_names_;
 };
 
 } // namespace csql

@@ -21,7 +21,12 @@ void QueryTreeUtil::resolveColumns(
     Function<size_t (const String&)> resolver) {
   auto colref = dynamic_cast<ColumnReferenceNode*>(expr.get());
   if (colref) {
-    colref->setColumnIndex(resolver(colref->fieldName()));
+    auto idx = resolver(colref->fieldName());
+    if (idx == size_t(-1)) {
+      RAISEF(kRuntimeError, "column not found: '$0'", colref->fieldName());
+    }
+
+    colref->setColumnIndex(idx);
   }
 
   for (auto& arg : expr->arguments()) {
