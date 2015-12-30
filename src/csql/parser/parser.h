@@ -98,6 +98,8 @@ protected:
   ASTNode* describeTableStatement();
 
   ASTNode* fromClause();
+  ASTNode* tableReference();
+
   ASTNode* whereClause();
   ASTNode* groupByClause();
   ASTNode* groupOverClause();
