@@ -79,6 +79,7 @@ protected:
 
   ASTNode* expr(int precedence = 0);
   ASTNode* unaryExpr();
+  ASTNode* columnName();
   ASTNode* binaryExpr(ASTNode* lhs, int precedence);
   ASTNode* methodCall();
 
@@ -99,6 +100,9 @@ protected:
 
   ASTNode* fromClause();
   ASTNode* tableReference();
+  ASTNode* tableFactor();
+  ASTNode* joinExpression(ASTNode* base);
+  ASTNode* joinCondition();
 
   ASTNode* whereClause();
   ASTNode* groupByClause();
