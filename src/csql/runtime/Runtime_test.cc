@@ -129,6 +129,25 @@ TEST_CASE(RuntimeTest, TestExecuteIfStatement, [] () {
   }
 });
 
+TEST_CASE(RuntimeTest, TestColumnReferenceWithTableNamePrefix, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newTransaction();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new CSTableScanProvider(
+          "testtable",
+          "src/csql/testdata/testtbl.cst"));
+
+  ResultList result;
+  auto query = R"(select testtable.time from testtable;)";
+  auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+  runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+  EXPECT_EQ(result.getNumColumns(), 1);
+  EXPECT_EQ(result.getNumRows(), 1);
+});
+
+
 TEST_CASE(RuntimeTest, TestSimpleCSTableAggregate, [] () {
   auto runtime = Runtime::getDefaultRuntime();
   auto ctx = runtime->newTransaction();
