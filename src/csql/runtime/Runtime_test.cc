@@ -1350,9 +1350,7 @@ TEST_CASE(RuntimeTest, TestInternalOrderByWithSubquery, [] () {
   ResultList result;
   auto query = R"(select t1.x from (select count(1) as x from testtable group by TRUNCATE(time / 2000000)) t1  order by t1.x DESC LIMIT 2;)";
   auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
-  iputs("qtree: $0 // $1", qplan->getStatementQTree(0)->toString(), qplan->getStatementQTree(0).asInstanceOf<TableExpressionNode>()->outputColumns());
   runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
-  result.debugPrint();
   EXPECT_EQ(result.getNumColumns(), 1);
   EXPECT_EQ(result.getNumRows(), 2);
 });
