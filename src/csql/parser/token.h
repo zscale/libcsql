@@ -35,6 +35,7 @@ public:
     T_IDENTIFIER,
     SQL_STRING,
     T_NUMERIC,
+    T_NULL,
     T_SEMICOLON,
     T_LPAREN,
     T_RPAREN,
