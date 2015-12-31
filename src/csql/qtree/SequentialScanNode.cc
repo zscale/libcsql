@@ -39,22 +39,13 @@ SequentialScanNode::SequentialScanNode(
   if (!where_expr_.isEmpty()) {
     findConstraints(where_expr_.get());
   }
-
-  auto normalizer = [this] (RefPtr<ColumnReferenceNode> expr) {
-    expr->setColumnName(normalizeColumnName(expr->columnName()));
-  };
-
-  for (auto& sl : select_list_) {
-    QueryTreeUtil::findColumns(sl->expression(), normalizer);
-    output_columns_.emplace_back(sl->columnName());
-  }
 }
 
 SequentialScanNode::SequentialScanNode(
     const SequentialScanNode& other) :
     table_name_(other.table_name_),
-    aggr_strategy_(other.aggr_strategy_),
     output_columns_(other.output_columns_),
+    aggr_strategy_(other.aggr_strategy_),
     constraints_(other.constraints_) {
   for (const auto& e : other.select_list_) {
     select_list_.emplace_back(e->deepCopyAs<SelectListNode>());
@@ -90,12 +81,12 @@ Vector<RefPtr<SelectListNode>> SequentialScanNode::selectList() const {
   return select_list_;
 }
 
-static void findSelectedColumnNames(
+void SequentialScanNode::findSelectedColumnNames(
     RefPtr<ValueExpressionNode> expr,
-    Set<String>* columns) {
+    Set<String>* columns) const {
   auto colname = dynamic_cast<ColumnReferenceNode*>(expr.get());
   if (colname) {
-    columns->emplace(colname->fieldName());
+    columns->emplace(normalizeColumnName(colname->fieldName()));
   }
 
   for (const auto& a : expr->arguments()) {
@@ -115,6 +106,17 @@ Set<String> SequentialScanNode::selectedColumns() const {
 
 Vector<String> SequentialScanNode::outputColumns() const {
   return output_columns_;
+}
+
+void SequentialScanNode::normalizeColumnNames() {
+  auto normalizer = [this] (RefPtr<ColumnReferenceNode> expr) {
+    expr->setColumnName(normalizeColumnName(expr->columnName()));
+  };
+
+  for (auto& sl : select_list_) {
+    QueryTreeUtil::findColumns(sl->expression(), normalizer);
+    output_columns_.emplace_back(sl->columnName());
+  }
 }
 
 String SequentialScanNode::normalizeColumnName(const String& column_name) const {
