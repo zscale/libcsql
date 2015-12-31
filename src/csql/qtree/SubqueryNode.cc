@@ -30,7 +30,8 @@ SubqueryNode::SubqueryNode(
 
 SubqueryNode::SubqueryNode(
     const SubqueryNode& other) :
-    subquery_(other.subquery_->deepCopy()) {
+    subquery_(other.subquery_->deepCopy()),
+    column_names_(other.column_names_) {
   for (const auto& e : other.select_list_) {
     select_list_.emplace_back(e->deepCopyAs<SelectListNode>());
   }
@@ -38,10 +39,6 @@ SubqueryNode::SubqueryNode(
   if (!other.where_expr_.isEmpty()) {
     where_expr_ = Some(
         other.where_expr_.get()->deepCopyAs<ValueExpressionNode>());
-  }
-
-  for (const auto& sl : select_list_) {
-    column_names_.emplace_back(sl->columnName());
   }
 
   addChild(&subquery_);
@@ -76,7 +73,7 @@ size_t SubqueryNode::getColumnIndex(const String& column_name) {
   }
 
   for (int i = 0; i < column_names_.size(); ++i) {
-    if (column_names_[i] == col) {
+    if (column_names_[i] == col || column_names_[i] == column_name) {
       return i;
     }
   }
