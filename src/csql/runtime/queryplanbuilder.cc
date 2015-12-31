@@ -373,16 +373,7 @@ QueryTreeNode* QueryPlanBuilder::buildGroupBy(
 
   /* generate select list for child */
   auto child_sl = new ASTNode(ASTNode::T_SELECT_LIST);
-  buildInternalSelectList(select_list, child_sl, false);
-
-  /* copy ast for child and swap out select lists*/
-  auto child_ast = ast->deepCopy();
-  if (child_ast->getType() == ASTNode::T_SELECT) {
-    child_ast->setType(ASTNode::T_SELECT_DEEP);
-  }
-
-  child_ast->removeChildByIndex(0);
-  child_ast->appendChild(child_sl, 0);
+  buildInternalSelectList(select_list, child_sl);
 
   /* search for a group by clause */
   Vector<RefPtr<ValueExpressionNode>> group_expressions;
@@ -391,24 +382,21 @@ QueryTreeNode* QueryPlanBuilder::buildGroupBy(
       continue;
     }
 
-    /* FIXPAUL resolve aliases in group list from select list, return error
-       if alias contains aggregate func */
-
-    /* copy all group expressions and add required field to child select list */
     for (const auto& group_expr : child->getChildren()) {
       auto e = group_expr->deepCopy();
-      buildInternalSelectList(e, child_sl, false);
-
       if (hasAggregationExpression(e)) {
         RAISE(kRuntimeError, "GROUP clause can only contain pure functions");
       }
 
       group_expressions.emplace_back(buildValueExpression(txn, e));
     }
-
-    /* remove group by clause from child ast */
-    child_ast->removeChildrenByType(ASTNode::T_GROUP_BY);
   }
+
+  /* copy ast for child and swap out select lists*/
+  auto child_ast = ast->deepCopy();
+  child_ast->removeChildrenByType(ASTNode::T_GROUP_BY);
+  child_ast->removeChildByIndex(0);
+  child_ast->appendChild(child_sl, 0);
 
   /* select list  */
   Vector<RefPtr<SelectListNode>> select_list_expressions;
@@ -436,132 +424,9 @@ QueryTreeNode* QueryPlanBuilder::buildGroupBy(
       subtree);
 }
 
-//QueryPlanNode* QueryPlanBuilder::buildGroupOverTimewindow(
-//    ASTNode* ast,
-//    TableRepository* repo) {
-//  ASTNode group_exprs(ASTNode::T_GROUP_BY);
-//  ASTNode* time_expr_ast;
-//  ASTNode* window_expr_ast;
-//  ASTNode* step_expr_ast = nullptr;
-//
-//  /* copy own select list */
-//  if (!(ast->getChildren()[0]->getType() == ASTNode::T_SELECT_LIST)) {
-//    RAISE(kRuntimeError, "corrupt AST");
-//  }
-//
-//  auto select_list = ast->getChildren()[0]->deepCopy();
-//
-//  /* generate select list for child */
-//  auto child_sl = new ASTNode(ASTNode::T_SELECT_LIST);
-//  buildInternalSelectList(select_list, child_sl);
-//
-//  /* copy ast for child and swap out select lists*/
-//  auto child_ast = ast->deepCopy();
-//  child_ast->removeChildByIndex(0);
-//  child_ast->appendChild(child_sl, 0);
-//
-//  /* search for a group over timewindow clause */
-//  for (const auto& child : ast->getChildren()) {
-//    if (child->getType() != ASTNode::T_GROUP_OVER_TIMEWINDOW) {
-//      continue;
-//    }
-//
-//    if (child->getChildren().size() < 3) {
-//      RAISE(kRuntimeError, "corrupt AST");
-//    }
-//
-//    /* FIXPAUL resolve aliases in group list from select list, return error
-//       if alias contains aggregate func */
-//
-//    /* copy time expression and add required fields to the child select list */
-//    time_expr_ast = child->getChildren()[0]->deepCopy();
-//    buildInternalSelectList(time_expr_ast, child_sl);
-//
-//    /* copy all group exprs and add required fields to the child select list */
-//    auto group_by_list = child->getChildren()[1];
-//    for (const auto& group_expr : group_by_list->getChildren()) {
-//      auto e = group_expr->deepCopy();
-//      buildInternalSelectList(e, child_sl);
-//      group_exprs.appendChild(e);
-//    }
-//
-//    /* copy window and step expressions */
-//    window_expr_ast = child->getChildren()[2]->deepCopy();
-//    if (child->getChildren().size() > 3) {
-//      step_expr_ast = child->getChildren()[3]->deepCopy();
-//    }
-//
-//    /* remove group by clause from child ast */
-//    child_ast->removeChildrenByType(ASTNode::T_GROUP_OVER_TIMEWINDOW);
-//  }
-//
-//  /* compile select list and group expressions */
-//  size_t select_scratchpad_len = 0;
-//  auto select_expr = compiler_->compile(select_list, &select_scratchpad_len);
-//
-//  size_t group_scratchpad_len = 0;
-//  auto group_expr = compiler_->compile(&group_exprs, &group_scratchpad_len);
-//
-//  if (group_scratchpad_len > 0) {
-//    RAISE(
-//        kRuntimeError,
-//        "illegal use of aggregate functions in the GROUP BY clause");
-//  }
-//
-//  /* compile time expression */
-//  size_t time_expr_scratchpad_len = 0;
-//  auto time_expr = compiler_->compile(
-//      time_expr_ast,
-//      &time_expr_scratchpad_len);
-//
-//  if (time_expr_scratchpad_len > 0) {
-//    RAISE(
-//        kRuntimeError,
-//        "illegal use of aggregate functions in the GROUP OVER clause");
-//  }
-//
-//  /* find time expression input column */
-//  if (time_expr_ast->getType() != ASTNode::T_RESOLVED_COLUMN) {
-//    RAISE(
-//        kRuntimeError,
-//        "first argument to TIMEWINDOW() must be a column reference");
-//  }
-//
-//  auto input_row_size = child_sl->getChildren().size();
-//  auto input_row_time_index = time_expr_ast->getID();
-//
-//  /* compile window and step */
-//  auto window_svalue = executeSimpleConstExpression(compiler_, window_expr_ast);
-//  auto window = window_svalue.getInteger();
-//
-//  SValue::IntegerType step;
-//  if (step_expr_ast == nullptr) {
-//    step = window;
-//  } else {
-//    auto step_svalue = executeSimpleConstExpression(compiler_, step_expr_ast);
-//    step = step_svalue.getInteger();
-//  }
-//
-//  /* resolve output column names */
-//  auto column_names = ASTUtil::columnNamesFromSelectList(select_list);
-//
-//  return new GroupOverTimewindow(
-//      std::move(column_names),
-//      time_expr,
-//      window,
-//      step,
-//      input_row_size,
-//      input_row_time_index,
-//      select_expr,
-//      group_expr,
-//      select_scratchpad_len,
-//      buildQueryPlan(child_ast, repo));
-//}
-//
 bool QueryPlanBuilder::buildInternalSelectList(
     ASTNode* node,
-    ASTNode* target_select_list,
-    bool in_aggregation) {
+    ASTNode* target_select_list) {
   /* search recursively */
   switch (node->getType()) {
 
@@ -578,54 +443,21 @@ bool QueryPlanBuilder::buildInternalSelectList(
       return true;
     }
 
-    /* push down referenced columns into the child select list */
-    case ASTNode::T_COLUMN_NAME: {
-      auto derived = new ASTNode(ASTNode::T_DERIVED_COLUMN);
-      if (in_aggregation) {
-        derived->appendChild(node->deepCopy());
-      } else {
-        auto mcall = derived->appendChild(ASTNode::T_METHOD_CALL_WITHIN_RECORD);
-        mcall->setToken(new Token(Token::T_IDENTIFIER, "repeat_value"));
-        mcall->appendChild(node->deepCopy());
-      }
-
-      /* check if this column already exists in the select list */
-      auto col_index = -1;
-      const auto& candidates = target_select_list->getChildren();
-      for (int i = 0; i < candidates.size(); ++i) {
-        if (derived->compare(candidates[i])) {
-          col_index = i;
-          break;
-        }
-      }
-
-      /* otherwise add this column to the select list */
-      if (col_index < 0) {
-        target_select_list->appendChild(derived);
-        col_index = target_select_list->getChildren().size() - 1;
-      }
-
-      node->setType(ASTNode::T_RESOLVED_COLUMN);
-      node->setID(col_index);
-      node->clearChildren();
-      node->clearToken();
-      return true;
-    }
-
+    /* push down aggregate function subexpressions */
     case ASTNode::T_METHOD_CALL:
       if (node->getToken() == nullptr) {
         RAISE(kRuntimeError, "corrupt AST");
       }
 
       if (symbol_table_->isAggregateFunction(node->getToken()->getString())) {
-        in_aggregation = true;
+        /* fallthrough */
+      } else {
+        /* fallthrough */
       }
-
-      /* fallthrough */
 
     default: {
       for (const auto& child : node->getChildren()) {
-        if (!buildInternalSelectList(child, target_select_list, in_aggregation)) {
+        if (!buildInternalSelectList(child, target_select_list)) {
           return false;
         }
       }
@@ -865,10 +697,7 @@ QueryTreeNode* QueryPlanBuilder::buildSequentialScan(
   }
 
   if (has_aggregation_within_record) {
-    seqscan->setAggregationStrategy(
-        *ast == ASTNode::T_SELECT_DEEP ?
-            AggregationStrategy::AGGREGATE_WITHIN_RECORD_DEEP :
-            AggregationStrategy::AGGREGATE_WITHIN_RECORD_FLAT);
+    seqscan->setAggregationStrategy(AggregationStrategy::AGGREGATE_WITHIN_RECORD_FLAT);
   }
 
   return seqscan;

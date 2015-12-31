@@ -8,6 +8,7 @@
  * <http://www.gnu.org/licenses/>.
  */
 #include <csql/qtree/SubqueryNode.h>
+#include <csql/qtree/ColumnReferenceNode.h>
 
 using namespace stx;
 
@@ -67,10 +68,28 @@ Vector<String> SubqueryNode::outputColumns() const {
 }
 
 size_t SubqueryNode::getColumnIndex(const String& column_name) {
+  auto col = column_name;
+  if (!alias_.empty()) {
+    if (StringUtil::beginsWith(col, alias_ + ".")) {
+      col = col.substr(alias_.size() + 1);
+    }
+  }
+
   for (int i = 0; i < column_names_.size(); ++i) {
-    if (column_names_[i] == column_name) {
+    if (column_names_[i] == col) {
       return i;
     }
+  }
+
+  auto child_idx = subquery_
+      .asInstanceOf<TableExpressionNode>()
+      ->getColumnIndex(col);
+
+  if (child_idx != size_t(-1)) {
+    auto slnode = new SelectListNode(new ColumnReferenceNode(child_idx));
+    slnode->setAlias(col);
+    select_list_.emplace_back(slnode);
+    return select_list_.size() - 1;
   }
 
   return -1;

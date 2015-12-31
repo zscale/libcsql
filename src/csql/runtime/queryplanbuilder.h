@@ -109,13 +109,6 @@ public:
       ASTNode* ast,
       RefPtr<TableProvider> tables);
 
-  ///**
-  // * Build a group over timewindow query plan node for a SELECT statement that
-  // * has a GROUP OVer TIMEWINDOW clause
-  // */
-  //QueryPlanNode* buildGroupOverTimewindow(ASTNode* ast, TableRepository* repo);
-
-
   QueryTreeNode* buildSequentialScan(
       Transaction* txn,
       ASTNode* ast,
@@ -206,8 +199,7 @@ public:
    */
   bool buildInternalSelectList(
       ASTNode* ast,
-      ASTNode* select_list,
-      bool in_aggregation = false);
+      ASTNode* select_list);
 
 protected:
   QueryPlanBuilderOptions opts_;
