@@ -986,7 +986,7 @@ ValueExpressionNode* QueryPlanBuilder::buildLiteral(
       literal.tryNumericConversion();
       break;
 
-    case Token::SQL_STRING:
+    case Token::T_STRING:
       literal = SValue(token->getString());
       break;
 
@@ -1096,7 +1096,7 @@ ValueExpressionNode* QueryPlanBuilder::buildRegex(
 
   if (args[1]->getType() != ASTNode::T_LITERAL ||
       args[1]->getToken() == nullptr ||
-      args[1]->getToken()->getType() != Token::SQL_STRING) {
+      args[1]->getToken()->getType() != Token::T_STRING) {
     RAISE(
         kRuntimeError,
         "second argument to REGEX operator must be a string literal");
@@ -1118,7 +1118,7 @@ ValueExpressionNode* QueryPlanBuilder::buildLike(
 
   if (args[1]->getType() != ASTNode::T_LITERAL ||
       args[1]->getToken() == nullptr ||
-      args[1]->getToken()->getType() != Token::SQL_STRING) {
+      args[1]->getToken()->getType() != Token::T_STRING) {
     RAISE(
         kRuntimeError,
         "second argument to LIKE operator must be a string literal");
