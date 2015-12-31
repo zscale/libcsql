@@ -388,7 +388,6 @@ QueryTreeNode* QueryPlanBuilder::buildGroupBy(
         RAISE(kRuntimeError, "GROUP clause can only contain pure functions");
       }
 
-      buildGroupBySelectList(e, child_sl);
       group_expressions.emplace_back(buildValueExpression(txn, e));
     }
   }
@@ -399,14 +398,23 @@ QueryTreeNode* QueryPlanBuilder::buildGroupBy(
   child_ast->removeChildByIndex(0);
   child_ast->appendChild(child_sl, 0);
 
+  auto subtree = build(txn, child_ast, tables);
+  auto subtree_tbl = subtree.asInstanceOf<TableExpressionNode>();
+
   /* select list  */
   Vector<RefPtr<SelectListNode>> select_list_expressions;
   for (const auto& select_expr : select_list->getChildren()) {
-    select_list_expressions.emplace_back(buildSelectList(txn, select_expr));
+    if (*select_expr == ASTNode::T_ALL) {
+      for (const auto& col : subtree_tbl->outputColumns()) {
+        auto sl = new SelectListNode(new ColumnReferenceNode(col));
+        sl->setAlias(col);
+        select_list_expressions.emplace_back(sl);
+      }
+    } else {
+      auto sl = buildSelectList(txn, select_expr);
+      select_list_expressions.emplace_back(sl);
+    }
   }
-
-  auto subtree = build(txn, child_ast, tables);
-  auto subtree_tbl = subtree.asInstanceOf<TableExpressionNode>();
 
   for (auto& sl : select_list_expressions) {
     QueryTreeUtil::resolveColumns(
@@ -450,6 +458,12 @@ bool QueryPlanBuilder::buildGroupBySelectList(
       node->setID(col_index);
       node->clearChildren();
       node->clearToken();
+      return true;
+    }
+
+    /* push down T_ALL */
+    case ASTNode::T_ALL: {
+      target_select_list->appendChild(ASTNode::T_ALL);
       return true;
     }
 
