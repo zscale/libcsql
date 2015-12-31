@@ -179,15 +179,13 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildSubquery(
   }
 
   for (const auto& slnode : node->selectList()) {
-    column_names.emplace_back(slnode->columnName());
-
     select_expressions.emplace_back(
         runtime->buildValueExpression(ctx, slnode->expression()));
   }
 
   return mkScoped(new SubqueryExpression(
       ctx,
-      column_names,
+      node->outputColumns(),
       std::move(select_expressions),
       std::move(where_expr),
       build(ctx, node->subquery(), runtime, tables)));

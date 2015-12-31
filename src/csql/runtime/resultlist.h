@@ -64,6 +64,10 @@ public:
   }
 
   void addRow(const csql::SValue* row, int row_len) {
+    if (row_len > columns_.size()) {
+      row_len = columns_.size();
+    }
+
     Vector<String> str_row;
     for (int i = 0; i < row_len; ++i) {
       str_row.emplace_back(row[i].toString());
