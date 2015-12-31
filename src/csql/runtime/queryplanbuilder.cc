@@ -388,6 +388,7 @@ QueryTreeNode* QueryPlanBuilder::buildGroupBy(
         RAISE(kRuntimeError, "GROUP clause can only contain pure functions");
       }
 
+      buildGroupBySelectList(e, child_sl);
       group_expressions.emplace_back(buildValueExpression(txn, e));
     }
   }
@@ -436,6 +437,34 @@ bool QueryPlanBuilder::buildGroupBySelectList(
       derived->appendChild(node->deepCopy());
       target_select_list->appendChild(derived);
       auto col_index = target_select_list->getChildren().size() - 1;
+      node->setType(ASTNode::T_RESOLVED_COLUMN);
+      node->setID(col_index);
+      node->clearChildren();
+      node->clearToken();
+      return true;
+    }
+
+    /* push down referenced columns into the child select list */
+    case ASTNode::T_COLUMN_NAME: {
+      auto derived = new ASTNode(ASTNode::T_DERIVED_COLUMN); // LEAK
+      derived->appendChild(node->deepCopy());
+
+      /* check if this column already exists in the select list */
+      auto col_index = -1;
+      const auto& candidates = target_select_list->getChildren();
+      for (int i = 0; i < candidates.size(); ++i) {
+        if (derived->compare(candidates[i])) {
+          col_index = i;
+          break;
+        }
+      }
+
+      /* otherwise add this column to the select list */
+      if (col_index < 0) {
+        target_select_list->appendChild(derived);
+        col_index = target_select_list->getChildren().size() - 1;
+      }
+
       node->setType(ASTNode::T_RESOLVED_COLUMN);
       node->setID(col_index);
       node->clearChildren();
