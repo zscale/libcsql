@@ -1385,3 +1385,22 @@ TEST_CASE(RuntimeTest, TestInternalOrderByWithSubquery, [] () {
   EXPECT_EQ(result.getNumRows(), 2);
 });
 
+TEST_CASE(RuntimeTest, TestWildcardWithGroupBy, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newTransaction();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new CSTableScanProvider(
+          "testtable",
+          "src/csql/testdata/testtbl.cst"));
+
+  ResultList result;
+  auto query = R"(select * from testtable group by time;)";
+  auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+  runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+  EXPECT_EQ(result.getNumColumns(), 63);
+  EXPECT_EQ(result.getColumns()[0], "attr.ab_test_group");
+  EXPECT_EQ(result.getColumns()[62], "user_id");
+  EXPECT_EQ(result.getNumRows(), 24883);
+});
