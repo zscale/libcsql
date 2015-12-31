@@ -673,11 +673,14 @@ TEST_CASE(RuntimeTest, TestSelectWithInternalAggrGroupColumns, [] () {
 
   {
     ResultList result;
-    auto query = R"(select count(1) from testtable group by TRUNCATE(time / 60000000);)";
+    auto query = R"(select count(1) cnt, time from testtable group by TRUNCATE(time / 60000000) order by cnt desc;)";
     auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
     runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
-    EXPECT_EQ(result.getNumColumns(), 1);
+    EXPECT_EQ(result.getNumColumns(), 2);
     EXPECT_EQ(result.getNumRows(), 129);
+    EXPECT_EQ(result.getRow(0)[0], "6");
+    EXPECT_EQ(result.getRow(0)[1], "1438055578000000");
+    result.debugPrint();
   }
 });
 

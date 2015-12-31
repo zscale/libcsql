@@ -51,6 +51,10 @@ bool ColumnReferenceNode::hasColumnIndex() const {
 }
 
 void ColumnReferenceNode::setColumnIndex(size_t index) {
+  if (index == size_t(-1)) {
+    return;
+  }
+
   column_index_ = Some(index);
 }
 
@@ -59,7 +63,7 @@ RefPtr<QueryTreeNode> ColumnReferenceNode::deepCopy() const {
 }
 
 String ColumnReferenceNode::toSQL() const {
-  if (column_name_.empty() && !column_index_.isEmpty()) {
+  if (!column_index_.isEmpty() && column_index_.get() != size_t(-1)) {
     return StringUtil::format("subquery_column($0)", column_index_.get());
   }
 
