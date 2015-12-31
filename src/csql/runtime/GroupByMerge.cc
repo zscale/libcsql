@@ -99,9 +99,8 @@ void GroupByMerge::execute(
 
   if (!errors.empty()) {
     sources_[0]->freeResult(&groups);
-    RAISEF(
+    RAISE(
         kRuntimeError,
-        "SQL subtree execution failed: $0",
         StringUtil::join(errors, "; "));
   }
 
