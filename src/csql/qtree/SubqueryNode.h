@@ -34,7 +34,9 @@ public:
   Vector<RefPtr<SelectListNode>> selectList() const;
   Vector<String> outputColumns() const override;
 
-  size_t getColumnIndex(const String& column_name) override;
+  size_t getColumnIndex(
+      const String& column_name,
+      bool allow_add = false) override;
 
   Option<RefPtr<ValueExpressionNode>> whereExpression() const;
 

@@ -133,7 +133,9 @@ String SequentialScanNode::normalizeColumnName(const String& column_name) const 
   return column_name;
 }
 
-size_t SequentialScanNode::getColumnIndex(const String& column_name) {
+size_t SequentialScanNode::getColumnIndex(
+    const String& column_name,
+    bool allow_add /* = false */) {
   bool have_name = !table_name_.empty();
   bool have_alias = !table_alias_.empty();
   auto col = normalizeColumnName(column_name);
@@ -146,6 +148,10 @@ size_t SequentialScanNode::getColumnIndex(const String& column_name) {
         (have_alias && select_list_[i]->columnName() == col_with_alias)) {
       return i;
     }
+  }
+
+  if (!allow_add) {
+    return -1;
   }
 
   auto slnode = new SelectListNode(new ColumnReferenceNode(col));

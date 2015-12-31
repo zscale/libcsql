@@ -20,7 +20,9 @@ public:
 
   virtual Vector<String> outputColumns() const = 0;
 
-  virtual size_t getColumnIndex(const String& column_name) = 0;
+  virtual size_t getColumnIndex(
+      const String& column_name,
+      bool allow_add = false) = 0;
 
   size_t numColumns() const;
 

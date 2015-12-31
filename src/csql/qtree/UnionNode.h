@@ -29,7 +29,9 @@ public:
 
   String toString() const override;
 
-  size_t getColumnIndex(const String& column_name) override;
+  size_t getColumnIndex(
+      const String& column_name,
+      bool allow_add = false) override;
 
 protected:
   Vector<RefPtr<QueryTreeNode>> tables_;

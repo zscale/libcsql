@@ -31,8 +31,12 @@ Vector<String> LimitNode::outputColumns() const {
   return table_.asInstanceOf<TableExpressionNode>()->outputColumns();
 }
 
-size_t LimitNode::getColumnIndex(const String& column_name) {
-  return table_.asInstanceOf<TableExpressionNode>()->getColumnIndex(column_name);
+size_t LimitNode::getColumnIndex(
+    const String& column_name,
+    bool allow_add /* = false */) {
+  return table_.asInstanceOf<TableExpressionNode>()->getColumnIndex(
+      column_name,
+      allow_add);
 }
 
 RefPtr<QueryTreeNode> LimitNode::deepCopy() const {

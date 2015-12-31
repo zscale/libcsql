@@ -30,7 +30,9 @@ Vector<String> SelectExpressionNode::outputColumns() const {
   return column_names_;
 }
 
-size_t SelectExpressionNode::getColumnIndex(const String& column_name) {
+size_t SelectExpressionNode::getColumnIndex(
+    const String& column_name,
+    bool allow_add /* = false */) {
   for (int i = 0; i < column_names_.size(); ++i) {
     if (column_names_[i] == column_name) {
       return i;

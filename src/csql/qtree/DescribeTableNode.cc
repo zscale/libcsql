@@ -33,7 +33,9 @@ Vector<String> DescribeTableNode::outputColumns() const {
   return Vector<String>{};
 }
 
-size_t DescribeTableNode::getColumnIndex(const String& column_name) {
+size_t DescribeTableNode::getColumnIndex(
+    const String& column_name,
+    bool allow_add /* = false */) {
   return -1;
 }
 
