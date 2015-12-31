@@ -23,7 +23,10 @@ public:
   explicit ColumnReferenceNode(const String& column_name);
   explicit ColumnReferenceNode(size_t column_index_);
 
-  const String& fieldName() const;
+  const String& fieldName() const; // DEPRECATED
+
+  const String& columnName() const;
+  void setColumnName(const String& name);
 
   size_t columnIndex() const;
 

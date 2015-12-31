@@ -145,7 +145,7 @@ TEST_CASE(RuntimeTest, TestColumnReferenceWithTableNamePrefix, [] () {
     auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
     runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 1);
-    EXPECT_EQ(result.getNumRows(), 1);
+    EXPECT_EQ(result.getNumRows(), 213);
   }
 
   {
@@ -154,7 +154,7 @@ TEST_CASE(RuntimeTest, TestColumnReferenceWithTableNamePrefix, [] () {
     auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
     runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 1);
-    EXPECT_EQ(result.getNumRows(), 1);
+    EXPECT_EQ(result.getNumRows(), 213);
   }
 });
 
