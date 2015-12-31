@@ -33,7 +33,7 @@ public:
     T_COMMA,
     T_DOT,
     T_IDENTIFIER,
-    SQL_STRING,
+    T_STRING,
     T_NUMERIC,
     T_NULL,
     T_SEMICOLON,
