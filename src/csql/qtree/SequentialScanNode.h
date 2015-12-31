@@ -99,6 +99,7 @@ public:
 
   Vector<String> outputColumns() const override;
 
+  void normalizeColumnNames();
   String normalizeColumnName(const String& column_name) const;
   size_t getColumnIndex(const String& column_name) override;
 
@@ -120,6 +121,10 @@ public:
 protected:
 
   void findConstraints(RefPtr<ValueExpressionNode> expr);
+
+  void findSelectedColumnNames(
+    RefPtr<ValueExpressionNode> expr,
+    Set<String>* columns) const;
 
   String table_name_;
   String table_alias_;

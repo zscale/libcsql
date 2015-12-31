@@ -619,6 +619,13 @@ QueryTreeNode* QueryPlanBuilder::buildSequentialScan(
 
   auto table_name = tbl_name_token->getString();
 
+  /* get table alias */
+  String table_alias;
+  if (from_list->getChildren().size() > 1 &&
+      from_list->getChildren()[1]->getType() == ASTNode::T_TABLE_ALIAS) {
+    table_alias = from_list->getChildren()[1]->getToken()->getString();
+  }
+
   /* get select list */
   if (!(*ast->getChildren()[0] == ASTNode::T_SELECT_LIST)) {
     RAISE(kRuntimeError, "corrupt AST");
@@ -703,6 +710,10 @@ QueryTreeNode* QueryPlanBuilder::buildSequentialScan(
       select_list_expressions,
       where_expr);
 
+  if (!table_alias.empty()) {
+    seqscan->setTableAlias(table_alias);
+  }
+
   if (has_aggregation) {
     seqscan->setAggregationStrategy(AggregationStrategy::AGGREGATE_ALL);
   }
@@ -711,6 +722,7 @@ QueryTreeNode* QueryPlanBuilder::buildSequentialScan(
     seqscan->setAggregationStrategy(AggregationStrategy::AGGREGATE_WITHIN_RECORD_FLAT);
   }
 
+  seqscan->normalizeColumnNames();
   return seqscan;
 }
 

@@ -80,7 +80,7 @@ public:
     std::vector<int> col_widths;
     int total_width = 0;
 
-    for (const auto& col : columns_) {
+    for (size_t i = 0; i < columns_.size(); ++i) {
       col_widths.push_back(20);
       total_width += 20;
     }
