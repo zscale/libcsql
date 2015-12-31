@@ -80,6 +80,21 @@ size_t SubqueryNode::getColumnIndex(
     }
   }
 
+  if (!allow_add) {
+    return -1;
+  }
+
+  auto child_idx = subquery_
+      .asInstanceOf<TableExpressionNode>()
+      ->getColumnIndex(col);
+
+  if (child_idx != size_t(-1)) {
+    auto slnode = new SelectListNode(new ColumnReferenceNode(child_idx));
+    slnode->setAlias(col);
+    select_list_.emplace_back(slnode);
+    return select_list_.size() - 1;
+  }
+
   return -1;
 }
 
