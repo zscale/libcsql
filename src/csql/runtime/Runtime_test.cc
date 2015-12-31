@@ -139,12 +139,23 @@ TEST_CASE(RuntimeTest, TestColumnReferenceWithTableNamePrefix, [] () {
           "testtable",
           "src/csql/testdata/testtbl.cst"));
 
-  ResultList result;
-  auto query = R"(select testtable.time from testtable;)";
-  auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
-  runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
-  EXPECT_EQ(result.getNumColumns(), 1);
-  EXPECT_EQ(result.getNumRows(), 1);
+  {
+    ResultList result;
+    auto query = R"(select testtable.time from testtable;)";
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 1);
+    EXPECT_EQ(result.getNumRows(), 1);
+  }
+
+  {
+    ResultList result;
+    auto query = R"(select t1.time from testtable t1;)";
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 1);
+    EXPECT_EQ(result.getNumRows(), 1);
+  }
 });
 
 
