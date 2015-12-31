@@ -11,6 +11,7 @@
 #include <csql/qtree/ColumnReferenceNode.h>
 #include <csql/qtree/CallExpressionNode.h>
 #include <csql/qtree/LiteralExpressionNode.h>
+#include <csql/qtree/QueryTreeUtil.h>
 
 using namespace stx;
 
@@ -39,7 +40,12 @@ SequentialScanNode::SequentialScanNode(
     findConstraints(where_expr_.get());
   }
 
-  for (const auto& sl : select_list_) {
+  auto normalizer = [this] (RefPtr<ColumnReferenceNode> expr) {
+    expr->setColumnName(normalizeColumnName(expr->columnName()));
+  };
+
+  for (auto& sl : select_list_) {
+    QueryTreeUtil::findColumns(sl->expression(), normalizer);
     output_columns_.emplace_back(sl->columnName());
   }
 }
@@ -68,8 +74,16 @@ const String& SequentialScanNode::tableName() const {
   return table_name_;
 }
 
+const String& SequentialScanNode::tableAlias() const {
+  return table_alias_;
+}
+
 void SequentialScanNode::setTableName(const String& table_name) {
   table_name_ = table_name;
+}
+
+void SequentialScanNode::setTableAlias(const String& table_alias) {
+  table_alias_ = table_alias;
 }
 
 Vector<RefPtr<SelectListNode>> SequentialScanNode::selectList() const {
@@ -103,15 +117,37 @@ Vector<String> SequentialScanNode::outputColumns() const {
   return output_columns_;
 }
 
+String SequentialScanNode::normalizeColumnName(const String& column_name) const {
+  if (!table_name_.empty() &&
+      StringUtil::beginsWith(column_name, table_name_ + ".")) {
+    return column_name.substr(table_name_.size() + 1);
+  }
+
+  if (!table_alias_.empty() &&
+      StringUtil::beginsWith(column_name, table_alias_ + ".")) {
+    return column_name.substr(table_alias_.size() + 1);
+  }
+
+  return column_name;
+}
+
 size_t SequentialScanNode::getColumnIndex(const String& column_name) {
+  bool have_name = !table_name_.empty();
+  bool have_alias = !table_alias_.empty();
+  auto col = normalizeColumnName(column_name);
+  auto col_with_name = table_name_ + "." + col;
+  auto col_with_alias = table_alias_ + "." + col;
+
   for (size_t i = 0; i < select_list_.size(); ++i) {
-    if (select_list_[i]->columnName() == column_name) {
+    if ((select_list_[i]->columnName() == col) ||
+        (have_name && select_list_[i]->columnName() == col_with_name) ||
+        (have_alias && select_list_[i]->columnName() == col_with_alias)) {
       return i;
     }
   }
 
-  auto slnode = new SelectListNode(new ColumnReferenceNode(column_name));
-  slnode->setAlias(column_name);
+  auto slnode = new SelectListNode(new ColumnReferenceNode(col));
+  slnode->setAlias(col);
   select_list_.emplace_back(slnode);
   return select_list_.size() - 1;
 }

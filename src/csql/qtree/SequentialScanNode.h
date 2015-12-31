@@ -90,13 +90,16 @@ public:
   SequentialScanNode(const SequentialScanNode& other);
 
   const String& tableName() const;
+  const String& tableAlias() const;
   void setTableName(const String& table_name);
+  void setTableAlias(const String& table_alias);
 
   Vector<RefPtr<SelectListNode>> selectList() const;
   Set<String> selectedColumns() const;
 
   Vector<String> outputColumns() const override;
 
+  String normalizeColumnName(const String& column_name) const;
   size_t getColumnIndex(const String& column_name) override;
 
   Option<RefPtr<ValueExpressionNode>> whereExpression() const;
@@ -119,6 +122,7 @@ protected:
   void findConstraints(RefPtr<ValueExpressionNode> expr);
 
   String table_name_;
+  String table_alias_;
   Vector<RefPtr<SelectListNode>> select_list_;
   Vector<String> output_columns_;
   Option<RefPtr<ValueExpressionNode>> where_expr_;

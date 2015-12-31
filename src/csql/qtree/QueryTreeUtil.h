@@ -32,6 +32,16 @@ public:
       Function<size_t (const String&)> resolver);
 
   /**
+   * Walks the provided value expression and calls the provided function for
+   * each column reference
+   *
+   * The function may modify the provided expression in place
+   */
+  static void findColumns(
+      RefPtr<ValueExpressionNode> expr,
+      Function<void (const RefPtr<ColumnReferenceNode>&)> fn);
+
+  /**
    * Walks the provided value expression and folds all constant subexpressions
    * into a literal (by evaluating them)
    */

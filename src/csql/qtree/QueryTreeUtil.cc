@@ -34,6 +34,19 @@ void QueryTreeUtil::resolveColumns(
   }
 }
 
+void QueryTreeUtil::findColumns(
+    RefPtr<ValueExpressionNode> expr,
+    Function<void (const RefPtr<ColumnReferenceNode>&)> fn) {
+  auto colref = dynamic_cast<ColumnReferenceNode*>(expr.get());
+  if (colref) {
+    fn(colref);
+  }
+
+  for (auto& arg : expr->arguments()) {
+    findColumns(arg, fn);
+  }
+}
+
 RefPtr<ValueExpressionNode> QueryTreeUtil::foldConstants(
     Transaction* txn,
     RefPtr<ValueExpressionNode> expr) {

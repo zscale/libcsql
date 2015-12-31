@@ -31,6 +31,14 @@ const String& ColumnReferenceNode::fieldName() const {
   return column_name_;
 }
 
+const String& ColumnReferenceNode::columnName() const {
+  return column_name_;
+}
+
+void ColumnReferenceNode::setColumnName(const String& name) {
+  column_name_ = name;
+}
+
 Vector<RefPtr<ValueExpressionNode>> ColumnReferenceNode::arguments() const {
   return Vector<RefPtr<ValueExpressionNode>>{};
 }
