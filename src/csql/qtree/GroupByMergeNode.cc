@@ -43,12 +43,15 @@ Vector<String> GroupByMergeNode::outputColumns() const {
   }
 }
 
-size_t GroupByMergeNode::getColumnIndex(const String& column_name) {
+size_t GroupByMergeNode::getColumnIndex(
+    const String& column_name,
+    bool allow_add /* = false */) {
   size_t idx = -1;
 
   for (auto& tbl : tables_) {
     auto tidx = tbl.asInstanceOf<TableExpressionNode>()->getColumnIndex(
-        column_name);
+        column_name,
+        allow_add);
 
     if (idx != size_t(-1) && tidx != idx) {
       RAISEF(

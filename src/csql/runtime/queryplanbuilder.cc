@@ -407,16 +407,25 @@ QueryTreeNode* QueryPlanBuilder::buildGroupBy(
 
   auto subtree = build(txn, child_ast, tables);
   auto subtree_tbl = subtree.asInstanceOf<TableExpressionNode>();
-  auto resolver = [&subtree_tbl] (const String& name) -> size_t {
-    return subtree_tbl->getColumnIndex(name);
-  };
 
   for (auto& sl : select_list_expressions) {
-    QueryTreeUtil::resolveColumns(sl->expression(), resolver);
+    QueryTreeUtil::resolveColumns(
+        sl->expression(),
+        std::bind(
+            &TableExpressionNode::getColumnIndex,
+            subtree_tbl.get(),
+            std::placeholders::_1,
+            false));
   }
 
   for (auto& e : group_expressions) {
-    QueryTreeUtil::resolveColumns(e, resolver);
+    QueryTreeUtil::resolveColumns(
+        e,
+        std::bind(
+            &TableExpressionNode::getColumnIndex,
+            subtree_tbl.get(),
+            std::placeholders::_1,
+            true));
   }
 
   return new GroupByNode(
@@ -576,9 +585,6 @@ QueryTreeNode* QueryPlanBuilder::buildOrderByClause(
   child_ast->removeChildrenByType(ASTNode::T_ORDER_BY);
   auto subtree = build(txn, child_ast, tables);
   auto subtree_tbl = subtree.asInstanceOf<TableExpressionNode>();
-  auto resolver = [&subtree_tbl] (const String& name) -> size_t {
-    return subtree_tbl->getColumnIndex(name);
-  };
 
   /* search for the order by clause */
   for (const auto& child : ast->getChildren()) {
@@ -597,7 +603,13 @@ QueryTreeNode* QueryPlanBuilder::buildOrderByClause(
       /* create the sort spec */
       OrderByNode::SortSpec sort_spec;
       sort_spec.expr = buildValueExpression(txn, sort->getChildren()[0]);
-      QueryTreeUtil::resolveColumns(sort_spec.expr, resolver);
+      QueryTreeUtil::resolveColumns(
+          sort_spec.expr, 
+          std::bind(
+              &TableExpressionNode::getColumnIndex,
+              subtree_tbl.get(),
+              std::placeholders::_1,
+              true));
       sort_spec.descending = sort_descending;
       sort_specs.emplace_back(sort_spec);
     }

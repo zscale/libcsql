@@ -29,8 +29,12 @@ Vector<String> OrderByNode::outputColumns() const {
   return table_.asInstanceOf<TableExpressionNode>()->outputColumns();
 }
 
-size_t OrderByNode::getColumnIndex(const String& column_name) {
-  return table_.asInstanceOf<TableExpressionNode>()->getColumnIndex(column_name);
+size_t OrderByNode::getColumnIndex(
+    const String& column_name,
+    bool allow_add /* = false */) {
+  return table_.asInstanceOf<TableExpressionNode>()->getColumnIndex(
+      column_name,
+      allow_add);
 }
 
 const Vector<OrderByNode::SortSpec>& OrderByNode::sortSpecs() const {

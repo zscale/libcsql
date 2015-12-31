@@ -101,7 +101,9 @@ public:
 
   void normalizeColumnNames();
   String normalizeColumnName(const String& column_name) const;
-  size_t getColumnIndex(const String& column_name) override;
+  size_t getColumnIndex(
+      const String& column_name,
+      bool allow_add = false) override;
 
   Option<RefPtr<ValueExpressionNode>> whereExpression() const;
 

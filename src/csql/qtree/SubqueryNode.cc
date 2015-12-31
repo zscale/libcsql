@@ -64,7 +64,9 @@ Vector<String> SubqueryNode::outputColumns() const {
   return column_names_;
 }
 
-size_t SubqueryNode::getColumnIndex(const String& column_name) {
+size_t SubqueryNode::getColumnIndex(
+    const String& column_name,
+    bool allow_add /* = false */) {
   auto col = column_name;
   if (!alias_.empty()) {
     if (StringUtil::beginsWith(col, alias_ + ".")) {

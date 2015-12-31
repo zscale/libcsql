@@ -51,16 +51,22 @@ Vector<String> GroupByNode::outputColumns() const {
   return column_names_;
 }
 
-size_t GroupByNode::getColumnIndex(const String& column_name) {
+size_t GroupByNode::getColumnIndex(
+    const String& column_name,
+    bool allow_add /* = false */) {
   for (size_t i = 0; i < select_list_.size(); ++i) {
     if (select_list_[i]->columnName() == column_name) {
       return i;
     }
   }
 
+  if (!allow_add) {
+    return -1;
+  }
+
   auto child_idx = table_
       .asInstanceOf<TableExpressionNode>()
-      ->getColumnIndex(column_name);
+      ->getColumnIndex(column_name, allow_add);
 
   if (child_idx != size_t(-1)) {
     auto slnode = new SelectListNode(new ColumnReferenceNode(child_idx));
