@@ -373,7 +373,7 @@ QueryTreeNode* QueryPlanBuilder::buildGroupBy(
 
   /* generate select list for child */
   auto child_sl = new ASTNode(ASTNode::T_SELECT_LIST);
-  buildInternalSelectList(select_list, child_sl);
+  buildGroupBySelectList(select_list, child_sl);
 
   /* search for a group by clause */
   Vector<RefPtr<ValueExpressionNode>> group_expressions;
@@ -424,7 +424,7 @@ QueryTreeNode* QueryPlanBuilder::buildGroupBy(
       subtree);
 }
 
-bool QueryPlanBuilder::buildInternalSelectList(
+bool QueryPlanBuilder::buildGroupBySelectList(
     ASTNode* node,
     ASTNode* target_select_list) {
   /* search recursively */
@@ -443,21 +443,32 @@ bool QueryPlanBuilder::buildInternalSelectList(
       return true;
     }
 
-    /* push down aggregate function subexpressions */
+    /* push down aggregate function arguments */
     case ASTNode::T_METHOD_CALL:
       if (node->getToken() == nullptr) {
         RAISE(kRuntimeError, "corrupt AST");
       }
 
       if (symbol_table_->isAggregateFunction(node->getToken()->getString())) {
-        /* fallthrough */
+        auto derived = new ASTNode(ASTNode::T_DERIVED_COLUMN);
+        for (auto& cld : node->getChildren()) {
+          derived->appendChild(cld->deepCopy());
+          target_select_list->appendChild(derived);
+          auto col_index = target_select_list->getChildren().size() - 1;
+          cld->setType(ASTNode::T_RESOLVED_COLUMN);
+          cld->setID(col_index);
+          cld->clearChildren();
+          cld->clearToken();
+        }
+
+        return true;
       } else {
         /* fallthrough */
       }
 
     default: {
       for (const auto& child : node->getChildren()) {
-        if (!buildInternalSelectList(child, target_select_list)) {
+        if (!buildGroupBySelectList(child, target_select_list)) {
           return false;
         }
       }

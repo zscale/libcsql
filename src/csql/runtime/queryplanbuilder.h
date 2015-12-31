@@ -197,7 +197,7 @@ public:
    *
    * This is used to create child select lists for nested query plan nodes.
    */
-  bool buildInternalSelectList(
+  bool buildGroupBySelectList(
       ASTNode* ast,
       ASTNode* select_list);
 
