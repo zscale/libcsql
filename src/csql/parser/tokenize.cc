@@ -313,6 +313,11 @@ next:
     goto next;
   }
 
+  if (token == "NULL") {
+    token_list->emplace_back(Token::T_NULL);
+    goto next;
+  }
+
   if (token == "TRUE") {
     token_list->emplace_back(Token::T_TRUE);
     goto next;

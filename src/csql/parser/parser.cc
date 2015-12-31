@@ -124,7 +124,8 @@ ASTNode* Parser::unaryExpr() {
     case Token::T_TRUE:
     case Token::T_FALSE:
     case Token::T_NUMERIC:
-    case Token::SQL_STRING: {
+    case Token::SQL_STRING:
+    case Token::T_NULL: {
       auto e = new ASTNode(ASTNode::T_LITERAL);
       e->setToken(cur_token_);
       consumeToken();

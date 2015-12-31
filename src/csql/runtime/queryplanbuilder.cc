@@ -990,6 +990,10 @@ ValueExpressionNode* QueryPlanBuilder::buildLiteral(
       literal = SValue(token->getString());
       break;
 
+    case Token::T_NULL:
+      literal = SValue();
+      break;
+
     default:
       RAISE(kRuntimeError, "can't cast Token to SValue");
 
