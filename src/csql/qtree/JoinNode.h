@@ -14,6 +14,7 @@
 #include <csql/qtree/TableExpressionNode.h>
 #include <csql/qtree/ValueExpressionNode.h>
 #include <csql/qtree/SelectListNode.h>
+#include <csql/qtree/JoinCondition.h>
 
 using namespace stx;
 
@@ -26,7 +27,8 @@ public:
       RefPtr<QueryTreeNode> base_table,
       RefPtr<QueryTreeNode> joined_table,
       Vector<RefPtr<SelectListNode>> select_list,
-      Option<RefPtr<ValueExpressionNode>> where_expr);
+      Option<RefPtr<ValueExpressionNode>> where_expr,
+      Option<RefPtr<JoinCondition>> join_cond);
 
   JoinNode(const JoinNode& other);
 
@@ -40,6 +42,7 @@ public:
       bool allow_add = false) override;
 
   Option<RefPtr<ValueExpressionNode>> whereExpression() const;
+  Option<RefPtr<JoinCondition>> joinCondition() const;
 
   RefPtr<QueryTreeNode> deepCopy() const override;
 
@@ -51,6 +54,7 @@ protected:
   Vector<String> column_names_;
   Vector<RefPtr<SelectListNode>> select_list_;
   Option<RefPtr<ValueExpressionNode>> where_expr_;
+  Option<RefPtr<JoinCondition>> join_cond_;
 };
 
 } // namespace csql

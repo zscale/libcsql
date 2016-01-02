@@ -909,6 +909,41 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
     //QueryTreeUtil::resolveColumns(where_expr.get(), resolver);
   }
 
+  Option<RefPtr<JoinCondition>> join_cond;
+  if (table_ref->getChildren().size() > 2) {
+    auto cond_ast = table_ref->getChildren()[2];
+
+    switch (cond_ast->getType()) {
+      case ASTNode::T_JOIN_CONDITION: {
+        if (cond_ast->getChildren().size() != 1) {
+          RAISE(kRuntimeError, "corrupt AST");
+        }
+
+        auto e = cond_ast->getChildren()[0];
+        if (e == nullptr) {
+          RAISE(kRuntimeError, "corrupt AST");
+        }
+
+        if (hasAggregationExpression(e)) {
+          RAISE(
+              kRuntimeError,
+              "JOIN conditions can only contain pure functions\n");
+        }
+
+        join_cond = mkRef<JoinCondition>(
+            new ExpressionJoinCondition(buildValueExpression(txn, e)));
+      }
+
+      case ASTNode::T_JOIN_COLUMNLIST: {
+        RAISE(kNotYetImplementedError);
+      }
+
+      default:
+        RAISE(kRuntimeError, "corrupt AST");
+    }
+
+  }
+
   auto child_sl = mkScoped(new ASTNode(ASTNode::T_SELECT_LIST));
 
   auto base_table = buildTableReference(
@@ -929,7 +964,8 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
       base_table,
       joined_table,
       select_list_expressions,
-      where_expr);
+      where_expr,
+      join_cond);
 }
 
 QueryTreeNode* QueryPlanBuilder::buildSubqueryTableReference(
