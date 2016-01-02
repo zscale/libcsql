@@ -109,12 +109,17 @@ public:
       ASTNode* ast,
       RefPtr<TableProvider> tables);
 
-  QueryTreeNode* buildSequentialScan(
+  QueryTreeNode* buildJoinExpression(
       Transaction* txn,
       ASTNode* ast,
       RefPtr<TableProvider> tables);
 
   QueryTreeNode* buildSubquery(
+      Transaction* txn,
+      ASTNode* ast,
+      RefPtr<TableProvider> tables);
+
+  QueryTreeNode* buildSequentialScan(
       Transaction* txn,
       ASTNode* ast,
       RefPtr<TableProvider> tables);
@@ -135,6 +140,34 @@ public:
   QueryTreeNode* buildSelectExpression(
       Transaction* txn,
       ASTNode* ast);
+
+  QueryTreeNode* buildTableReference(
+      Transaction* txn,
+      ASTNode* table_ref,
+      ASTNode* select_list,
+      ASTNode* where_clause,
+      RefPtr<TableProvider> tables);
+
+  QueryTreeNode* buildJoinTableReference(
+      Transaction* txn,
+      ASTNode* table_ref,
+      ASTNode* select_list,
+      ASTNode* where_clause,
+      RefPtr<TableProvider> tables);
+
+  QueryTreeNode* buildSubqueryTableReference(
+      Transaction* txn,
+      ASTNode* table_ref,
+      ASTNode* select_list,
+      ASTNode* where_clause,
+      RefPtr<TableProvider> tables);
+
+  QueryTreeNode* buildSeqscanTableReference(
+      Transaction* txn,
+      ASTNode* table_ref,
+      ASTNode* select_list,
+      ASTNode* where_clause,
+      RefPtr<TableProvider> tables);
 
   QueryTreeNode* buildShowTables(
       Transaction* txn,
