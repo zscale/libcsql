@@ -18,11 +18,13 @@ JoinNode::JoinNode(
     RefPtr<QueryTreeNode> base_table,
     RefPtr<QueryTreeNode> joined_table,
     Vector<RefPtr<SelectListNode>> select_list,
-    Option<RefPtr<ValueExpressionNode>> where_expr) :
+    Option<RefPtr<ValueExpressionNode>> where_expr,
+    Option<RefPtr<JoinCondition>> join_cond) :
     base_table_(base_table),
     joined_table_(joined_table),
     select_list_(select_list),
-    where_expr_(where_expr) {
+    where_expr_(where_expr),
+    join_cond_(join_cond) {
   for (const auto& sl : select_list_) {
     column_names_.emplace_back(sl->columnName());
   }
@@ -35,7 +37,8 @@ JoinNode::JoinNode(
     const JoinNode& other) :
     base_table_(other.base_table_->deepCopy()),
     joined_table_(other.joined_table_->deepCopy()),
-    column_names_(other.column_names_) {
+    column_names_(other.column_names_),
+    join_cond_(other.join_cond_) {
   for (const auto& e : other.select_list_) {
     select_list_.emplace_back(e->deepCopyAs<SelectListNode>());
   }
@@ -72,6 +75,10 @@ size_t JoinNode::getColumnIndex(
 
 Option<RefPtr<ValueExpressionNode>> JoinNode::whereExpression() const {
   return where_expr_;
+}
+
+Option<RefPtr<JoinCondition>> JoinNode::joinCondition() const {
+  return join_cond_;
 }
 
 RefPtr<QueryTreeNode> JoinNode::deepCopy() const {
