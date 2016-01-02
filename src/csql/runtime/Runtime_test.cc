@@ -1404,3 +1404,30 @@ TEST_CASE(RuntimeTest, TestWildcardWithGroupBy, [] () {
   EXPECT_EQ(result.getColumns()[62], "user_id");
   EXPECT_EQ(result.getNumRows(), 213);
 });
+
+TEST_CASE(RuntimeTest, TestSimpleJoin, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newTransaction();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new CSTableScanProvider(
+          "testtable",
+          "src/csql/testdata/testtbl.cst"));
+
+  ResultList result;
+  auto query = R"(
+      SELECT
+        time, t1.x, t2.x, t1.x + t2.x, t1.x * 3 = t3.x, x1, x2, x3
+      FROM
+        (select TRUNCATE(time / 1000000) as time, count(1) as x, 123 as x1 from testtable group by TRUNCATE(time / 1200000000)) t1,
+        (select TRUNCATE(time / 1000000) as time, sum(2) as x, 456 as x2 from testtable group by TRUNCATE(time / 1200000000)) AS t2,
+        (select TRUNCATE(time / 1000000) as time, sum(3) as x, 789 as x2 from testtable group by TRUNCATE(time / 1200000000)) AS t3
+      ORDER BY
+        time desc;
+  )";
+
+  auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+  runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+  result.debugPrint();
+});
