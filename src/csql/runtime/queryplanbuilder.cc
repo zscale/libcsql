@@ -26,6 +26,7 @@
 #include <csql/qtree/SubQueryNode.h>
 #include <csql/qtree/QueryTreeUtil.h>
 #include <csql/qtree/ValueExpressionNode.h>
+#include <csql/qtree/JoinNode.h>
 
 namespace csql {
 
@@ -795,10 +796,6 @@ QueryTreeNode* QueryPlanBuilder::buildJoinExpression(
       return nullptr;
   }
 
-  if (join->getChildren().size() < 2) {
-    return nullptr;
-  }
-
   /* select list  */
   auto select_list = ast->getChildren()[0];
   ASTNode* where_clause = nullptr;
@@ -832,21 +829,31 @@ QueryTreeNode* QueryPlanBuilder::buildTableReference(
           where_clause,
           tables);
 
-    case ASTNode::T_TABLE_NAME:
-      return buildSeqscanTableReference(
-          txn,
-          table_ref,
-          select_list,
-          where_clause,
-          tables);
+    case ASTNode::T_FROM:
+      if (table_ref->getChildren().size() > 1) {
+        switch (table_ref->getChildren()[0]->getType()) {
+          case ASTNode::T_TABLE_NAME:
+            return buildSeqscanTableReference(
+                txn,
+                table_ref,
+                select_list,
+                where_clause,
+                tables);
 
-    case ASTNode::T_SELECT:
-      return buildSubqueryTableReference(
-          txn,
-          table_ref,
-          select_list,
-          where_clause,
-          tables);
+          case ASTNode::T_SELECT:
+            return buildSubqueryTableReference(
+                txn,
+                table_ref,
+                select_list,
+                where_clause,
+                tables);
+
+          default:
+            break;
+
+        }
+      }
+      /* fallthrough */
 
     default:
       RAISE(kRuntimeError, "invalid table reference");
@@ -860,7 +867,69 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
     ASTNode* select_list,
     ASTNode* where_clause,
     RefPtr<TableProvider> tables) {
-  RAISE(kNotYetImplementedError);
+  if (table_ref->getChildren().size() < 2) {
+    return nullptr;
+  }
+
+  Vector<RefPtr<SelectListNode>> select_list_expressions;
+  for (const auto& select_expr : select_list->getChildren()) {
+    if (hasAggregationWithinRecord(select_expr)) {
+      RAISE(
+          kRuntimeError,
+          "WITHIN RECORD can't be used together with JOIN in the same SELECT"
+          " statement. consider moving the WITHIN RECORD expression into a"
+          " subquery");
+    }
+
+    select_list_expressions.emplace_back(buildSelectList(txn, select_expr));
+  }
+
+  Option<RefPtr<ValueExpressionNode>> where_expr;
+  if (where_clause) {
+    if (!(*where_clause == ASTNode::T_WHERE)) {
+      return nullptr;
+    }
+
+    if (where_clause->getChildren().size() != 1) {
+      RAISE(kRuntimeError, "corrupt AST");
+    }
+
+    auto e = where_clause->getChildren()[0];
+    if (e == nullptr) {
+      RAISE(kRuntimeError, "corrupt AST");
+    }
+
+    if (hasAggregationExpression(e)) {
+      RAISE(
+          kRuntimeError,
+          "where expressions can only contain pure functions\n");
+    }
+
+    where_expr = Some(RefPtr<ValueExpressionNode>(buildValueExpression(txn, e)));
+    //QueryTreeUtil::resolveColumns(where_expr.get(), resolver);
+  }
+
+  auto child_sl = mkScoped(new ASTNode(ASTNode::T_SELECT_LIST));
+
+  auto base_table = buildTableReference(
+      txn,
+      table_ref->getChildren()[0],
+      child_sl.get(),
+      where_clause,
+      tables);
+
+  auto joined_table = buildTableReference(
+      txn,
+      table_ref->getChildren()[0],
+      child_sl.get(),
+      where_clause,
+      tables);
+
+  return new JoinNode(
+      base_table,
+      joined_table,
+      select_list_expressions,
+      where_expr);
 }
 
 QueryTreeNode* QueryPlanBuilder::buildSubqueryTableReference(

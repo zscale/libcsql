@@ -38,6 +38,7 @@ add_library(chartsql STATIC
     parser/tokenize.cc
     qtree/CallExpressionNode.cc
     qtree/ColumnReferenceNode.cc
+    qtree/JoinNode.cc
     qtree/SequentialScanNode.cc
     qtree/SubqueryNode.cc
     qtree/SelectExpressionNode.cc
