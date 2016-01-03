@@ -84,8 +84,8 @@ void TableScan::execute(
       VM::evaluate(
           txn_,
           select_exprs_[i].program(),
-          outbuf.size(),
-          outbuf.data(),
+          inbuf.size(),
+          inbuf.data(),
           &outbuf[i]);
     }
 

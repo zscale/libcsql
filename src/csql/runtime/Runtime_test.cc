@@ -1406,7 +1406,6 @@ TEST_CASE(RuntimeTest, TestWildcardWithGroupBy, [] () {
   EXPECT_EQ(result.getColumns()[1], "value");
   EXPECT_EQ(result.getColumns()[2], "segment1");
   EXPECT_EQ(result.getColumns()[3], "segment2");
-  result.debugPrint();
   EXPECT_EQ(result.getNumRows(), 4);
 });
 
