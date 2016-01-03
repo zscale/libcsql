@@ -1,4 +1,4 @@
-- join where push down
+- join where push down for SUBQUERY
 - join relation extraction
 - fold hashjoins
 - fold nestedloopjions

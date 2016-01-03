@@ -1165,9 +1165,14 @@ QueryTreeNode* QueryPlanBuilder::buildSeqscanTableReference(
     table_alias = table_ref->getChildren()[1]->getToken()->getString();
   }
 
+  auto table = tables->describe(table_name);
+  if (table.isEmpty()) {
+    RAISEF(kRuntimeError, "table not found: '$0'", table_name);
+  }
+
   /* get where expression */
   Option<RefPtr<ValueExpressionNode>> where_expr;
-  if (!in_join && where_clause) {
+  if (where_clause) {
     if (!(*where_clause == ASTNode::T_WHERE)) {
       return nullptr;
     }
@@ -1188,7 +1193,22 @@ QueryTreeNode* QueryPlanBuilder::buildSeqscanTableReference(
           "where expressions can only contain pure functions\n");
     }
 
-    where_expr = Some(RefPtr<ValueExpressionNode>(buildValueExpression(txn, e)));
+    auto pred = RefPtr<ValueExpressionNode>(buildValueExpression(txn, e));
+
+    if (in_join) {
+      Set<String> valid_columns;
+      for (const auto& col : table.get().columns) {
+        valid_columns.insert(col.column_name);
+        valid_columns.insert(table_name + "." + col.column_name);
+        if (!table_alias.empty()) {
+          valid_columns.insert(table_alias + "." + col.column_name);
+        }
+      }
+
+      pred = QueryTreeUtil::prunePredicateExpression(pred, valid_columns);
+    }
+
+    where_expr = Some(pred);
   }
 
   bool has_aggregation = false;
@@ -1198,12 +1218,7 @@ QueryTreeNode* QueryPlanBuilder::buildSeqscanTableReference(
   Vector<RefPtr<SelectListNode>> select_list_expressions;
   for (const auto& select_expr : select_list->getChildren()) {
     if (*select_expr == ASTNode::T_ALL) {
-      auto tbl_info = tables->describe(table_name);
-      if (tbl_info.isEmpty()) {
-        RAISEF(kNotFoundError, "table not found: $0", table_name);
-      }
-
-      for (const auto& col : tbl_info.get().columns) {
+      for (const auto& col : table.get().columns) {
         auto sl = new SelectListNode(new ColumnReferenceNode(col.column_name));
         sl->setAlias(col.column_name);
         select_list_expressions.emplace_back(sl);
@@ -1227,10 +1242,6 @@ QueryTreeNode* QueryPlanBuilder::buildSeqscanTableReference(
         "invalid use of aggregation WITHIN RECORD functions");
   }
 
-  auto table = tables->describe(table_name);
-  if (table.isEmpty()) {
-    RAISEF(kRuntimeError, "table not found: '$0'", table_name);
-  }
 
   /* aggregation type */
   auto seqscan = new SequentialScanNode(
