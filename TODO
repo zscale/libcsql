@@ -1,3 +1,6 @@
+
+- push down all JOIN conjunctions from higher-level join condtitions and WHERE clause
+- fold nested loop joins
 - join where push down for SUBQUERY
 - join relation extraction
 - fold hashjoins
