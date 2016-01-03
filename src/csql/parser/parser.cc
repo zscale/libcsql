@@ -747,11 +747,11 @@ ASTNode* Parser::joinExpression(ASTNode* base) {
           ASTNode::T_LEFT_JOIN :
           ASTNode::T_RIGHT_JOIN;
 
+      consumeToken();
       consumeIf(Token::T_OUTER);
       expectAndConsume(Token::T_JOIN);
 
       std::unique_ptr<ASTNode> join(new ASTNode(join_type));
-
       join->appendChild(base);
       join->appendChild(tableFactor());
 

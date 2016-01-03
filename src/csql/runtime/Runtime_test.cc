@@ -1409,7 +1409,7 @@ TEST_CASE(RuntimeTest, TestWildcardWithGroupBy, [] () {
   EXPECT_EQ(result.getNumRows(), 4);
 });
 
-TEST_CASE(RuntimeTest, TestSimpleJoin, [] () {
+TEST_CASE(RuntimeTest, TestInnerJoin, [] () {
   auto runtime = Runtime::getDefaultRuntime();
   auto ctx = runtime->newTransaction();
 
@@ -1522,5 +1522,45 @@ TEST_CASE(RuntimeTest, TestSimpleJoin, [] () {
     EXPECT_EQ(result.getRow(11)[7], "123");
     EXPECT_EQ(result.getRow(11)[8], "456");
     EXPECT_EQ(result.getRow(11)[9], "789");
+  }
+});
+
+TEST_CASE(RuntimeTest, TestLeftJoin, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newTransaction();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new backends::csv::CSVTableProvider(
+          "customers",
+          "src/csql/testdata/testtbl2.csv",
+          '\t'));
+  estrat->addTableProvider(
+      new backends::csv::CSVTableProvider(
+          "orders",
+          "src/csql/testdata/testtbl3.csv",
+          '\t'));
+
+  {
+    ResultList result;
+    auto query = R"(
+      SELECT customers.customername, orders.orderid
+      FROM customers
+      LEFT JOIN orders
+      ON customers.customerid=orders.customerid
+      ORDER BY customers.customername;
+    )";
+
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+    result.debugPrint();
+    EXPECT_EQ(result.getNumColumns(), 2);
+    EXPECT_EQ(result.getNumRows(), 213);
+    EXPECT_EQ(result.getRow(0)[0], "Alfreds Futterkiste");
+    EXPECT_EQ(result.getRow(0)[1], "null");
+    EXPECT_EQ(result.getRow(1)[0], "Ana Trujillo Emparedados y helados");
+    EXPECT_EQ(result.getRow(1)[1], "10308");
+    EXPECT_EQ(result.getRow(212)[0], "Wolski");
+    EXPECT_EQ(result.getRow(212)[1], "10374");
   }
 });

@@ -167,111 +167,112 @@ void Runtime::executeAggregate(
     const RemoteAggregateParams& query,
     RefPtr<ExecutionStrategy> execution_strategy,
     OutputStream* os) {
-  Option<RefPtr<ValueExpressionNode>> where_expr;
-  if (query.has_where_expression()) {
-    csql::Parser parser;
-    parser.parseValueExpression(
-        query.where_expression().data(),
-        query.where_expression().size());
+  RAISE(kNotYetImplementedError);
+  //Option<RefPtr<ValueExpressionNode>> where_expr;
+  //if (query.has_where_expression()) {
+  //  csql::Parser parser;
+  //  parser.parseValueExpression(
+  //      query.where_expression().data(),
+  //      query.where_expression().size());
 
-    auto stmts = parser.getStatements();
-    if (stmts.size() != 1) {
-      RAISE(kIllegalArgumentError);
-    }
+  //  auto stmts = parser.getStatements();
+  //  if (stmts.size() != 1) {
+  //    RAISE(kIllegalArgumentError);
+  //  }
 
-    where_expr = Some(query_plan_builder_->buildValueExpression(txn, stmts[0]));
-  }
+  //  where_expr = Some(query_plan_builder_->buildValueExpression(txn, stmts[0]));
+  //}
 
-  Vector<RefPtr<SelectListNode>> inner_select_list;
-  for (const auto& e : query.select_expression_list()) {
-    csql::Parser parser;
-    parser.parseValueExpression(
-        e.expression().data(),
-        e.expression().size());
+  //Vector<RefPtr<SelectListNode>> inner_select_list;
+  //for (const auto& e : query.select_expression_list()) {
+  //  csql::Parser parser;
+  //  parser.parseValueExpression(
+  //      e.expression().data(),
+  //      e.expression().size());
 
-    auto stmts = parser.getStatements();
-    if (stmts.size() != 1) {
-      RAISE(kIllegalArgumentError);
-    }
+  //  auto stmts = parser.getStatements();
+  //  if (stmts.size() != 1) {
+  //    RAISE(kIllegalArgumentError);
+  //  }
 
-    auto slnode = mkRef(
-        new SelectListNode(
-            query_plan_builder_->buildValueExpression(txn, stmts[0])));
+  //  auto slnode = mkRef(
+  //      new SelectListNode(
+  //          query_plan_builder_->buildValueExpression(txn, stmts[0])));
 
-    if (e.has_alias()) {
-      slnode->setAlias(e.alias());
-    }
+  //  if (e.has_alias()) {
+  //    slnode->setAlias(e.alias());
+  //  }
 
-    inner_select_list.emplace_back(slnode);
-  }
+  //  inner_select_list.emplace_back(slnode);
+  //}
 
-  auto seqscan =
-        new SequentialScanNode(
-              query.table_name(),
-              inner_select_list,
-              where_expr,
-              (AggregationStrategy) query.aggregation_strategy());
+  //auto seqscan =
+  //      new SequentialScanNode(
+  //            query.table_name(),
+  //            inner_select_list,
+  //            where_expr,
+  //            (AggregationStrategy) query.aggregation_strategy());
 
-  Vector<RefPtr<SelectListNode>> outer_select_list;
-  for (const auto& e : query.aggregate_expression_list()) {
-    csql::Parser parser;
-    parser.parseValueExpression(
-        e.expression().data(),
-        e.expression().size());
+  //Vector<RefPtr<SelectListNode>> outer_select_list;
+  //for (const auto& e : query.aggregate_expression_list()) {
+  //  csql::Parser parser;
+  //  parser.parseValueExpression(
+  //      e.expression().data(),
+  //      e.expression().size());
 
-    auto stmts = parser.getStatements();
-    if (stmts.size() != 1) {
-      RAISE(kIllegalArgumentError);
-    }
+  //  auto stmts = parser.getStatements();
+  //  if (stmts.size() != 1) {
+  //    RAISE(kIllegalArgumentError);
+  //  }
 
-    auto slnode = mkRef(
-        new SelectListNode(
-            query_plan_builder_->buildValueExpression(txn, stmts[0])));
+  //  auto slnode = mkRef(
+  //      new SelectListNode(
+  //          query_plan_builder_->buildValueExpression(txn, stmts[0])));
 
-    if (e.has_alias()) {
-      slnode->setAlias(e.alias());
-    }
+  //  if (e.has_alias()) {
+  //    slnode->setAlias(e.alias());
+  //  }
 
-    outer_select_list.emplace_back(slnode);
-  }
+  //  outer_select_list.emplace_back(slnode);
+  //}
 
-  Vector<RefPtr<ValueExpressionNode>> group_exprs;
-  for (const auto& e : query.group_expression_list()) {
-    csql::Parser parser;
-    parser.parseValueExpression(e.data(), e.size());
+  //Vector<RefPtr<ValueExpressionNode>> group_exprs;
+  //for (const auto& e : query.group_expression_list()) {
+  //  csql::Parser parser;
+  //  parser.parseValueExpression(e.data(), e.size());
 
-    auto stmts = parser.getStatements();
-    if (stmts.size() != 1) {
-      RAISE(kIllegalArgumentError);
-    }
+  //  auto stmts = parser.getStatements();
+  //  if (stmts.size() != 1) {
+  //    RAISE(kIllegalArgumentError);
+  //  }
 
-    auto ve = query_plan_builder_->buildValueExpression(txn, stmts[0]);
-    group_exprs.emplace_back(ve);
-  }
+  //  auto ve = query_plan_builder_->buildValueExpression(txn, stmts[0]);
+  //  group_exprs.emplace_back(ve);
+  //}
 
-  auto qtree = mkRef(
-      new GroupByNode(
-          outer_select_list,
-          group_exprs,
-          seqscan));
+  //auto qtree = mkRef(
+  //    new GroupByNode(
+  //        outer_select_list,
+  //        group_exprs,
+  //        seqscan));
 
-  auto expr = query_builder_->buildTableExpression(
-      txn,
-      qtree.get(),
-      execution_strategy->tableProvider(),
-      this);
+  //auto expr = query_builder_->buildTableExpression(
+  //    txn,
+  //    qtree.get(),
+  //    execution_strategy->tableProvider(),
+  //    this);
 
-  auto group_expr = dynamic_cast<GroupByExpression*>(expr.get());
-  if (!group_expr) {
-    RAISE(kIllegalStateError);
-  }
+  //auto group_expr = dynamic_cast<GroupByExpression*>(expr.get());
+  //if (!group_expr) {
+  //  RAISE(kIllegalStateError);
+  //}
 
-  csql::ExecutionContext context(&tpool_);
-  if (!cachedir_.isEmpty()) {
-    context.setCacheDir(cachedir_.get());
-  }
+  //csql::ExecutionContext context(&tpool_);
+  //if (!cachedir_.isEmpty()) {
+  //  context.setCacheDir(cachedir_.get());
+  //}
 
-  group_expr->executeRemote(&context, os);
+  //group_expr->executeRemote(&context, os);
 }
 
 SValue Runtime::evaluateScalarExpression(

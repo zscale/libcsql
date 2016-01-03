@@ -13,24 +13,12 @@
 #include <csql/backends/tableref.h>
 #include <csql/runtime/TableExpression.h>
 #include <csql/qtree/SequentialScanNode.h>
+#include <csql/TableInfo.h>
 
 namespace csql {
 class ImportStatement;
 class QueryBuilder;
 class Transaction;
-
-struct ColumnInfo {
-  String column_name;
-  String type;
-  bool is_nullable;
-  size_t type_size;
-};
-
-struct TableInfo {
-  String table_name;
-  Option<String> description;
-  Vector<ColumnInfo> columns;
-};
 
 class TableProvider : public RefCounted {
 public:
@@ -84,4 +72,4 @@ protected:
   Vector<RefPtr<TableProvider>> providers_;
 };
 
-}
+} // namespace csql

@@ -830,7 +830,7 @@ QueryTreeNode* QueryPlanBuilder::buildTableReference(
           tables);
 
     case ASTNode::T_FROM:
-      if (table_ref->getChildren().size() > 1) {
+      if (table_ref->getChildren().size() > 0) {
         switch (table_ref->getChildren()[0]->getType()) {
           case ASTNode::T_TABLE_NAME:
             return buildSeqscanTableReference(
@@ -856,6 +856,7 @@ QueryTreeNode* QueryPlanBuilder::buildTableReference(
       /* fallthrough */
 
     default:
+      table_ref->debugPrint();
       RAISE(kRuntimeError, "invalid table reference");
 
   }
@@ -1214,9 +1215,14 @@ QueryTreeNode* QueryPlanBuilder::buildSeqscanTableReference(
         "invalid use of aggregation WITHIN RECORD functions");
   }
 
+  auto table = tables->describe(table_name);
+  if (table.isEmpty()) {
+    RAISEF(kRuntimeError, "table not found: '$0'", table_name);
+  }
+
   /* aggregation type */
   auto seqscan = new SequentialScanNode(
-      table_name,
+      table.get(),
       select_list_expressions,
       where_expr);
 
