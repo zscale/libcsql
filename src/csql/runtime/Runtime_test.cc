@@ -1488,8 +1488,8 @@ TEST_CASE(RuntimeTest, TestSimpleJoin, [] () {
           (select TRUNCATE(time / 1000000) as time, sum(2) as x, 456 as x2 from testtable group by TRUNCATE(time / 1200000000)) AS t2
         JOIN
           (select TRUNCATE(time / 1000000) as time, sum(3) as x, 789 as x3 from testtable group by TRUNCATE(time / 1200000000)) AS t3
-        ON
-          t2.time = t1.time = t3.time
+        WHERE
+          t2.time = t1.time AND t1.time = t3.time
         ORDER BY
           t1.time desc;
     )";

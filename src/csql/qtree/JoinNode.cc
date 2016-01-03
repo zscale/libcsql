@@ -175,6 +175,10 @@ String JoinNode::toString() const {
     str += StringUtil::format(" (where $0)", where_expr_.get()->toString());
   }
 
+  if (!join_cond_.isEmpty()) {
+    str += StringUtil::format(" (join-cond $0)", join_cond_.get()->toString());
+  }
+
   str += ")";
   return str;
 };
