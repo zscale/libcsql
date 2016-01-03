@@ -18,6 +18,7 @@
 #include "csql/qtree/CallExpressionNode.h"
 #include "csql/qtree/LiteralExpressionNode.h"
 #include "csql/CSTableScanProvider.h"
+#include "csql/backends/csv/CSVTableProvider.h"
 
 using namespace stx;
 using namespace csql;
@@ -1391,18 +1392,19 @@ TEST_CASE(RuntimeTest, TestWildcardWithGroupBy, [] () {
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
-      new CSTableScanProvider(
+      new backends::csv::CSVTableProvider(
           "testtable",
-          "src/csql/testdata/testtbl.cst"));
+          "src/csql/testdata/testtbl1.csv",
+          '\t'));
 
   ResultList result;
-  auto query = R"(select * from testtable group by session_id;)";
+  auto query = R"(select * from testtable group by time;)";
   auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
   runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
-  EXPECT_EQ(result.getNumColumns(), 63);
-  EXPECT_EQ(result.getColumns()[0], "attr.ab_test_group");
-  EXPECT_EQ(result.getColumns()[62], "user_id");
-  EXPECT_EQ(result.getNumRows(), 213);
+  EXPECT_EQ(result.getNumColumns(), 4);
+  EXPECT_EQ(result.getColumns()[0], "time");
+  EXPECT_EQ(result.getColumns()[1], "segment2");
+  EXPECT_EQ(result.getNumRows(), 4);
 });
 
 TEST_CASE(RuntimeTest, TestSimpleJoin, [] () {
