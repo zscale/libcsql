@@ -20,6 +20,10 @@ using namespace stx;
 namespace csql {
 
 class JoinCondition : public RefCounted {
+public:
+
+  virtual RefPtr<ValueExpressionNode> getExpression() const = 0;
+
 };
 
 class ExpressionJoinCondition : public  JoinCondition {
@@ -27,13 +31,16 @@ public:
 
   ExpressionJoinCondition(RefPtr<ValueExpressionNode> expr);
 
-  RefPtr<ValueExpressionNode> getExpression() const;
+  RefPtr<ValueExpressionNode> getExpression() const override;
 
 protected:
   RefPtr<ValueExpressionNode> expr_;
 };
 
-class ColumnListJoinConditions : public JoinCondition {
+class ColumnListJoinCondition : public JoinCondition {
+public:
+
+  RefPtr<ValueExpressionNode> getExpression() const override;
 
 };
 
