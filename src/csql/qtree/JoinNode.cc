@@ -15,11 +15,13 @@ using namespace stx;
 namespace csql {
 
 JoinNode::JoinNode(
+    JoinType join_type,
     RefPtr<QueryTreeNode> base_table,
     RefPtr<QueryTreeNode> joined_table,
     Vector<RefPtr<SelectListNode>> select_list,
     Option<RefPtr<ValueExpressionNode>> where_expr,
     Option<RefPtr<JoinCondition>> join_cond) :
+    join_type_(join_type),
     base_table_(base_table),
     joined_table_(joined_table),
     select_list_(select_list),
@@ -50,6 +52,18 @@ JoinNode::JoinNode(
 
   addChild(&base_table_);
   addChild(&joined_table_);
+}
+
+JoinType JoinNode::joinType() const {
+  return join_type_;
+}
+
+RefPtr<QueryTreeNode> JoinNode::baseTable() const {
+  return base_table_;
+}
+
+RefPtr<QueryTreeNode> JoinNode::joinedTable() const {
+  return joined_table_;
 }
 
 Vector<RefPtr<SelectListNode>> JoinNode::selectList() const {

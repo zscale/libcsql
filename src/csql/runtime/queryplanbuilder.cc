@@ -871,6 +871,27 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
     return nullptr;
   }
 
+  JoinType join_type;
+
+  switch (table_ref->getType()) {
+    case ASTNode::T_INNER_JOIN:
+      join_type = JoinType::INNER;
+      break;
+    case ASTNode::T_LEFT_JOIN:
+      join_type = JoinType::LEFT;
+      break;
+    case ASTNode::T_RIGHT_JOIN:
+      join_type = JoinType::RIGHT;
+      break;
+    case ASTNode::T_NATURAL_JOIN:
+      RAISE(
+          kRuntimeError,
+          "NATURAL JOINs are currently not supported, please list the join"
+          " conditions explicitly.");
+    default:
+      RAISE(kRuntimeError, "invalid JOIN type");
+  }
+
   Vector<RefPtr<SelectListNode>> select_list_expressions;
   for (const auto& select_expr : select_list->getChildren()) {
     if (hasAggregationWithinRecord(select_expr)) {
@@ -941,7 +962,10 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
       default:
         RAISE(kRuntimeError, "corrupt AST");
     }
+  }
 
+  if (join_cond.isEmpty() && join_type == JoinType::INNER) {
+    join_type = JoinType::CARTESIAN;
   }
 
   auto child_sl = mkScoped(new ASTNode(ASTNode::T_SELECT_LIST));
@@ -961,6 +985,7 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
       tables);
 
   return new JoinNode(
+      join_type,
       base_table,
       joined_table,
       select_list_expressions,
