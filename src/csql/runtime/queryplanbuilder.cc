@@ -1208,6 +1208,7 @@ QueryTreeNode* QueryPlanBuilder::buildSeqscanTableReference(
       pred = QueryTreeUtil::prunePredicateExpression(pred, valid_columns);
     }
 
+    // FIXME skip if literal true expression
     where_expr = Some(pred);
   }
 

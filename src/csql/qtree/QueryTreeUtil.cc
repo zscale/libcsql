@@ -84,4 +84,32 @@ bool QueryTreeUtil::isConstantExpression(
   return true;
 }
 
+RefPtr<ValueExpressionNode> QueryTreeUtil::prunePredicateExpression(
+    RefPtr<ValueExpressionNode> expr,
+    const Set<String>& column_whitelist) {
+  auto call_expr = dynamic_cast<CallExpressionNode*>(expr.get());
+  if (call_expr && call_expr->symbol() == "logical_and") {
+    return new CallExpressionNode(
+        "logical_and",
+        Vector<RefPtr<ValueExpressionNode>> {
+          prunePredicateExpression(call_expr->arguments()[0], column_whitelist),
+          prunePredicateExpression(call_expr->arguments()[1], column_whitelist),
+        });
+  }
+
+  bool is_invalid = false;
+  findColumns(expr, [&] (const RefPtr<ColumnReferenceNode>& col) {
+    const auto& col_name = col->columnName();
+    if (!col_name.empty() && column_whitelist.count(col_name) == 0) {
+      is_invalid = true;
+    }
+  });
+
+  if (is_invalid) {
+    return new LiteralExpressionNode(SValue(SValue::BoolType(true)));
+  } else {
+    return expr;
+  }
+}
+
 } // namespace csql
