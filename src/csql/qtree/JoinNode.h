@@ -49,6 +49,10 @@ public:
       const String& column_name,
       bool allow_add = false) override;
 
+  size_t getInputColumnIndex(
+      const String& column_name,
+      bool allow_add = false);
+
   Option<RefPtr<ValueExpressionNode>> whereExpression() const;
   Option<RefPtr<JoinCondition>> joinCondition() const;
 
@@ -57,9 +61,17 @@ public:
   String toString() const override;
 
 protected:
+
+  struct InputColumnRef {
+    String column;
+    size_t table_idx;
+    size_t column_idx;
+  };
+
   JoinType join_type_;
   RefPtr<QueryTreeNode> base_table_;
   RefPtr<QueryTreeNode> joined_table_;
+  Vector<InputColumnRef> input_map_;
   Vector<String> column_names_;
   Vector<RefPtr<SelectListNode>> select_list_;
   Option<RefPtr<ValueExpressionNode>> where_expr_;

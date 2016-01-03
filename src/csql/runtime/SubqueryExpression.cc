@@ -26,6 +26,7 @@ SubqueryExpression::SubqueryExpression(
 
 void SubqueryExpression::prepare(ExecutionContext* context) {
   context->incrNumSubtasksTotal(1);
+  subquery_->prepare(context);
 }
 
 void SubqueryExpression::execute(

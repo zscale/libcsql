@@ -9,6 +9,7 @@
  */
 #include <csql/qtree/JoinNode.h>
 #include <csql/qtree/ColumnReferenceNode.h>
+#include <csql/qtree/QueryTreeUtil.h>
 
 using namespace stx;
 
@@ -37,8 +38,10 @@ JoinNode::JoinNode(
 
 JoinNode::JoinNode(
     const JoinNode& other) :
+    join_type_(other.join_type_),
     base_table_(other.base_table_->deepCopy()),
     joined_table_(other.joined_table_->deepCopy()),
+    input_map_(other.input_map_),
     column_names_(other.column_names_),
     join_cond_(other.join_cond_) {
   for (const auto& e : other.select_list_) {
@@ -77,14 +80,68 @@ Vector<String> JoinNode::outputColumns() const {
 size_t JoinNode::getColumnIndex(
     const String& column_name,
     bool allow_add /* = false */) {
-  auto col = column_name;
   for (int i = 0; i < column_names_.size(); ++i) {
-    if (column_names_[i] == col || column_names_[i] == column_name) {
+    if (column_names_[i] == column_name) {
       return i;
     }
   }
 
+  auto input_idx = getInputColumnIndex(column_name);
+  if (input_idx != size_t(-1)) {
+    auto slnode = new SelectListNode(new ColumnReferenceNode(input_idx));
+    slnode->setAlias(column_name);
+    select_list_.emplace_back(slnode);
+    return select_list_.size() - 1;
+  }
+
   return -1; // FIXME
+}
+
+size_t JoinNode::getInputColumnIndex(
+    const String& column_name,
+    bool allow_add /* = false */) {
+  for (int i = 0; i < input_map_.size(); ++i) {
+    if (input_map_[i].column == column_name) {
+      return i;
+    }
+  }
+
+  auto base_table_idx = base_table_
+      .asInstanceOf<TableExpressionNode>()
+      ->getColumnIndex(column_name, allow_add);
+
+  auto joined_table_idx = joined_table_
+      .asInstanceOf<TableExpressionNode>()
+      ->getColumnIndex(column_name, allow_add);
+
+  if (base_table_idx != size_t(-1) && joined_table_idx != size_t(-1)) {
+    RAISEF(
+        kRuntimeError,
+        "ambiguous column reference: '$0'",
+        column_name);
+  }
+
+  if (base_table_idx != size_t(-1)) {
+    input_map_.emplace_back(InputColumnRef{
+      .column = column_name,
+      .table_idx = 0,
+      .column_idx = base_table_idx
+    });
+
+    return input_map_.size() - 1;
+  }
+
+  if (joined_table_idx != size_t(-1)) {
+    input_map_.emplace_back(InputColumnRef{
+      .column = column_name,
+      .table_idx = 1,
+      .column_idx = joined_table_idx
+    });
+
+    return input_map_.size() - 1;
+  }
+
+  return -1;
 }
 
 Option<RefPtr<ValueExpressionNode>> JoinNode::whereExpression() const {

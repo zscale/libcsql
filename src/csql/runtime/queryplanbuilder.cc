@@ -979,18 +979,30 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
 
   auto joined_table = buildTableReference(
       txn,
-      table_ref->getChildren()[0],
+      table_ref->getChildren()[1],
       child_sl.get(),
       where_clause,
       tables);
 
-  return new JoinNode(
+  auto join_node = mkScoped(new JoinNode(
       join_type,
       base_table,
       joined_table,
       select_list_expressions,
       where_expr,
-      join_cond);
+      join_cond));
+
+  for (auto& sl : join_node->selectList()) {
+    QueryTreeUtil::resolveColumns(
+        sl->expression(),
+        std::bind(
+            &JoinNode::getInputColumnIndex,
+            join_node.get(),
+            std::placeholders::_1,
+            false));
+  }
+
+  return join_node.release();
 }
 
 QueryTreeNode* QueryPlanBuilder::buildSubqueryTableReference(

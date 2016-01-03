@@ -37,6 +37,12 @@ public:
   size_t numColumns() const override;
 
 protected:
+
+  void executeCartesianJoin(Function<bool (int argc, const SValue* argv)> fn);
+  void executeInnerJoin(Function<bool (int argc, const SValue* argv)> fn);
+  void executeLeftJoin(Function<bool (int argc, const SValue* argv)> fn);
+  void executeRightJoin(Function<bool (int argc, const SValue* argv)> fn);
+
   Transaction* txn_;
   JoinType join_type_;
   ScopedPtr<TableExpression> base_table_;

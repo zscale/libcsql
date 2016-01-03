@@ -80,13 +80,9 @@ size_t SubqueryNode::getColumnIndex(
     }
   }
 
-  if (!allow_add) {
-    return -1;
-  }
-
   auto child_idx = subquery_
       .asInstanceOf<TableExpressionNode>()
-      ->getColumnIndex(col);
+      ->getColumnIndex(col, false);
 
   if (child_idx != size_t(-1)) {
     auto slnode = new SelectListNode(new ColumnReferenceNode(child_idx));
