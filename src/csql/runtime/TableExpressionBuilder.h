@@ -16,6 +16,7 @@
 #include <csql/qtree/GroupByMergeNode.h>
 #include <csql/qtree/UnionNode.h>
 #include <csql/qtree/LimitNode.h>
+#include <csql/qtree/JoinNode.h>
 #include <csql/qtree/OrderByNode.h>
 #include <csql/qtree/SequentialScanNode.h>
 #include <csql/qtree/DrawStatementNode.h>
@@ -52,6 +53,12 @@ protected:
   ScopedPtr<TableExpression> buildGroupMerge(
       Transaction* ctx,
       RefPtr<GroupByMergeNode> node,
+      QueryBuilder* runtime,
+      TableProvider* tables);
+
+  ScopedPtr<TableExpression> buildJoin(
+      Transaction* ctx,
+      RefPtr<JoinNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
