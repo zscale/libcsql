@@ -54,6 +54,19 @@ public:
       Transaction* txn,
       RefPtr<ValueExpressionNode> expr);
 
+  /**
+   * Prunes the provided predicate expression such that all references
+   * to columns no in the provided whitelist are removed.
+   *
+   * This method does _not_ preserve the full correctness of the provided
+   * expression: The pruned predicate expression may match on more inputs than
+   * the original expression did. However, it is guaranteed that all inputs
+   * that match the original expression will still match the pruned expression.
+   */
+  static RefPtr<ValueExpressionNode> prunePredicateExpression(
+      RefPtr<ValueExpressionNode> expr,
+      const Set<String>& column_whitelist);
+
 };
 
 
