@@ -121,6 +121,10 @@ void SequentialScanNode::normalizeColumnNames() {
     QueryTreeUtil::findColumns(sl->expression(), normalizer);
     output_columns_.emplace_back(sl->columnName());
   }
+
+  if (!where_expr_.isEmpty()) {
+    QueryTreeUtil::findColumns(where_expr_.get(), normalizer);
+  }
 }
 
 String SequentialScanNode::normalizeColumnName(const String& column_name) const {
