@@ -1553,11 +1553,10 @@ TEST_CASE(RuntimeTest, TestLeftJoin, [] () {
 
     auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
     runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
-    result.debugPrint();
     EXPECT_EQ(result.getNumColumns(), 2);
     EXPECT_EQ(result.getNumRows(), 213);
     EXPECT_EQ(result.getRow(0)[0], "Alfreds Futterkiste");
-    EXPECT_EQ(result.getRow(0)[1], "null");
+    EXPECT_EQ(result.getRow(0)[1], "NULL");
     EXPECT_EQ(result.getRow(1)[0], "Ana Trujillo Emparedados y helados");
     EXPECT_EQ(result.getRow(1)[1], "10308");
     EXPECT_EQ(result.getRow(212)[0], "Wolski");
