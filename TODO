@@ -2,7 +2,6 @@
 - join relation extraction
 - fold hashjoins
 - fold nestedloopjions
-- left join/right join
 - join column list
 - select expression with where
 - show tables/describe tables with where
