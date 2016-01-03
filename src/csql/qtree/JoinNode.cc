@@ -156,6 +156,10 @@ RefPtr<QueryTreeNode> JoinNode::deepCopy() const {
   return new JoinNode(*this);
 }
 
+const Vector<JoinNode::InputColumnRef>& JoinNode::inputColumnMap() const {
+  return input_map_;
+}
+
 String JoinNode::toString() const {
   auto str = StringUtil::format(
       "(join (base-table $0) (joined-table $0) (select-list",

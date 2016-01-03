@@ -27,6 +27,12 @@ enum class JoinType {
 class JoinNode : public TableExpressionNode {
 public:
 
+  struct InputColumnRef {
+    String column;
+    size_t table_idx;
+    size_t column_idx;
+  };
+
   JoinNode(
       JoinType join_type,
       RefPtr<QueryTreeNode> base_table,
@@ -45,6 +51,8 @@ public:
   Vector<RefPtr<SelectListNode>> selectList() const;
   Vector<String> outputColumns() const override;
 
+  const Vector<InputColumnRef>& inputColumnMap() const;
+
   size_t getColumnIndex(
       const String& column_name,
       bool allow_add = false) override;
@@ -62,11 +70,6 @@ public:
 
 protected:
 
-  struct InputColumnRef {
-    String column;
-    size_t table_idx;
-    size_t column_idx;
-  };
 
   JoinType join_type_;
   RefPtr<QueryTreeNode> base_table_;

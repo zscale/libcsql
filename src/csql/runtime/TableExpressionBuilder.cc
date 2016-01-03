@@ -161,6 +161,7 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildJoin(
           node->joinType(),
           std::move(base_tbl),
           std::move(joined_tbl),
+          node->inputColumnMap(),
           node->outputColumns(),
           std::move(select_expressions)));
 }

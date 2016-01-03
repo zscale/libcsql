@@ -23,6 +23,7 @@ public:
       JoinType join_type,
       ScopedPtr<TableExpression> base_tbl,
       ScopedPtr<TableExpression> joined_tbl,
+      const Vector<JoinNode::InputColumnRef>& input_map,
       const Vector<String>& column_names,
       Vector<ValueExpression> select_expressions);
 
@@ -38,15 +39,29 @@ public:
 
 protected:
 
-  void executeCartesianJoin(Function<bool (int argc, const SValue* argv)> fn);
-  void executeInnerJoin(Function<bool (int argc, const SValue* argv)> fn);
-  void executeLeftJoin(Function<bool (int argc, const SValue* argv)> fn);
-  void executeRightJoin(Function<bool (int argc, const SValue* argv)> fn);
+  void executeCartesianJoin(
+      ExecutionContext* context,
+      Function<bool (int argc, const SValue* argv)> fn,
+      const List<Vector<SValue>>& t1,
+      const List<Vector<SValue>>& t2);
+
+  void executeInnerJoin(
+      ExecutionContext* context,
+      Function<bool (int argc, const SValue* argv)> fn);
+
+  void executeLeftJoin(
+      ExecutionContext* context,
+      Function<bool (int argc, const SValue* argv)> fn);
+
+  void executeRightJoin(
+      ExecutionContext* context,
+      Function<bool (int argc, const SValue* argv)> fn);
 
   Transaction* txn_;
   JoinType join_type_;
   ScopedPtr<TableExpression> base_table_;
   ScopedPtr<TableExpression> joined_table_;
+  Vector<JoinNode::InputColumnRef> input_map_;
   Vector<String> column_names_;
   Vector<ValueExpression> select_exprs_;
 };
