@@ -69,6 +69,7 @@ add_library(chartsql STATIC
     runtime/ResultFormat.cc
     runtime/ValueExpression.cc
     runtime/ScratchMemory.cc
+    runtime/NestedLoopJoin.cc
     runtime/runtime.cc
     runtime/symboltable.cc
     runtime/queryplannode.cc
