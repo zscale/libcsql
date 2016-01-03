@@ -213,8 +213,6 @@ void NestedLoopJoin::executeInnerJoin(
   }
 }
 
-
-
 Vector<String> NestedLoopJoin::columnNames() const {
   return column_names_;
 }
