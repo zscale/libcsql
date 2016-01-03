@@ -684,7 +684,8 @@ QueryTreeNode* QueryPlanBuilder::buildSequentialScan(
       from_list,
       select_list,
       where_clause,
-      tables);
+      tables,
+      false);
 }
 
 QueryTreeNode* QueryPlanBuilder::buildSubquery(
@@ -733,7 +734,8 @@ QueryTreeNode* QueryPlanBuilder::buildSubquery(
       from_list,
       select_list,
       where_clause,
-      tables);
+      tables,
+      false);
 }
 
 QueryTreeNode* QueryPlanBuilder::buildSelectExpression(
@@ -808,7 +810,8 @@ QueryTreeNode* QueryPlanBuilder::buildJoin(
       join,
       select_list,
       where_clause,
-      tables);
+      tables,
+      false);
 }
 
 QueryTreeNode* QueryPlanBuilder::buildTableReference(
@@ -816,7 +819,8 @@ QueryTreeNode* QueryPlanBuilder::buildTableReference(
     ASTNode* table_ref,
     ASTNode* select_list,
     ASTNode* where_clause,
-    RefPtr<TableProvider> tables) {
+    RefPtr<TableProvider> tables,
+    bool in_join) {
   switch (table_ref->getType()) {
     case ASTNode::T_INNER_JOIN:
     case ASTNode::T_LEFT_JOIN:
@@ -827,7 +831,8 @@ QueryTreeNode* QueryPlanBuilder::buildTableReference(
           table_ref,
           select_list,
           where_clause,
-          tables);
+          tables,
+          in_join);
 
     case ASTNode::T_FROM:
       if (table_ref->getChildren().size() > 0) {
@@ -838,7 +843,8 @@ QueryTreeNode* QueryPlanBuilder::buildTableReference(
                 table_ref,
                 select_list,
                 where_clause,
-                tables);
+                tables,
+                in_join);
 
           case ASTNode::T_SELECT:
             return buildSubqueryTableReference(
@@ -846,7 +852,8 @@ QueryTreeNode* QueryPlanBuilder::buildTableReference(
                 table_ref,
                 select_list,
                 where_clause,
-                tables);
+                tables,
+                in_join);
 
           default:
             break;
@@ -867,7 +874,8 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
     ASTNode* table_ref,
     ASTNode* select_list,
     ASTNode* where_clause,
-    RefPtr<TableProvider> tables) {
+    RefPtr<TableProvider> tables,
+    bool in_join) {
   if (table_ref->getChildren().size() < 2) {
     return nullptr;
   }
@@ -907,7 +915,7 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
   }
 
   Option<RefPtr<ValueExpressionNode>> where_expr;
-  if (where_clause) {
+  if (!in_join && where_clause) {
     if (!(*where_clause == ASTNode::T_WHERE)) {
       return nullptr;
     }
@@ -936,15 +944,17 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
       txn,
       table_ref->getChildren()[0],
       child_sl.get(),
-      nullptr,
-      tables);
+      where_clause,
+      tables,
+      true);
 
   auto joined_table = buildTableReference(
       txn,
       table_ref->getChildren()[1],
       child_sl.get(),
-      nullptr,
-      tables);
+      where_clause,
+      tables,
+      true);
 
   Option<RefPtr<ValueExpressionNode>> join_cond;
   if (table_ref->getChildren().size() > 2) {
@@ -1032,7 +1042,8 @@ QueryTreeNode* QueryPlanBuilder::buildSubqueryTableReference(
     ASTNode* table_ref,
     ASTNode* select_list,
     ASTNode* where_clause,
-    RefPtr<TableProvider> tables) {
+    RefPtr<TableProvider> tables,
+    bool in_join) {
   if (!(*table_ref == ASTNode::T_FROM)) {
     return nullptr;
   }
@@ -1085,7 +1096,7 @@ QueryTreeNode* QueryPlanBuilder::buildSubqueryTableReference(
 
   /* get where expression */
   Option<RefPtr<ValueExpressionNode>> where_expr;
-  if (where_clause) {
+  if (!in_join && where_clause) {
     if (!(*where_clause == ASTNode::T_WHERE)) {
       return nullptr;
     }
@@ -1124,7 +1135,8 @@ QueryTreeNode* QueryPlanBuilder::buildSeqscanTableReference(
     ASTNode* table_ref,
     ASTNode* select_list,
     ASTNode* where_clause,
-    RefPtr<TableProvider> tables) {
+    RefPtr<TableProvider> tables,
+    bool in_join) {
   if (!(*table_ref == ASTNode::T_FROM)) {
     return nullptr;
   }
@@ -1155,7 +1167,7 @@ QueryTreeNode* QueryPlanBuilder::buildSeqscanTableReference(
 
   /* get where expression */
   Option<RefPtr<ValueExpressionNode>> where_expr;
-  if (where_clause) {
+  if (!in_join && where_clause) {
     if (!(*where_clause == ASTNode::T_WHERE)) {
       return nullptr;
     }

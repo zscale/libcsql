@@ -146,28 +146,32 @@ public:
       ASTNode* table_ref,
       ASTNode* select_list,
       ASTNode* where_clause,
-      RefPtr<TableProvider> tables);
+      RefPtr<TableProvider> tables,
+      bool in_join);
 
   QueryTreeNode* buildJoinTableReference(
       Transaction* txn,
       ASTNode* table_ref,
       ASTNode* select_list,
       ASTNode* where_clause,
-      RefPtr<TableProvider> tables);
+      RefPtr<TableProvider> tables,
+      bool in_join);
 
   QueryTreeNode* buildSubqueryTableReference(
       Transaction* txn,
       ASTNode* table_ref,
       ASTNode* select_list,
       ASTNode* where_clause,
-      RefPtr<TableProvider> tables);
+      RefPtr<TableProvider> tables,
+      bool in_join);
 
   QueryTreeNode* buildSeqscanTableReference(
       Transaction* txn,
       ASTNode* table_ref,
       ASTNode* select_list,
       ASTNode* where_clause,
-      RefPtr<TableProvider> tables);
+      RefPtr<TableProvider> tables,
+      bool in_join);
 
   QueryTreeNode* buildShowTables(
       Transaction* txn,
