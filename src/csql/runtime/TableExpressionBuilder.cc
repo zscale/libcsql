@@ -153,10 +153,10 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildJoin(
   }
 
   Option<ValueExpression> where_expr;
-  //if (!node->whereExpression().isEmpty()) {
-  //  where_expr = std::move(Option<ValueExpression>(
-  //      runtime->buildValueExpression(ctx, node->whereExpression().get())));
-  //}
+  if (!node->whereExpression().isEmpty()) {
+    where_expr = std::move(Option<ValueExpression>(
+        runtime->buildValueExpression(ctx, node->whereExpression().get())));
+  }
 
   Option<ValueExpression> join_cond_expr;
   if (!node->joinCondition().isEmpty()) {

@@ -113,6 +113,20 @@ void NestedLoopJoin::executeCartesianJoin(
         }
       }
 
+      if (!where_expr_.isEmpty()) {
+        SValue pred;
+        VM::evaluate(
+            txn_,
+            where_expr_.get().program(),
+            inbuf.size(),
+            inbuf.data(),
+            &pred);
+
+        if (!pred.toBool()) {
+          continue;
+        }
+      }
+
       for (int i = 0; i < select_exprs_.size(); ++i) {
         VM::evaluate(
             txn_,
@@ -169,13 +183,19 @@ void NestedLoopJoin::executeInnerJoin(
         }
       }
 
-      //if (!where_expr_.isEmpty()) {
-      //  SValue pred;
-      //  VM::evaluate(txn_, where_expr_.get().program(), inc, inv, &pred);
-      //  if (!pred.toBool()) {
-      //    continue;
-      //  }
-      //}
+      if (!where_expr_.isEmpty()) {
+        SValue pred;
+        VM::evaluate(
+            txn_,
+            where_expr_.get().program(),
+            inbuf.size(),
+            inbuf.data(),
+            &pred);
+
+        if (!pred.toBool()) {
+          continue;
+        }
+      }
 
       for (int i = 0; i < select_exprs_.size(); ++i) {
         VM::evaluate(

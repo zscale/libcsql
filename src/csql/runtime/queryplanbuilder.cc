@@ -927,7 +927,6 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
     }
 
     where_expr = Some(RefPtr<ValueExpressionNode>(buildValueExpression(txn, e)));
-    //QueryTreeUtil::resolveColumns(where_expr.get(), resolver);
   }
 
   auto child_sl = mkScoped(new ASTNode(ASTNode::T_SELECT_LIST));
@@ -936,14 +935,14 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
       txn,
       table_ref->getChildren()[0],
       child_sl.get(),
-      where_clause,
+      nullptr,
       tables);
 
   auto joined_table = buildTableReference(
       txn,
       table_ref->getChildren()[1],
       child_sl.get(),
-      where_clause,
+      nullptr,
       tables);
 
   Option<RefPtr<ValueExpressionNode>> join_cond;
@@ -1006,6 +1005,17 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
   if (!jce.isEmpty()) {
     QueryTreeUtil::resolveColumns(
         jce.get(),
+        std::bind(
+            &JoinNode::getInputColumnIndex,
+            join_node.get(),
+            std::placeholders::_1,
+            true));
+  }
+
+  auto we = join_node->whereExpression();
+  if (!we.isEmpty()) {
+    QueryTreeUtil::resolveColumns(
+        we.get(),
         std::bind(
             &JoinNode::getInputColumnIndex,
             join_node.get(),
