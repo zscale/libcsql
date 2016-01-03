@@ -11,6 +11,7 @@
 #include <stx/stdtypes.h>
 #include <csql/runtime/tablerepository.h>
 #include <csql/backends/csv/CSVInputStream.h>
+#include <csql/backends/csv/CSVTableScan.h>
 
 using namespace stx;
 
@@ -44,9 +45,10 @@ public:
 
   Option<csql::TableInfo> describe(const String& table_name) const override;
 
+protected:
+
   csql::TableInfo tableInfo() const;
 
-protected:
   const String table_name_;
   FactoryFn stream_factory_;
   Vector<String> headers_;

@@ -8,135 +8,93 @@
  * <http://www.gnu.org/licenses/>.
  */
 #include <csql/parser/astutil.h>
+#include <csql/qtree/QueryTreeUtil.h>
 #include <csql/runtime/tablescan.h>
+#include <csql/runtime/QueryBuilder.h>
 
 namespace csql {
 
 TableScan::TableScan(
-    TableRef* tbl_ref,
-    std::vector<std::string>&& columns,
-    VM::Instruction* select_expr,
-    VM::Instruction* where_expr):
-    tbl_ref_(tbl_ref),
-    columns_(std::move(columns)),
-    select_expr_(select_expr),
-    where_expr_(where_expr) {}
+    Transaction* txn,
+    QueryBuilder* qbuilder,
+    RefPtr<SequentialScanNode> stmt,
+    ScopedPtr<TableIterator> iter) :
+    txn_(txn),
+    iter_(std::move(iter)) {
+  output_columns_ = stmt->outputColumns();
 
-void TableScan::execute() {
-  tbl_ref_->executeScan(this);
-  finish();
-}
+  for (const auto& slnode : stmt->selectList()) {
+    QueryTreeUtil::resolveColumns(
+        slnode->expression(),
+        std::bind(
+            &TableIterator::findColumn,
+            iter_.get(),
+            std::placeholders::_1));
 
-bool TableScan::nextRow(SValue* row, int row_len) {
-  RAISE(kNotImplementedError);
-  //auto pred_bool = true;
-  //auto continue_bool = true;
-
-  //SValue out[128]; // FIXPAUL
-  //int out_len;
-
-  //if (where_expr_ != nullptr) {
-  //  executeExpression(where_expr_, nullptr, row_len, row, &out_len, out);
-
-  //  if (out_len != 1) {
-  //    RAISE(
-  //        kRuntimeError,
-  //        "WHERE predicate expression evaluation did not return a result");
-  //  }
-
-  //  pred_bool = out[0].getBool();
-  //}
-
-  //if (pred_bool) {
-  //  executeExpression(select_expr_, nullptr, row_len, row, &out_len, out);
-  //  continue_bool = emitRow(out, out_len);
-  //}
-
-  //return continue_bool;
-}
-
-size_t TableScan::getNumCols() const {
-  return columns_.size();
-}
-
-const std::vector<std::string>& TableScan::getColumns() const {
-  return columns_;
-}
-
-/* recursively walk the ast and resolve column references */
-bool TableScan::resolveColumns(
-    ASTNode* node,
-    ASTNode* parent,
-    TableRef* tbl_ref) {
-  if (node == nullptr) {
-    RAISE(kRuntimeError, "corrupt AST");
+    select_exprs_.emplace_back(
+        qbuilder->buildValueExpression(txn, slnode->expression()));
   }
 
-  switch (node->getType()) {
-    case ASTNode::T_TABLE_NAME: {
-      if (node->getChildren().size() != 1) {
-        RAISE(kRuntimeError, "corrupt AST");
-      }
+  if (!stmt->whereExpression().isEmpty()) {
+    QueryTreeUtil::resolveColumns(
+        stmt->whereExpression().get(),
+        std::bind(
+            &TableIterator::findColumn,
+            iter_.get(),
+            std::placeholders::_1));
 
-      auto column_name = node->getChildren()[0];
-      if (column_name->getType() != ASTNode::T_COLUMN_NAME) {
-        RAISE(kRuntimeError, "corrupt AST");
-      }
-
-      auto token = column_name->getToken();
-      if (!(token && *token == Token::T_IDENTIFIER)) {
-        RAISE(kRuntimeError, "corrupt AST");
-      }
-
-      auto col_index = tbl_ref->getColumnIndex(token->getString());
-      if (col_index < 0) {
-        RAISE(
-            kRuntimeError,
-            "no such column: '%s'",
-            token->getString().c_str());
-        return false;
-      }
-
-      node->setType(ASTNode::T_RESOLVED_COLUMN);
-      node->setID(col_index);
-      return true;
-    }
-
-    case ASTNode::T_COLUMN_NAME: {
-      auto token = node->getToken();
-      if (!(token && *token == Token::T_IDENTIFIER)) {
-        RAISE(kRuntimeError, "corrupt AST");
-      }
-
-      auto col_index = tbl_ref->getColumnIndex(token->getString());
-      if (col_index < 0) {
-        RAISE(
-            kRuntimeError,
-            "no such column: '%s'",
-            token->getString().c_str());
-        return false;
-      }
-
-      node->setType(ASTNode::T_RESOLVED_COLUMN);
-      node->setID(col_index);
-      return true;
-    }
-
-    default: {
-      for (const auto& child : node->getChildren()) {
-        if (child == nullptr) {
-          RAISE(kRuntimeError, "corrupt AST");
-        }
-
-        if (!resolveColumns(child, node, tbl_ref)) {
-          return false;
-        }
-      }
-
-      return true;
-    }
-
+    where_expr_ = std::move(Option<ValueExpression>(
+        qbuilder->buildValueExpression(txn, stmt->whereExpression().get())));
   }
+}
+
+Vector<String> TableScan::columnNames() const {
+  return output_columns_;
+}
+
+size_t TableScan::numColumns() const {
+  return output_columns_.size();
+}
+
+void TableScan::prepare(ExecutionContext* context) {
+  context->incrNumSubtasksTotal(1);
+}
+
+void TableScan::execute(
+    ExecutionContext* context,
+    Function<bool (int argc, const SValue* argv)> fn) {
+  Vector<SValue> inbuf(iter_->numColumns());
+  Vector<SValue> outbuf(select_exprs_.size());
+  while (iter_->nextRow(inbuf.data())) {
+    if (!where_expr_.isEmpty()) {
+      SValue pred;
+      VM::evaluate(
+          txn_,
+          where_expr_.get().program(),
+          inbuf.size(),
+          inbuf.data(),
+          &pred);
+
+      if (!pred.toBool()) {
+        continue;
+      }
+    }
+
+    for (int i = 0; i < select_exprs_.size(); ++i) {
+      VM::evaluate(
+          txn_,
+          select_exprs_[i].program(),
+          outbuf.size(),
+          outbuf.data(),
+          &outbuf[i]);
+    }
+
+    if (!fn(outbuf.size(), outbuf.data())) {
+      return;
+    }
+  }
+
+  context->incrNumSubtasksCompleted(1);
 }
 
 }

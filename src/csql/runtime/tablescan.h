@@ -7,8 +7,7 @@
  * copy of the GNU General Public License along with this program. If not, see
  * <http://www.gnu.org/licenses/>.
  */
-#ifndef _FNORDMETRIC_QUERY_TABLELESCAN_H
-#define _FNORDMETRIC_QUERY_TABLELESCAN_H
+#pragma once
 #include <stdlib.h>
 #include <string>
 #include <vector>
@@ -23,29 +22,39 @@
 
 namespace csql {
 
-class TableScan : public QueryPlanNode {
+class TableIterator {
+public:
+  virtual bool nextRow(SValue* row) = 0;
+  virtual size_t findColumn(const String& name) = 0;
+  virtual size_t numColumns() const = 0;
+};
+
+class TableScan : public TableExpression {
 public:
 
   TableScan(
-      TableRef* tbl_ref,
-      std::vector<std::string>&& columns,
-      VM::Instruction* select_expr,
-      VM::Instruction* where_expr);
+      Transaction* txn,
+      QueryBuilder* qbuilder,
+      RefPtr<SequentialScanNode> stmt,
+      ScopedPtr<TableIterator> iter);
 
-  void execute() override;
-  bool nextRow(SValue* row, int row_len) override;
-  size_t getNumCols() const override;
-  const std::vector<std::string>& getColumns() const override;
+  Vector<String> columnNames() const override;
+
+  size_t numColumns() const override;
+
+  void prepare(ExecutionContext* context) override;
+
+  void execute(
+      ExecutionContext* context,
+      Function<bool (int argc, const SValue* argv)> fn) override;
 
 protected:
 
-  static bool resolveColumns(ASTNode* node, ASTNode* parent, TableRef* tbl_ref);
-
-  TableRef* const tbl_ref_;
-  const std::vector<std::string> columns_;
-  VM::Instruction* const select_expr_;
-  VM::Instruction* const where_expr_;
+  Transaction* txn_;
+  ScopedPtr<TableIterator> iter_;
+  Vector<String> output_columns_;
+  Vector<ValueExpression> select_exprs_;
+  Option<ValueExpression> where_expr_;
 };
 
-}
-#endif
+} // namespace csql
