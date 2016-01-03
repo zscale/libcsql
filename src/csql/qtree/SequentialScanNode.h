@@ -14,6 +14,7 @@
 #include <csql/qtree/TableExpressionNode.h>
 #include <csql/qtree/ValueExpressionNode.h>
 #include <csql/qtree/SelectListNode.h>
+#include <csql/TableInfo.h>
 
 using namespace stx;
 
@@ -77,12 +78,12 @@ class SequentialScanNode : public TableExpressionNode {
 public:
 
   SequentialScanNode(
-      const String& table_name,
+      const TableInfo& table_info,
       Vector<RefPtr<SelectListNode>> select_list,
       Option<RefPtr<ValueExpressionNode>> where_expr);
 
   SequentialScanNode(
-      const String& table_name,
+      const TableInfo& table_info,
       Vector<RefPtr<SelectListNode>> select_list,
       Option<RefPtr<ValueExpressionNode>> where_expr,
       AggregationStrategy aggr_strategy);
@@ -130,6 +131,7 @@ protected:
 
   String table_name_;
   String table_alias_;
+  Vector<String> table_columns_;
   Vector<RefPtr<SelectListNode>> select_list_;
   Vector<String> output_columns_;
   Option<RefPtr<ValueExpressionNode>> where_expr_;

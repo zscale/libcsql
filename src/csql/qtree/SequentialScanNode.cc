@@ -18,24 +18,28 @@ using namespace stx;
 namespace csql {
 
 SequentialScanNode::SequentialScanNode(
-    const String& table_name,
+    const TableInfo& table_info,
     Vector<RefPtr<SelectListNode>> select_list,
     Option<RefPtr<ValueExpressionNode>> where_expr) :
     SequentialScanNode(
-        table_name,
+        table_info,
         select_list,
         where_expr,
         AggregationStrategy::NO_AGGREGATION) {}
 
 SequentialScanNode::SequentialScanNode(
-    const String& table_name,
+    const TableInfo& table_info,
     Vector<RefPtr<SelectListNode>> select_list,
     Option<RefPtr<ValueExpressionNode>> where_expr,
     AggregationStrategy aggr_strategy) :
-    table_name_(table_name),
+    table_name_(table_info.table_name),
     select_list_(select_list),
     where_expr_(where_expr),
     aggr_strategy_(aggr_strategy) {
+  for (const auto& col : table_info.columns) {
+    table_columns_.emplace_back(col.column_name);
+  }
+
   if (!where_expr_.isEmpty()) {
     findConstraints(where_expr_.get());
   }
@@ -150,7 +154,15 @@ size_t SequentialScanNode::getColumnIndex(
     }
   }
 
-  if (!allow_add) {
+  bool found = false;
+  for (const auto& c : table_columns_) {
+    if (c == col) {
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) {
     return -1;
   }
 
