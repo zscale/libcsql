@@ -1563,3 +1563,44 @@ TEST_CASE(RuntimeTest, TestLeftJoin, [] () {
     EXPECT_EQ(result.getRow(212)[1], "10374");
   }
 });
+
+TEST_CASE(RuntimeTest, TestRightJoin, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newTransaction();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new backends::csv::CSVTableProvider(
+          "employees",
+          "src/csql/testdata/testtbl4.csv",
+          '\t'));
+  estrat->addTableProvider(
+      new backends::csv::CSVTableProvider(
+          "orders",
+          "src/csql/testdata/testtbl3.csv",
+          '\t'));
+
+  {
+    ResultList result;
+    auto query = R"(
+      SELECT orders.orderid, employees.firstname
+      FROM orders
+      RIGHT JOIN employees
+      ON orders.employeeid=employees.employeeid
+      ORDER BY orders.orderid;
+    )";
+
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 2);
+    EXPECT_EQ(result.getNumRows(), 197);
+    EXPECT_EQ(result.getRow(0)[0], "10248");
+    EXPECT_EQ(result.getRow(0)[1], "Steven");
+    EXPECT_EQ(result.getRow(1)[0], "10249");
+    EXPECT_EQ(result.getRow(1)[1], "Michael");
+    EXPECT_EQ(result.getRow(195)[0], "10443");
+    EXPECT_EQ(result.getRow(195)[1], "Laura");
+    EXPECT_EQ(result.getRow(196)[0], "NULL");
+    EXPECT_EQ(result.getRow(196)[1], "Adam");
+  }
+});
