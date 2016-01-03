@@ -57,7 +57,8 @@ protected:
       ExecutionContext* context,
       Function<bool (int argc, const SValue* argv)> fn,
       const List<Vector<SValue>>& t1,
-      const List<Vector<SValue>>& t2);
+      const List<Vector<SValue>>& t2,
+      bool reverse);
 
   Transaction* txn_;
   JoinType join_type_;
