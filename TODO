@@ -11,4 +11,5 @@
 - show tables/describe tables with where
 - fold limit (without order) into lower tablescan??
 - natural join
+- topN optimzation / distributed top
 
