@@ -60,7 +60,7 @@ RefPtr<QueryTreeNode> QueryPlanBuilder::build(
   }
 
   /* leaf nodes: table scan, join, subquery tableless select */
-  if ((node = buildJoinExpression(txn, ast, tables)) != nullptr) {
+  if ((node = buildJoin(txn, ast, tables)) != nullptr) {
     return node;
   }
 
@@ -768,7 +768,7 @@ QueryTreeNode* QueryPlanBuilder::buildSelectExpression(
   return new SelectExpressionNode(select_list_expressions);
 }
 
-QueryTreeNode* QueryPlanBuilder::buildJoinExpression(
+QueryTreeNode* QueryPlanBuilder::buildJoin(
     Transaction* txn,
     ASTNode* ast,
     RefPtr<TableProvider> tables) {

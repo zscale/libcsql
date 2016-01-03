@@ -15,10 +15,10 @@
 
 namespace csql {
 
-class JoinExpression : public TableExpression {
+class NestedLoopJoin : public TableExpression {
 public:
 
-  JoinExpression(
+  NestedLoopJoin(
       Transaction* txn,
       JoinType join_type,
       ScopedPtr<TableExpression> base_tbl,
