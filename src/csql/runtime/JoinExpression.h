@@ -11,6 +11,7 @@
 #include <stx/stdtypes.h>
 #include <csql/runtime/TableExpression.h>
 #include <csql/runtime/defaultruntime.h>
+#include <csql/qtree/JoinNode.h>
 
 namespace csql {
 
@@ -19,12 +20,11 @@ public:
 
   JoinExpression(
       Transaction* txn,
+      JoinType join_type,
+      ScopedPtr<TableExpression> base_tbl,
+      ScopedPtr<TableExpression> joined_tbl,
       const Vector<String>& column_names,
-      Vector<ValueExpression> select_expressions,
-      Option<ValueExpression> where_expr,
-      Option<ValueExpression> join_cond,
-      ScopedPtr<TableExpression> base_table,
-      ScopedPtr<TableExpression> joined_table);
+      Vector<ValueExpression> select_expressions);
 
   void prepare(ExecutionContext* context) override;
 
@@ -38,12 +38,11 @@ public:
 
 protected:
   Transaction* txn_;
-  Vector<String> column_names_;
-  Vector<ValueExpression> select_exprs_;
-  Option<ValueExpression> where_expr_;
-  Option<ValueExpression> join_cond_;
+  JoinType join_type_;
   ScopedPtr<TableExpression> base_table_;
   ScopedPtr<TableExpression> joined_table_;
+  Vector<String> column_names_;
+  Vector<ValueExpression> select_exprs_;
 };
 
 }

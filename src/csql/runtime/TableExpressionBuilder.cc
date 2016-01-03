@@ -17,6 +17,7 @@
 #include <csql/runtime/ShowTablesStatement.h>
 #include <csql/runtime/DescribeTableStatement.h>
 #include <csql/runtime/SubqueryExpression.h>
+#include <csql/runtime/JoinExpression.h>
 
 using namespace stx;
 
@@ -50,6 +51,14 @@ ScopedPtr<TableExpression> TableExpressionBuilder::build(
 
   if (dynamic_cast<UnionNode*>(node.get())) {
     return buildUnion(ctx, node.asInstanceOf<UnionNode>(), runtime, tables);
+  }
+
+  if (dynamic_cast<JoinNode*>(node.get())) {
+    return buildJoin(
+        ctx,
+        node.asInstanceOf<JoinNode>(),
+        runtime,
+        tables);
   }
 
   if (dynamic_cast<SequentialScanNode*>(node.get())) {
@@ -128,6 +137,32 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildGroupBy(
           std::move(select_expressions),
           std::move(group_expressions),
           SHA1::compute(node->toString())));
+}
+
+ScopedPtr<TableExpression> TableExpressionBuilder::buildJoin(
+    Transaction* ctx,
+    RefPtr<JoinNode> node,
+    QueryBuilder* runtime,
+    TableProvider* tables) {
+  Vector<String> column_names;
+  Vector<ValueExpression> select_expressions;
+
+  for (const auto& slnode : node->selectList()) {
+    select_expressions.emplace_back(
+        runtime->buildValueExpression(ctx, slnode->expression()));
+  }
+
+  auto base_tbl = build(ctx, node->baseTable(), runtime, tables);
+  auto joined_tbl = build(ctx, node->joinedTable(), runtime, tables);
+
+  return mkScoped(
+      new JoinExpression(
+          ctx,
+          node->joinType(),
+          std::move(base_tbl),
+          std::move(joined_tbl),
+          node->outputColumns(),
+          std::move(select_expressions)));
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildSequentialScan(
