@@ -450,35 +450,6 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithWhere, [] () {
       new CSTableScanProvider(
           "testtable",
           "src/csql/testdata/testtbl.cst"));
-
-  //{
-  //  ResultList result;
-  //  auto query = R"(
-  //    select
-  //      FROM_TIMESTAMP(TRUNCATE(event.search_query.time / 86400000000) * 86400) as time,
-  //      event.search_query.result_items.position,
-  //      sum(count(event.search_query.result_items.position) WITHIN RECORD) as number_impressions,
-  //      sum(sum(if(event.search_query.result_items.clicked, 1, 0)) WITHIN RECORD) as number_result_clicked,
-  //      (
-  //        sum(sum(if(event.search_query.result_items.clicked, 1, 0)) WITHIN RECORD) / 
-  //        sum(count(event.search_query.result_items.position) WITHIN RECORD)
-  //      ) as ctr
-  //    from testtable
-  //    where event.search_query.result_items.position = 9
-  //    group by TRUNCATE(event.search_query.time / 86400000000);
-  //  )";
-
-  //  auto qplan = runtime->buildQueryPlan(query, estrat.get());
-  //  runtime->executeStatement(qplan->getStatement(0), &result);
-  //  EXPECT_EQ(result.getNumColumns(), 5);
-  //  result.debugPrint();
-  //  EXPECT_EQ(result.getNumRows(), 1);
-  //  EXPECT_EQ(result.getRow(0)[0], "2015-07-28 00:00:00");
-  //  EXPECT_EQ(result.getRow(0)[1], "9");
-  //  EXPECT_EQ(result.getRow(0)[2], "679");
-  //  EXPECT_EQ(result.getRow(0)[3], "4");
-  //  EXPECT_EQ(result.getRow(0)[4], "0.005891");
-  //}
 });
 
 TEST_CASE(RuntimeTest, TestTableNamesWithDots, [] () {
@@ -1562,6 +1533,29 @@ TEST_CASE(RuntimeTest, TestLeftJoin, [] () {
     EXPECT_EQ(result.getRow(212)[0], "Wolski");
     EXPECT_EQ(result.getRow(212)[1], "10374");
   }
+
+  {
+    ResultList result;
+    auto query = R"(
+      SELECT customers.customername, orders.orderid
+      FROM customers
+      LEFT JOIN orders
+      ON customers.customerid=orders.customerid
+      WHERE customers.country = 'UK'
+      ORDER BY customers.customername;
+    )";
+
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 2);
+    EXPECT_EQ(result.getNumRows(), 13);
+    EXPECT_EQ(result.getRow(0)[0], "Around the Horn");
+    EXPECT_EQ(result.getRow(0)[1], "10355");
+    EXPECT_EQ(result.getRow(1)[0], "Around the Horn");
+    EXPECT_EQ(result.getRow(1)[1], "10383");
+    EXPECT_EQ(result.getRow(12)[0], "Seven Seas Imports");
+    EXPECT_EQ(result.getRow(12)[1], "10388");
+  }
 });
 
 TEST_CASE(RuntimeTest, TestRightJoin, [] () {
@@ -1602,5 +1596,28 @@ TEST_CASE(RuntimeTest, TestRightJoin, [] () {
     EXPECT_EQ(result.getRow(195)[1], "Laura");
     EXPECT_EQ(result.getRow(196)[0], "NULL");
     EXPECT_EQ(result.getRow(196)[1], "Adam");
+  }
+
+  {
+    ResultList result;
+    auto query = R"(
+      SELECT orders.orderid, employees.firstname
+      FROM orders
+      RIGHT JOIN employees
+      ON orders.employeeid=employees.employeeid
+      WHERE employees.firstname = 'Steven'
+      ORDER BY orders.orderid;
+    )";
+
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 2);
+    EXPECT_EQ(result.getNumRows(), 11);
+    EXPECT_EQ(result.getRow(0)[0], "10248");
+    EXPECT_EQ(result.getRow(0)[1], "Steven");
+    EXPECT_EQ(result.getRow(1)[0], "10254");
+    EXPECT_EQ(result.getRow(1)[1], "Steven");
+    EXPECT_EQ(result.getRow(10)[0], "10397");
+    EXPECT_EQ(result.getRow(10)[1], "Steven");
   }
 });
