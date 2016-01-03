@@ -109,7 +109,7 @@ public:
       ASTNode* ast,
       RefPtr<TableProvider> tables);
 
-  QueryTreeNode* buildJoinExpression(
+  QueryTreeNode* buildJoin(
       Transaction* txn,
       ASTNode* ast,
       RefPtr<TableProvider> tables);

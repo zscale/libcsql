@@ -17,7 +17,7 @@
 #include <csql/runtime/ShowTablesStatement.h>
 #include <csql/runtime/DescribeTableStatement.h>
 #include <csql/runtime/SubqueryExpression.h>
-#include <csql/runtime/JoinExpression.h>
+#include <csql/runtime/NestedLoopJoin.h>
 
 using namespace stx;
 
@@ -156,7 +156,7 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildJoin(
   auto joined_tbl = build(ctx, node->joinedTable(), runtime, tables);
 
   return mkScoped(
-      new JoinExpression(
+      new NestedLoopJoin(
           ctx,
           node->joinType(),
           std::move(base_tbl),
