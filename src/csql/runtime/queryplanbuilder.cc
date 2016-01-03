@@ -930,7 +930,23 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
     //QueryTreeUtil::resolveColumns(where_expr.get(), resolver);
   }
 
-  Option<RefPtr<JoinCondition>> join_cond;
+  auto child_sl = mkScoped(new ASTNode(ASTNode::T_SELECT_LIST));
+
+  auto base_table = buildTableReference(
+      txn,
+      table_ref->getChildren()[0],
+      child_sl.get(),
+      where_clause,
+      tables);
+
+  auto joined_table = buildTableReference(
+      txn,
+      table_ref->getChildren()[1],
+      child_sl.get(),
+      where_clause,
+      tables);
+
+  Option<RefPtr<ValueExpressionNode>> join_cond;
   if (table_ref->getChildren().size() > 2) {
     auto cond_ast = table_ref->getChildren()[2];
 
@@ -951,8 +967,8 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
               "JOIN conditions can only contain pure functions\n");
         }
 
-        join_cond = mkRef<JoinCondition>(
-            new ExpressionJoinCondition(buildValueExpression(txn, e)));
+        join_cond = buildValueExpression(txn, e);
+        break;
       }
 
       case ASTNode::T_JOIN_COLUMNLIST: {
@@ -967,22 +983,6 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
   if (join_cond.isEmpty() && join_type == JoinType::INNER) {
     join_type = JoinType::CARTESIAN;
   }
-
-  auto child_sl = mkScoped(new ASTNode(ASTNode::T_SELECT_LIST));
-
-  auto base_table = buildTableReference(
-      txn,
-      table_ref->getChildren()[0],
-      child_sl.get(),
-      where_clause,
-      tables);
-
-  auto joined_table = buildTableReference(
-      txn,
-      table_ref->getChildren()[1],
-      child_sl.get(),
-      where_clause,
-      tables);
 
   auto join_node = mkScoped(new JoinNode(
       join_type,
@@ -1000,6 +1000,17 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
             join_node.get(),
             std::placeholders::_1,
             false));
+  }
+
+  auto jce = join_node->joinCondition();
+  if (!jce.isEmpty()) {
+    QueryTreeUtil::resolveColumns(
+        jce.get(),
+        std::bind(
+            &JoinNode::getInputColumnIndex,
+            join_node.get(),
+            std::placeholders::_1,
+            true));
   }
 
   return join_node.release();

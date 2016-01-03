@@ -21,4 +21,8 @@ RefPtr<ValueExpressionNode> ExpressionJoinCondition::getExpression() const {
   return expr_;
 }
 
+RefPtr<ValueExpressionNode> ColumnListJoinCondition::getExpression() const {
+  RAISE(kNotYetImplementedError);
+}
+
 } // namespace csql

@@ -1433,4 +1433,90 @@ TEST_CASE(RuntimeTest, TestSimpleJoin, [] () {
     EXPECT_EQ(result.getNumColumns(), 10);
     EXPECT_EQ(result.getNumRows(), 12 * 12 * 12);
   }
+
+  {
+    ResultList result;
+    auto query = R"(
+        SELECT
+          t1.time, t2.time, t3.time, t1.x, t2.x, t1.x + t2.x, t1.x * 3 = t3.x, x1, x2, x3
+        FROM
+          (select TRUNCATE(time / 1000000) as time, count(1) as x, 123 as x1 from testtable group by TRUNCATE(time / 1200000000)) t1
+        JOIN
+          (select TRUNCATE(time / 1000000) as time, sum(2) as x, 456 as x2 from testtable group by TRUNCATE(time / 1200000000)) AS t2
+        JOIN
+          (select TRUNCATE(time / 1000000) as time, sum(3) as x, 789 as x3 from testtable group by TRUNCATE(time / 1200000000)) AS t3
+        ON
+          t2.time = t1.time and t3.time = t2.time
+        ORDER BY
+          t1.time desc;
+    )";
+
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 10);
+    EXPECT_EQ(result.getNumRows(), 12);
+    EXPECT_EQ(result.getRow(0)[0], "1438055447");
+    EXPECT_EQ(result.getRow(0)[1], "1438055447");
+    EXPECT_EQ(result.getRow(0)[2], "1438055447");
+    EXPECT_EQ(result.getRow(0)[3], "48");
+    EXPECT_EQ(result.getRow(0)[4], "96");
+    EXPECT_EQ(result.getRow(0)[5], "144");
+    EXPECT_EQ(result.getRow(0)[6], "true");
+    EXPECT_EQ(result.getRow(0)[7], "123");
+    EXPECT_EQ(result.getRow(0)[8], "456");
+    EXPECT_EQ(result.getRow(0)[9], "789");
+    EXPECT_EQ(result.getRow(11)[0], "1438041765");
+    EXPECT_EQ(result.getRow(11)[1], "1438041765");
+    EXPECT_EQ(result.getRow(11)[2], "1438041765");
+    EXPECT_EQ(result.getRow(11)[3], "17");
+    EXPECT_EQ(result.getRow(11)[4], "34");
+    EXPECT_EQ(result.getRow(11)[5], "51");
+    EXPECT_EQ(result.getRow(11)[6], "true");
+    EXPECT_EQ(result.getRow(11)[7], "123");
+    EXPECT_EQ(result.getRow(11)[8], "456");
+    EXPECT_EQ(result.getRow(11)[9], "789");
+  }
+
+  {
+    ResultList result;
+    auto query = R"(
+        SELECT
+          t1.time, t2.time, t3.time, t1.x, t2.x, t1.x + t2.x, t1.x * 3 = t3.x, x1, x2, x3
+        FROM
+          (select TRUNCATE(time / 1000000) as time, count(1) as x, 123 as x1 from testtable group by TRUNCATE(time / 1200000000)) t1
+        JOIN
+          (select TRUNCATE(time / 1000000) as time, sum(2) as x, 456 as x2 from testtable group by TRUNCATE(time / 1200000000)) AS t2
+        JOIN
+          (select TRUNCATE(time / 1000000) as time, sum(3) as x, 789 as x3 from testtable group by TRUNCATE(time / 1200000000)) AS t3
+        ON
+          t2.time = t1.time = t3.time
+        ORDER BY
+          t1.time desc;
+    )";
+
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 10);
+    EXPECT_EQ(result.getNumRows(), 12);
+    EXPECT_EQ(result.getRow(0)[0], "1438055447");
+    EXPECT_EQ(result.getRow(0)[1], "1438055447");
+    EXPECT_EQ(result.getRow(0)[2], "1438055447");
+    EXPECT_EQ(result.getRow(0)[3], "48");
+    EXPECT_EQ(result.getRow(0)[4], "96");
+    EXPECT_EQ(result.getRow(0)[5], "144");
+    EXPECT_EQ(result.getRow(0)[6], "true");
+    EXPECT_EQ(result.getRow(0)[7], "123");
+    EXPECT_EQ(result.getRow(0)[8], "456");
+    EXPECT_EQ(result.getRow(0)[9], "789");
+    EXPECT_EQ(result.getRow(11)[0], "1438041765");
+    EXPECT_EQ(result.getRow(11)[1], "1438041765");
+    EXPECT_EQ(result.getRow(11)[2], "1438041765");
+    EXPECT_EQ(result.getRow(11)[3], "17");
+    EXPECT_EQ(result.getRow(11)[4], "34");
+    EXPECT_EQ(result.getRow(11)[5], "51");
+    EXPECT_EQ(result.getRow(11)[6], "true");
+    EXPECT_EQ(result.getRow(11)[7], "123");
+    EXPECT_EQ(result.getRow(11)[8], "456");
+    EXPECT_EQ(result.getRow(11)[9], "789");
+  }
 });

@@ -25,7 +25,9 @@ public:
       ScopedPtr<TableExpression> joined_tbl,
       const Vector<JoinNode::InputColumnRef>& input_map,
       const Vector<String>& column_names,
-      Vector<ValueExpression> select_expressions);
+      Vector<ValueExpression> select_expressions,
+      Option<ValueExpression> join_cond_expr,
+      Option<ValueExpression> where_expr);
 
   void prepare(ExecutionContext* context) override;
 
@@ -47,15 +49,21 @@ protected:
 
   void executeInnerJoin(
       ExecutionContext* context,
-      Function<bool (int argc, const SValue* argv)> fn);
+      Function<bool (int argc, const SValue* argv)> fn,
+      const List<Vector<SValue>>& t1,
+      const List<Vector<SValue>>& t2);
 
   void executeLeftJoin(
       ExecutionContext* context,
-      Function<bool (int argc, const SValue* argv)> fn);
+      Function<bool (int argc, const SValue* argv)> fn,
+      const List<Vector<SValue>>& t1,
+      const List<Vector<SValue>>& t2);
 
   void executeRightJoin(
       ExecutionContext* context,
-      Function<bool (int argc, const SValue* argv)> fn);
+      Function<bool (int argc, const SValue* argv)> fn,
+      const List<Vector<SValue>>& t1,
+      const List<Vector<SValue>>& t2);
 
   Transaction* txn_;
   JoinType join_type_;
@@ -64,6 +72,8 @@ protected:
   Vector<JoinNode::InputColumnRef> input_map_;
   Vector<String> column_names_;
   Vector<ValueExpression> select_exprs_;
+  Option<ValueExpression> join_cond_expr_;
+  Option<ValueExpression> where_expr_;
 };
 
 }

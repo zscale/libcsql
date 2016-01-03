@@ -21,7 +21,7 @@ JoinNode::JoinNode(
     RefPtr<QueryTreeNode> joined_table,
     Vector<RefPtr<SelectListNode>> select_list,
     Option<RefPtr<ValueExpressionNode>> where_expr,
-    Option<RefPtr<JoinCondition>> join_cond) :
+    Option<RefPtr<ValueExpressionNode>> join_cond) :
     join_type_(join_type),
     base_table_(base_table),
     joined_table_(joined_table),
@@ -148,7 +148,7 @@ Option<RefPtr<ValueExpressionNode>> JoinNode::whereExpression() const {
   return where_expr_;
 }
 
-Option<RefPtr<JoinCondition>> JoinNode::joinCondition() const {
+Option<RefPtr<ValueExpressionNode>> JoinNode::joinCondition() const {
   return join_cond_;
 }
 

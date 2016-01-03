@@ -152,6 +152,18 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildJoin(
         runtime->buildValueExpression(ctx, slnode->expression()));
   }
 
+  Option<ValueExpression> where_expr;
+  //if (!node->whereExpression().isEmpty()) {
+  //  where_expr = std::move(Option<ValueExpression>(
+  //      runtime->buildValueExpression(ctx, node->whereExpression().get())));
+  //}
+
+  Option<ValueExpression> join_cond_expr;
+  if (!node->joinCondition().isEmpty()) {
+    join_cond_expr = std::move(Option<ValueExpression>(
+        runtime->buildValueExpression(ctx, node->joinCondition().get())));
+  }
+
   auto base_tbl = build(ctx, node->baseTable(), runtime, tables);
   auto joined_tbl = build(ctx, node->joinedTable(), runtime, tables);
 
@@ -163,7 +175,9 @@ ScopedPtr<TableExpression> TableExpressionBuilder::buildJoin(
           std::move(joined_tbl),
           node->inputColumnMap(),
           node->outputColumns(),
-          std::move(select_expressions)));
+          std::move(select_expressions),
+          std::move(join_cond_expr),
+          std::move(where_expr)));
 }
 
 ScopedPtr<TableExpression> TableExpressionBuilder::buildSequentialScan(
