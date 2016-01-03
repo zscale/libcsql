@@ -18,13 +18,9 @@ add_library(chartsql STATIC
     #queryservice.cc
     CSTableScan.cc
     CSTableScanProvider.cc
-    backends/csv/CSVTableProvider.cc
     backends/csv/CSVInputStream.cc
-    backends/mysql/mysqlbackend.cc
-    backends/mysql/mysqlconnection.cc
-    backends/mysql/mysqltableref.cc
-    #backends/metricservice/metrictableref.cc
-    #backends/metricservice/metrictablerepository.cc
+    backends/csv/CSVTableProvider.cc
+    backends/csv/CSVTableScan.cc
     expressions/aggregate.cc
     expressions/boolean.cc
     expressions/datetime.cc

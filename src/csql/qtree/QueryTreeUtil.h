@@ -11,6 +11,7 @@
 #include <stx/stdtypes.h>
 #include <stx/autoref.h>
 #include <csql/qtree/ValueExpressionNode.h>
+#include <csql/qtree/ColumnReferenceNode.h>
 #include <csql/Transaction.h>
 
 using namespace stx;

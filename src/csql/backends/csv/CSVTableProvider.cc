@@ -8,6 +8,7 @@
  * <http://www.gnu.org/licenses/>.
  */
 #include <csql/backends/csv/CSVTableProvider.h>
+#include <csql/runtime/tablescan.h>
 
 using namespace stx;
 
@@ -47,7 +48,21 @@ Option<ScopedPtr<TableExpression>> CSVTableProvider::buildSequentialScan(
     Transaction* ctx,
     RefPtr<SequentialScanNode> node,
     QueryBuilder* runtime) const {
-  RAISE(kNotYetImplementedError);
+
+  if (node->tableName() != table_name_) {
+    return None<ScopedPtr<TableExpression>>();
+  }
+
+  auto stream = stream_factory_();
+  stream->skipNextRow();
+
+  return Option<ScopedPtr<TableExpression>>(
+      std::move(mkScoped<TableExpression>(
+          new TableScan(
+              ctx,
+              runtime,
+              node,
+              mkScoped(new CSVTableScan(headers_, std::move(stream)))))));
 }
 
 void CSVTableProvider::listTables(
