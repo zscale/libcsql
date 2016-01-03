@@ -20,10 +20,15 @@ using namespace stx;
 
 namespace csql {
 
+enum class JoinType {
+  CARTESIAN, INNER, LEFT, RIGHT
+};
+
 class JoinNode : public TableExpressionNode {
 public:
 
   JoinNode(
+      JoinType join_type,
       RefPtr<QueryTreeNode> base_table,
       RefPtr<QueryTreeNode> joined_table,
       Vector<RefPtr<SelectListNode>> select_list,
@@ -32,7 +37,10 @@ public:
 
   JoinNode(const JoinNode& other);
 
-  RefPtr<QueryTreeNode> subquery() const;
+  JoinType joinType() const;
+
+  RefPtr<QueryTreeNode> baseTable() const;
+  RefPtr<QueryTreeNode> joinedTable() const;
 
   Vector<RefPtr<SelectListNode>> selectList() const;
   Vector<String> outputColumns() const override;
@@ -49,6 +57,7 @@ public:
   String toString() const override;
 
 protected:
+  JoinType join_type_;
   RefPtr<QueryTreeNode> base_table_;
   RefPtr<QueryTreeNode> joined_table_;
   Vector<String> column_names_;
