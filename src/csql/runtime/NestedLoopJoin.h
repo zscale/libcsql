@@ -53,13 +53,7 @@ protected:
       const List<Vector<SValue>>& t1,
       const List<Vector<SValue>>& t2);
 
-  void executeLeftJoin(
-      ExecutionContext* context,
-      Function<bool (int argc, const SValue* argv)> fn,
-      const List<Vector<SValue>>& t1,
-      const List<Vector<SValue>>& t2);
-
-  void executeRightJoin(
+  void executeOuterJoin(
       ExecutionContext* context,
       Function<bool (int argc, const SValue* argv)> fn,
       const List<Vector<SValue>>& t1,

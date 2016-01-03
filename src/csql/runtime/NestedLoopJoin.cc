@@ -61,9 +61,19 @@ void NestedLoopJoin::execute(
 
   switch (join_type_) {
     case JoinType::LEFT:
-      RAISE(kNotYetImplementedError);
+      executeOuterJoin(
+          context,
+          fn,
+          base_tbl_data,
+          joined_tbl_data);
+      break;
     case JoinType::RIGHT:
-      RAISE(kNotYetImplementedError);
+      executeOuterJoin(
+          context,
+          fn,
+          joined_tbl_data,
+          base_tbl_data);
+      break;
     case JoinType::INNER:
       if (join_cond_expr_.isEmpty()) {
         /* fallthrough */
@@ -180,6 +190,116 @@ void NestedLoopJoin::executeInnerJoin(
 
         if (!pred.toBool()) {
           continue;
+        }
+      }
+
+      if (!where_expr_.isEmpty()) {
+        SValue pred;
+        VM::evaluate(
+            txn_,
+            where_expr_.get().program(),
+            inbuf.size(),
+            inbuf.data(),
+            &pred);
+
+        if (!pred.toBool()) {
+          continue;
+        }
+      }
+
+      for (int i = 0; i < select_exprs_.size(); ++i) {
+        VM::evaluate(
+            txn_,
+            select_exprs_[i].program(),
+            inbuf.size(),
+            inbuf.data(),
+            &outbuf[i]);
+      }
+
+      if (!fn(outbuf.size(), outbuf.data()))  {
+        return;
+      }
+    }
+  }
+}
+
+void NestedLoopJoin::executeOuterJoin(
+    ExecutionContext* context,
+    Function<bool (int argc, const SValue* argv)> fn,
+    const List<Vector<SValue>>& t1,
+    const List<Vector<SValue>>& t2) {
+  Vector<SValue> outbuf(select_exprs_.size(), SValue{});
+  Vector<SValue> inbuf(input_map_.size(), SValue{});
+
+  for (const auto& r1 : t1) {
+    bool match = false;
+
+    for (const auto& r2 : t2) {
+      for (size_t i = 0; i < input_map_.size(); ++i) {
+        const auto& m = input_map_[i];
+
+        switch (m.table_idx) {
+          case 0:
+            inbuf[i] = r1[m.column_idx];
+            break;
+          case 1:
+            inbuf[i] = r2[m.column_idx];
+            break;
+          default:
+            RAISE(kRuntimeError, "invalid table index");
+        }
+      }
+
+      {
+        SValue pred;
+        VM::evaluate(
+            txn_,
+            join_cond_expr_.get().program(),
+            inbuf.size(),
+            inbuf.data(),
+            &pred);
+
+        if (!pred.toBool()) {
+          continue;
+        }
+      }
+
+      if (!where_expr_.isEmpty()) {
+        SValue pred;
+        VM::evaluate(
+            txn_,
+            where_expr_.get().program(),
+            inbuf.size(),
+            inbuf.data(),
+            &pred);
+
+        if (!pred.toBool()) {
+          continue;
+        }
+      }
+
+      match = true;
+
+      for (int i = 0; i < select_exprs_.size(); ++i) {
+        VM::evaluate(
+            txn_,
+            select_exprs_[i].program(),
+            inbuf.size(),
+            inbuf.data(),
+            &outbuf[i]);
+      }
+
+      if (!fn(outbuf.size(), outbuf.data()))  {
+        return;
+      }
+    }
+
+    if (!match) {
+      for (size_t i = 0; i < input_map_.size(); ++i) {
+        const auto& m = input_map_[i];
+
+        if (m.table_idx == 1) {
+          inbuf[i] = SValue();
         }
       }
 
