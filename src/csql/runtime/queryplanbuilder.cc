@@ -947,6 +947,8 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
       true));
 
   Vector<QualifiedColumn> all_columns;
+  Option<RefPtr<ValueExpressionNode>> join_cond;
+
   if (natural_join) {
     RefPtr<TableExpressionNode> primary_table;
     RefPtr<TableExpressionNode> secondary_table;
@@ -958,7 +960,7 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
       secondary_table = joined_table.asInstanceOf<TableExpressionNode>();
     }
 
-    Set<String> common_column_set;
+    HashMap<String, Vector<String>> common_columns;
     {
       Set<String> tmp_column_set;
       for (const auto& col : secondary_table->allColumns()) {
@@ -968,24 +970,50 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
       for (const auto& col : primary_table->allColumns()) {
         if (tmp_column_set.count(col.short_name) > 0) {
           all_columns.emplace_back(col);
-          common_column_set.insert(col.short_name);
+          common_columns.emplace(col.short_name, Vector<String>{});
         }
       }
     }
 
     for (const auto& col :
             base_table.asInstanceOf<TableExpressionNode>()->allColumns()) {
-      if (common_column_set.count(col.short_name) == 0) {
+      if (common_columns.count(col.short_name) == 0) {
         all_columns.emplace_back(col);
+      } else {
+        common_columns[col.short_name].push_back(col.qualified_name);
       }
     }
 
     for (const auto& col :
             joined_table.asInstanceOf<TableExpressionNode>()->allColumns()) {
-      if (common_column_set.count(col.short_name) == 0) {
+      if (common_columns.count(col.short_name) == 0) {
         all_columns.emplace_back(col);
+      } else {
+        common_columns[col.short_name].push_back(col.qualified_name);
       }
     }
+
+    RefPtr<ValueExpressionNode> pred;
+    for (const auto& c : common_columns) {
+      auto cpred = mkRef<ValueExpressionNode>(
+          new csql::CallExpressionNode(
+              "eq",
+              Vector<RefPtr<csql::ValueExpressionNode>>{
+                new csql::ColumnReferenceNode(c.second[0]),
+                new csql::ColumnReferenceNode(c.second[1])
+              }));
+
+      if (pred.get() == nullptr) {
+        pred = cpred;
+      } else {
+        pred = mkRef<ValueExpressionNode>(
+            new csql::CallExpressionNode(
+                "logical_and",
+                Vector<RefPtr<csql::ValueExpressionNode>>{ pred, cpred }));
+      }
+    }
+
+    join_cond = pred;
   } else {
     for (const auto& col :
             base_table.asInstanceOf<TableExpressionNode>()->allColumns()) {
@@ -995,6 +1023,39 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
     for (const auto& col :
             joined_table.asInstanceOf<TableExpressionNode>()->allColumns()) {
       all_columns.emplace_back(col);
+    }
+
+    if (table_ref->getChildren().size() > 2) {
+      auto cond_ast = table_ref->getChildren()[2];
+
+      switch (cond_ast->getType()) {
+        case ASTNode::T_JOIN_CONDITION: {
+          if (cond_ast->getChildren().size() != 1) {
+            RAISE(kRuntimeError, "corrupt AST");
+          }
+
+          auto e = cond_ast->getChildren()[0];
+          if (e == nullptr) {
+            RAISE(kRuntimeError, "corrupt AST");
+          }
+
+          if (hasAggregationExpression(e)) {
+            RAISE(
+                kRuntimeError,
+                "JOIN conditions can only contain pure functions\n");
+          }
+
+          join_cond = buildValueExpression(txn, e);
+          break;
+        }
+
+        case ASTNode::T_JOIN_COLUMNLIST: {
+          RAISE(kNotYetImplementedError);
+        }
+
+        default:
+          RAISE(kRuntimeError, "corrupt AST");
+      }
     }
   }
 
@@ -1016,40 +1077,6 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
       }
     } else {
       select_list_expressions.emplace_back(buildSelectList(txn, select_expr));
-    }
-  }
-
-  Option<RefPtr<ValueExpressionNode>> join_cond;
-  if (table_ref->getChildren().size() > 2) {
-    auto cond_ast = table_ref->getChildren()[2];
-
-    switch (cond_ast->getType()) {
-      case ASTNode::T_JOIN_CONDITION: {
-        if (cond_ast->getChildren().size() != 1) {
-          RAISE(kRuntimeError, "corrupt AST");
-        }
-
-        auto e = cond_ast->getChildren()[0];
-        if (e == nullptr) {
-          RAISE(kRuntimeError, "corrupt AST");
-        }
-
-        if (hasAggregationExpression(e)) {
-          RAISE(
-              kRuntimeError,
-              "JOIN conditions can only contain pure functions\n");
-        }
-
-        join_cond = buildValueExpression(txn, e);
-        break;
-      }
-
-      case ASTNode::T_JOIN_COLUMNLIST: {
-        RAISE(kNotYetImplementedError);
-      }
-
-      default:
-        RAISE(kRuntimeError, "corrupt AST");
     }
   }
 

@@ -1796,7 +1796,6 @@ TEST_CASE(RuntimeTest, TestNaturalJoin, [] () {
 
     auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
     runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
-    result.debugPrint();
     EXPECT_EQ(result.getNumColumns(), 3);
     EXPECT_EQ(result.getColumns()[0], "deptid");
     EXPECT_EQ(result.getColumns()[1], "name");
