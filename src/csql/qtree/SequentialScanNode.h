@@ -108,6 +108,7 @@ public:
       bool allow_add = false) override;
 
   Option<RefPtr<ValueExpressionNode>> whereExpression() const;
+  void setWhereExpression(RefPtr<ValueExpressionNode> e);
 
   /**
    * Returns all constraints (see ScanConstraint) that were derived from the
