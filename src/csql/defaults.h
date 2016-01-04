@@ -12,9 +12,10 @@
 #include <csql/runtime/runtime.h>
 #include <csql/expressions/aggregate.h>
 #include <csql/expressions/boolean.h>
+#include <csql/expressions/conversion.h>
 #include <csql/expressions/datetime.h>
-#include <csql/expressions/math.h>
 #include <csql/expressions/internal.h>
+#include <csql/expressions/math.h>
 #include <csql/expressions/string.h>
 
 using namespace stx;

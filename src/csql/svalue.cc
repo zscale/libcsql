@@ -216,6 +216,10 @@ SValue::IntegerType SValue::getInteger() const {
   return 0;
 }
 
+SValue::IntegerType SValue::toInteger() const {
+  return getInteger();
+}
+
 SValue::FloatType SValue::getFloat() const {
   switch (data_.type) {
 
@@ -251,6 +255,10 @@ SValue::FloatType SValue::getFloat() const {
   }
 
   return 0;
+}
+
+SValue::FloatType SValue::toFloat() const {
+  return getFloat();
 }
 
 SValue::BoolType SValue::getBool() const {

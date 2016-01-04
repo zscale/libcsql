@@ -1621,3 +1621,49 @@ TEST_CASE(RuntimeTest, TestRightJoin, [] () {
     EXPECT_EQ(result.getRow(10)[1], "Steven");
   }
 });
+
+TEST_CASE(RuntimeTest, TestConversionFunctions, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newTransaction();
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("to_string(123)"));
+    EXPECT_EQ(v.getType(), SQL_STRING);
+    EXPECT_EQ(v.getString(), "123");
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("to_int('123')"));
+    EXPECT_EQ(v.getType(), SQL_INTEGER);
+    EXPECT_EQ(v.getInteger(), 123);
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("to_int('123.5')"));
+    EXPECT_EQ(v.getType(), SQL_INTEGER);
+    EXPECT_EQ(v.getInteger(), 123);
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("to_float('123')"));
+    EXPECT_EQ(v.getType(), SQL_FLOAT);
+    EXPECT_EQ(v.getFloat(), 123.0);
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("to_float('123.5')"));
+    EXPECT_EQ(v.getType(), SQL_FLOAT);
+    EXPECT_EQ(v.getFloat(), 123.5);
+  }
+});
+

@@ -54,13 +54,21 @@ public:
   template <typename T> bool testType() const;
   sql_type getType() const;
   sql_type testTypeWithNumericConversion() const;
+
   IntegerType getInteger() const;
+  IntegerType toInteger() const;
+
   FloatType getFloat() const;
+  FloatType toFloat() const;
+
   BoolType getBool() const;
   BoolType toBool() const;
+
   TimeType getTimestamp() const;
+
   StringType getString() const;
   std::string toString() const;
+
   bool tryNumericConversion();
   bool tryTimeConversion();
 

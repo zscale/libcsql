@@ -23,10 +23,11 @@ add_library(chartsql STATIC
     backends/csv/CSVTableScan.cc
     expressions/aggregate.cc
     expressions/boolean.cc
+    expressions/conversion.cc
     expressions/datetime.cc
+    expressions/internal.cc
     expressions/math.cc
     expressions/string.cc
-    expressions/internal.cc
     parser/astnode.cc
     parser/astutil.cc
     parser/parser.cc

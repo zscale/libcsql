@@ -53,7 +53,7 @@ void installDefaultSymbols(SymbolTable* rt) {
   rt->registerFunction("eq",  PureFunction(&expressions::eqExpr));
   rt->registerFunction("neq", PureFunction(&expressions::neqExpr));
   rt->registerFunction("logical_and", PureFunction(&expressions::andExpr));
-  rt->registerFunction("logical_or",  PureFunction(&expressions::orExpr));
+  rt->registerFunction("logical_or", PureFunction(&expressions::orExpr));
   rt->registerFunction("neg", PureFunction(&expressions::negExpr));
   rt->registerFunction("lt",  PureFunction(&expressions::ltExpr));
   rt->registerFunction("lte", PureFunction(&expressions::lteExpr));
@@ -61,7 +61,15 @@ void installDefaultSymbols(SymbolTable* rt) {
   rt->registerFunction("gte", PureFunction(&expressions::gteExpr));
   rt->registerFunction("isnull", PureFunction(&expressions::isNullExpr));
 
-  /* expressions/UnixTime.h */
+  /* expressions/conversion.h */
+  rt->registerFunction("to_string", PureFunction(&expressions::toStringExpr));
+  rt->registerFunction("to_str", PureFunction(&expressions::toStringExpr));
+  rt->registerFunction("to_integer", PureFunction(&expressions::toIntExpr));
+  rt->registerFunction("to_int", PureFunction(&expressions::toIntExpr));
+  rt->registerFunction("to_float", PureFunction(&expressions::toFloatExpr));
+  rt->registerFunction("to_bool", PureFunction(&expressions::toBoolExpr));
+
+  /* expressions/datetime.h */
   rt->registerFunction(
       "FROM_TIMESTAMP",
       PureFunction(&expressions::fromTimestamp));
