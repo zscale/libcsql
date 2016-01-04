@@ -1682,6 +1682,11 @@ TEST_CASE(RuntimeTest, TestWildcardJoins, [] () {
           "users",
           "src/csql/testdata/testtbl6.csv",
           '\t'));
+  estrat->addTableProvider(
+      new backends::csv::CSVTableProvider(
+          "openinghours",
+          "src/csql/testdata/testtbl7.csv",
+          '\t'));
 
   {
     ResultList result;
@@ -1709,9 +1714,52 @@ TEST_CASE(RuntimeTest, TestWildcardJoins, [] () {
     EXPECT_EQ(result.getRow(1)[1], "1");
     EXPECT_EQ(result.getRow(1)[2], "paul");
     EXPECT_EQ(result.getRow(1)[3], "1");
-    EXPECT_EQ(result.getRow(1)[0], "sales");
-    EXPECT_EQ(result.getRow(1)[1], "2");
-    EXPECT_EQ(result.getRow(1)[2], "hans");
-    EXPECT_EQ(result.getRow(1)[3], "2");
+    EXPECT_EQ(result.getRow(2)[0], "sales");
+    EXPECT_EQ(result.getRow(2)[1], "2");
+    EXPECT_EQ(result.getRow(2)[2], "hans");
+    EXPECT_EQ(result.getRow(2)[3], "2");
+  }
+
+  {
+    ResultList result;
+    auto query = R"(
+      SELECT *
+      FROM departments, users, openinghours
+      WHERE users.deptid = departments.deptid AND openinghours.deptid = departments.deptid
+      ORDER BY name;
+    )";
+
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 7);
+    EXPECT_EQ(result.getColumns()[0], "name");
+    EXPECT_EQ(result.getColumns()[1], "deptid");
+    EXPECT_EQ(result.getColumns()[2], "username");
+    EXPECT_EQ(result.getColumns()[3], "deptid");
+    EXPECT_EQ(result.getColumns()[4], "start_time");
+    EXPECT_EQ(result.getColumns()[5], "end_time");
+    EXPECT_EQ(result.getColumns()[6], "deptid");
+    EXPECT_EQ(result.getNumRows(), 3);
+    EXPECT_EQ(result.getRow(0)[0], "eng");
+    EXPECT_EQ(result.getRow(0)[1], "1");
+    EXPECT_EQ(result.getRow(0)[2], "laura");
+    EXPECT_EQ(result.getRow(0)[3], "1");
+    EXPECT_EQ(result.getRow(0)[4], "13:00");
+    EXPECT_EQ(result.getRow(0)[5], "22:00");
+    EXPECT_EQ(result.getRow(0)[6], "1");
+    EXPECT_EQ(result.getRow(1)[0], "eng");
+    EXPECT_EQ(result.getRow(1)[1], "1");
+    EXPECT_EQ(result.getRow(1)[2], "paul");
+    EXPECT_EQ(result.getRow(1)[3], "1");
+    EXPECT_EQ(result.getRow(1)[4], "13:00");
+    EXPECT_EQ(result.getRow(1)[5], "22:00");
+    EXPECT_EQ(result.getRow(1)[6], "1");
+    EXPECT_EQ(result.getRow(2)[0], "sales");
+    EXPECT_EQ(result.getRow(2)[1], "2");
+    EXPECT_EQ(result.getRow(2)[2], "hans");
+    EXPECT_EQ(result.getRow(2)[3], "2");
+    EXPECT_EQ(result.getRow(2)[4], "10:00");
+    EXPECT_EQ(result.getRow(2)[5], "19:00");
+    EXPECT_EQ(result.getRow(2)[6], "2");
   }
 });

@@ -78,7 +78,19 @@ Vector<String> JoinNode::outputColumns() const {
 }
 
 Vector<QualifiedColumn> JoinNode::allColumns() const {
-  RAISE(kNotYetImplementedError);
+  Vector<QualifiedColumn> cols;
+
+  for (const auto& c :
+      base_table_.asInstanceOf<TableExpressionNode>()->allColumns()) {
+    cols.emplace_back(c);
+  }
+
+  for (const auto& c :
+      joined_table_.asInstanceOf<TableExpressionNode>()->allColumns()) {
+    cols.emplace_back(c);
+  }
+
+  return cols;
 }
 
 size_t JoinNode::getColumnIndex(
