@@ -61,6 +61,20 @@ Vector<RefPtr<SelectListNode>> RemoteAggregateNode::selectList() const {
   return stmt_->selectList();
 }
 
+Vector<String> RemoteAggregateNode::outputColumns() const {
+  return stmt_->outputColumns();
+}
+
+Vector<QualifiedColumn> RemoteAggregateNode::allColumns() const {
+  return stmt_->allColumns();
+}
+
+size_t RemoteAggregateNode::getColumnIndex(
+    const String& column_name,
+    bool allow_add /* = false */) {
+  return stmt_->getColumnIndex(column_name, allow_add);
+}
+
 RefPtr<QueryTreeNode> RemoteAggregateNode::deepCopy() const {
   return new RemoteAggregateNode(stmt_, execute_fn_);
 }

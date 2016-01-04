@@ -25,7 +25,7 @@ namespace csql {
  * return locally the value that was obtained by calling Runtime::executeAggregate
  * on some remote host)
  */
-class RemoteAggregateNode : public QueryTreeNode {
+class RemoteAggregateNode : public TableExpressionNode {
 public:
   typedef
       Function<ScopedPtr<InputStream> (const RemoteAggregateParams& params)>
@@ -36,6 +36,14 @@ public:
       RemoteExecuteFn execute_fn);
 
   Vector<RefPtr<SelectListNode>> selectList() const;
+
+  Vector<String> outputColumns() const override;
+
+  Vector<QualifiedColumn> allColumns() const override;
+
+  size_t getColumnIndex(
+      const String& column_name,
+      bool allow_add = false) override;
 
   RemoteAggregateParams remoteAggregateParams() const;
   RemoteExecuteFn remoteExecuteFunction() const;
