@@ -1024,7 +1024,9 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
       }
     }
 
-    join_cond = pred;
+    if (pred.get() != nullptr) {
+      join_cond = pred;
+    }
   } else {
     for (const auto& col :
             base_table.asInstanceOf<TableExpressionNode>()->allColumns()) {
