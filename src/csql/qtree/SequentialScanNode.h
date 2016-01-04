@@ -100,6 +100,9 @@ public:
 
   Vector<String> outputColumns() const override;
 
+  Vector<String> allColumns(
+      const Option<String>& table_name) const override;
+
   void normalizeColumnNames();
   String normalizeColumnName(const String& column_name) const;
 

@@ -43,6 +43,15 @@ Vector<String> UnionNode::outputColumns() const {
   }
 }
 
+Vector<String> UnionNode::allColumns(const Option<String>& table_name) const {
+  if (tables_.empty()) {
+    return Vector<String>{};
+  } else {
+    return tables_[0].asInstanceOf<TableExpressionNode>()->allColumns(
+        table_name);
+  }
+}
+
 size_t UnionNode::getColumnIndex(
     const String& column_name,
     bool allow_add /* = false */) {

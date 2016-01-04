@@ -64,6 +64,11 @@ Vector<String> SubqueryNode::outputColumns() const {
   return column_names_;
 }
 
+Vector<String> SubqueryNode::allColumns(
+    const Option<String>& table_name) const {
+  return subquery_.asInstanceOf<TableExpressionNode>()->allColumns(table_name);
+}
+
 size_t SubqueryNode::getColumnIndex(
     const String& column_name,
     bool allow_add /* = false */) {

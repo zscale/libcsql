@@ -24,6 +24,9 @@ public:
 
   Vector<String> outputColumns() const override;
 
+  Vector<String> allColumns(
+      const Option<String>& table_name) const override;
+
   RefPtr<QueryTreeNode> deepCopy() const override;
 
   const String& tableName() const;

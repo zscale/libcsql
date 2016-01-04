@@ -31,6 +31,10 @@ Vector<String> LimitNode::outputColumns() const {
   return table_.asInstanceOf<TableExpressionNode>()->outputColumns();
 }
 
+Vector<String> LimitNode::allColumns(const Option<String>& table_name) const {
+  return table_.asInstanceOf<TableExpressionNode>()->allColumns(table_name);
+}
+
 size_t LimitNode::getColumnIndex(
     const String& column_name,
     bool allow_add /* = false */) {

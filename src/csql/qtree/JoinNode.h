@@ -48,7 +48,11 @@ public:
   RefPtr<QueryTreeNode> joinedTable() const;
 
   Vector<RefPtr<SelectListNode>> selectList() const;
+
   Vector<String> outputColumns() const override;
+
+  Vector<String> allColumns(
+      const Option<String>& table_name) const override;
 
   const Vector<InputColumnRef>& inputColumnMap() const;
 

@@ -32,6 +32,9 @@ public:
 
   Vector<String> outputColumns() const override;
 
+  Vector<String> allColumns(
+      const Option<String>& table_name) const override;
+
   const Vector<SortSpec>& sortSpecs() const;
 
   RefPtr<QueryTreeNode> deepCopy() const override;

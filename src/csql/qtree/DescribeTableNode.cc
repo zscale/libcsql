@@ -30,7 +30,12 @@ const String& DescribeTableNode::tableName() const {
 }
 
 Vector<String> DescribeTableNode::outputColumns() const {
-  return Vector<String>{};
+  return Vector<String>{}; // FIXME
+}
+
+Vector<String> DescribeTableNode::allColumns(
+    const Option<String>& table_name) const {
+  return Vector<String>{}; // FIXME
 }
 
 size_t DescribeTableNode::getColumnIndex(
