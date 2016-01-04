@@ -51,8 +51,8 @@ Vector<String> GroupByNode::outputColumns() const {
   return column_names_;
 }
 
-Vector<String> GroupByNode::allColumns(const Option<String>& table_name) const {
-  return table_.asInstanceOf<TableExpressionNode>()->allColumns(table_name);
+Vector<QualifiedColumn> GroupByNode::allColumns() const {
+  return table_.asInstanceOf<TableExpressionNode>()->allColumns();
 }
 
 size_t GroupByNode::getColumnIndex(

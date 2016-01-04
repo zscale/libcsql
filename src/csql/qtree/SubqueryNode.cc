@@ -64,9 +64,21 @@ Vector<String> SubqueryNode::outputColumns() const {
   return column_names_;
 }
 
-Vector<String> SubqueryNode::allColumns(
-    const Option<String>& table_name) const {
-  return subquery_.asInstanceOf<TableExpressionNode>()->allColumns(table_name);
+Vector<QualifiedColumn> SubqueryNode::allColumns() const {
+  String qualifier;
+  if (!alias_.empty()) {
+    qualifier = alias_ + ".";
+  }
+
+  Vector<QualifiedColumn> cols;
+  for (const auto& c : column_names_) {
+    cols.emplace_back(QualifiedColumn{
+      .short_name = c,
+      .qualified_name = qualifier + c
+    });
+  }
+
+  return cols;
 }
 
 size_t SubqueryNode::getColumnIndex(

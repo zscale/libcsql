@@ -1667,35 +1667,51 @@ TEST_CASE(RuntimeTest, TestConversionFunctions, [] () {
   }
 });
 
-TEST_CASE(RuntimeTest, TestWildcardInnerJoin, [] () {
+TEST_CASE(RuntimeTest, TestWildcardJoins, [] () {
   auto runtime = Runtime::getDefaultRuntime();
   auto ctx = runtime->newTransaction();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
   estrat->addTableProvider(
       new backends::csv::CSVTableProvider(
-          "customers",
-          "src/csql/testdata/testtbl2.csv",
+          "departments",
+          "src/csql/testdata/testtbl5.csv",
           '\t'));
   estrat->addTableProvider(
       new backends::csv::CSVTableProvider(
-          "orders",
-          "src/csql/testdata/testtbl3.csv",
+          "users",
+          "src/csql/testdata/testtbl6.csv",
           '\t'));
 
   {
     ResultList result;
     auto query = R"(
       SELECT *
-      FROM orders
-      JOIN customers
-      WHERE orders.customerid = customers.customerid
-      LIMIT 10;
+      FROM departments
+      JOIN users
+      ON users.deptid = departments.deptid
+      ORDER BY name;
     )";
 
     auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
     runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
-    EXPECT_EQ(result.getNumColumns(), 11);
-    EXPECT_EQ(result.getNumRows(), 10);
+    EXPECT_EQ(result.getNumColumns(), 4);
+    EXPECT_EQ(result.getColumns()[0], "name");
+    EXPECT_EQ(result.getColumns()[1], "deptid");
+    EXPECT_EQ(result.getColumns()[2], "username");
+    EXPECT_EQ(result.getColumns()[3], "deptid");
+    EXPECT_EQ(result.getNumRows(), 3);
+    EXPECT_EQ(result.getRow(0)[0], "eng");
+    EXPECT_EQ(result.getRow(0)[1], "1");
+    EXPECT_EQ(result.getRow(0)[2], "laura");
+    EXPECT_EQ(result.getRow(0)[3], "1");
+    EXPECT_EQ(result.getRow(1)[0], "eng");
+    EXPECT_EQ(result.getRow(1)[1], "1");
+    EXPECT_EQ(result.getRow(1)[2], "paul");
+    EXPECT_EQ(result.getRow(1)[3], "1");
+    EXPECT_EQ(result.getRow(1)[0], "sales");
+    EXPECT_EQ(result.getRow(1)[1], "2");
+    EXPECT_EQ(result.getRow(1)[2], "hans");
+    EXPECT_EQ(result.getRow(1)[3], "2");
   }
 });

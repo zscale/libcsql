@@ -118,9 +118,23 @@ Vector<String> SequentialScanNode::outputColumns() const {
   return output_columns_;
 }
 
-Vector<String> SequentialScanNode::allColumns(
-    const Option<String>& table_name) const {
-  return table_columns_;
+Vector<QualifiedColumn> SequentialScanNode::allColumns() const {
+  String qualifier;
+  if (table_alias_.empty()) {
+    qualifier = table_name_ + ".";
+  } else {
+    qualifier = table_alias_ + ".";
+  }
+
+  Vector<QualifiedColumn> cols;
+  for (const auto& c : table_columns_) {
+    cols.emplace_back(QualifiedColumn{
+      .short_name = c,
+      .qualified_name = qualifier + c
+    });
+  }
+
+  return cols;
 }
 
 void SequentialScanNode::normalizeColumnNames() {

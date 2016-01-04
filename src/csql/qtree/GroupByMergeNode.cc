@@ -43,13 +43,11 @@ Vector<String> GroupByMergeNode::outputColumns() const {
   }
 }
 
-Vector<String> GroupByMergeNode::allColumns(
-    const Option<String>& table_name) const {
+Vector<QualifiedColumn> GroupByMergeNode::allColumns() const {
   if (tables_.empty()) {
-    return Vector<String>{};
+    return Vector<QualifiedColumn>{};
   } else {
-    return tables_[0].asInstanceOf<TableExpressionNode>()->allColumns(
-        table_name);
+    return tables_[0].asInstanceOf<TableExpressionNode>()->allColumns();
   }
 }
 
