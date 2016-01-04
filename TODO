@@ -7,6 +7,7 @@
 - fold hashjoins
 - fold 1:1 mapping subqueries into lower tablescan
 - join column list
+- table-name qualified wildcards
 - select expression with where
 - show tables/describe tables with where
 - fold limit (without order) into lower tablescan??
