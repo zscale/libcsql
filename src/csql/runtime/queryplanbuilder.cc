@@ -880,6 +880,7 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
 
   JoinType join_type;
   bool natural_join = false;
+  bool reverse = false;
 
   switch (table_ref->getType()) {
     case ASTNode::T_NATURAL_INNER_JOIN:
@@ -892,13 +893,14 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
       natural_join = true;
       /* fallthrough */
     case ASTNode::T_LEFT_JOIN:
-      join_type = JoinType::LEFT;
+      join_type = JoinType::OUTER;
       break;
     case ASTNode::T_NATURAL_RIGHT_JOIN:
       natural_join = true;
       /* fallthrough */
     case ASTNode::T_RIGHT_JOIN:
-      join_type = JoinType::RIGHT;
+      reverse = true;
+      join_type = JoinType::OUTER;
       break;
     default:
       RAISE(kRuntimeError, "invalid JOIN type");
@@ -952,7 +954,7 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
   if (natural_join) {
     RefPtr<TableExpressionNode> primary_table;
     RefPtr<TableExpressionNode> secondary_table;
-    if (join_type == JoinType::RIGHT) {
+    if (reverse) {
       primary_table = joined_table.asInstanceOf<TableExpressionNode>();
       secondary_table = base_table.asInstanceOf<TableExpressionNode>();
     } else {
@@ -1095,8 +1097,8 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
 
   auto join_node = mkScoped(new JoinNode(
       join_type,
-      base_table,
-      joined_table,
+      reverse ? joined_table : base_table,
+      reverse ? base_table : joined_table,
       select_list_expressions,
       where_expr,
       join_cond));

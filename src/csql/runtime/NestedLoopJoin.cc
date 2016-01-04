@@ -60,21 +60,12 @@ void NestedLoopJoin::execute(
   context->incrNumSubtasksCompleted(1);
 
   switch (join_type_) {
-    case JoinType::LEFT:
+    case JoinType::OUTER:
       executeOuterJoin(
           context,
           fn,
           base_tbl_data,
-          joined_tbl_data,
-          false);
-      break;
-    case JoinType::RIGHT:
-      executeOuterJoin(
-          context,
-          fn,
-          joined_tbl_data,
-          base_tbl_data,
-          true);
+          joined_tbl_data);
       break;
     case JoinType::INNER:
       if (join_cond_expr_.isEmpty()) {
@@ -229,8 +220,7 @@ void NestedLoopJoin::executeOuterJoin(
     ExecutionContext* context,
     Function<bool (int argc, const SValue* argv)> fn,
     const List<Vector<SValue>>& t1,
-    const List<Vector<SValue>>& t2,
-    bool reverse) {
+    const List<Vector<SValue>>& t2) {
   Vector<SValue> outbuf(select_exprs_.size(), SValue{});
   Vector<SValue> inbuf(input_map_.size(), SValue{});
 
@@ -238,35 +228,18 @@ void NestedLoopJoin::executeOuterJoin(
     bool match = false;
 
     for (const auto& r2 : t2) {
-      if (reverse) {
-        for (size_t i = 0; i < input_map_.size(); ++i) {
-          const auto& m = input_map_[i];
+      for (size_t i = 0; i < input_map_.size(); ++i) {
+        const auto& m = input_map_[i];
 
-          switch (m.table_idx) {
-            case 0:
-              inbuf[i] = r2[m.column_idx];
-              break;
-            case 1:
-              inbuf[i] = r1[m.column_idx];
-              break;
-            default:
-              RAISE(kRuntimeError, "invalid table index");
-          }
-        }
-      } else {
-        for (size_t i = 0; i < input_map_.size(); ++i) {
-          const auto& m = input_map_[i];
-
-          switch (m.table_idx) {
-            case 0:
-              inbuf[i] = r1[m.column_idx];
-              break;
-            case 1:
-              inbuf[i] = r2[m.column_idx];
-              break;
-            default:
-              RAISE(kRuntimeError, "invalid table index");
-          }
+        switch (m.table_idx) {
+          case 0:
+            inbuf[i] = r1[m.column_idx];
+            break;
+          case 1:
+            inbuf[i] = r2[m.column_idx];
+            break;
+          default:
+            RAISE(kRuntimeError, "invalid table index");
         }
       }
 
@@ -323,7 +296,7 @@ void NestedLoopJoin::executeOuterJoin(
       for (size_t i = 0; i < input_map_.size(); ++i) {
         const auto& m = input_map_[i];
 
-        if (m.table_idx != reverse) {
+        if (m.table_idx != 0) {
           inbuf[i] = SValue();
         }
       }
