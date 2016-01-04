@@ -16,13 +16,17 @@ using namespace stx;
 
 namespace csql {
 
+struct QualifiedColumn {
+  String qualified_name;
+  String short_name;
+};
+
 class TableExpressionNode : public QueryTreeNode {
 public:
 
   virtual Vector<String> outputColumns() const = 0;
 
-  virtual Vector<String> allColumns(
-      const Option<String>& table_name = None<String>()) const = 0;
+  virtual Vector<QualifiedColumn> allColumns() const = 0;
 
   virtual size_t getColumnIndex(
       const String& column_name,

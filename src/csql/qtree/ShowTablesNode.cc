@@ -25,9 +25,8 @@ Vector<String> ShowTablesNode::outputColumns() const {
   return Vector<String>{}; // FIXME
 }
 
-Vector<String> ShowTablesNode::allColumns(
-    const Option<String>& table_name) const {
-  return Vector<String>{}; // FIXME
+Vector<QualifiedColumn> ShowTablesNode::allColumns() const {
+  return Vector<QualifiedColumn>{}; // FIXME
 }
 
 size_t ShowTablesNode::getColumnIndex(

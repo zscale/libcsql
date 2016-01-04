@@ -407,8 +407,8 @@ QueryTreeNode* QueryPlanBuilder::buildGroupBy(
   for (const auto& select_expr : select_list->getChildren()) {
     if (*select_expr == ASTNode::T_ALL) {
       for (const auto& col : subtree_tbl->allColumns()) {
-        auto sl = new SelectListNode(new ColumnReferenceNode(col));
-        sl->setAlias(col);
+        auto sl = new SelectListNode(new ColumnReferenceNode(col.qualified_name));
+        sl->setAlias(col.short_name);
         select_list_expressions.emplace_back(sl);
       }
     } else {
@@ -875,6 +875,7 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
   }
 
   JoinType join_type;
+  bool natural_join = false;
 
   switch (table_ref->getType()) {
     case ASTNode::T_INNER_JOIN:
@@ -937,8 +938,8 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
       tables,
       true));
 
-  Vector<Pair<String, String>> all_columns;
-  {
+  Vector<QualifiedColumn> all_columns;
+  if (natural_join) {
     RefPtr<TableExpressionNode> primary_table;
     RefPtr<TableExpressionNode> secondary_table;
     if (join_type == JoinType::RIGHT) {
@@ -951,14 +952,25 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
 
     Set<String> column_set;
     for (const auto& col : primary_table->allColumns()) {
-      all_columns.emplace_back(col, col);
-      column_set.insert(col);
+      all_columns.emplace_back(col);
+      column_set.insert(col.short_name);
     }
 
     for (const auto& col : secondary_table->allColumns()) {
-      if (column_set.count(col) == 0) {
-        all_columns.emplace_back(col, col);
+      if (column_set.count(col.short_name) == 0) {
+        all_columns.emplace_back(col);
       }
+    }
+  } else {
+    auto primary_table = base_table.asInstanceOf<TableExpressionNode>();
+    auto secondary_table = joined_table.asInstanceOf<TableExpressionNode>();
+
+    for (const auto& col : primary_table->allColumns()) {
+      all_columns.emplace_back(col);
+    }
+
+    for (const auto& col : secondary_table->allColumns()) {
+      all_columns.emplace_back(col);
     }
   }
 
@@ -974,8 +986,8 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
 
     if (*select_expr == ASTNode::T_ALL) {
       for (const auto& col : all_columns) {
-        auto sl = new SelectListNode(new ColumnReferenceNode(col.first));
-        sl->setAlias(col.second);
+        auto sl = new SelectListNode(new ColumnReferenceNode(col.qualified_name));
+        sl->setAlias(col.short_name);
         select_list_expressions.emplace_back(sl);
       }
     } else {
@@ -1109,8 +1121,8 @@ QueryTreeNode* QueryPlanBuilder::buildSubqueryTableReference(
   for (const auto& select_expr : select_list->getChildren()) {
     if (*select_expr == ASTNode::T_ALL) {
       for (const auto& col : subquery_tbl->allColumns()) {
-        auto sl = new SelectListNode(new ColumnReferenceNode(col));
-        sl->setAlias(col);
+        auto sl = new SelectListNode(new ColumnReferenceNode(col.qualified_name));
+        sl->setAlias(col.short_name);
         QueryTreeUtil::resolveColumns(sl->expression(), resolver);
         select_list_expressions.emplace_back(sl);
       }

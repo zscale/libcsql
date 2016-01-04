@@ -30,9 +30,18 @@ Vector<String> SelectExpressionNode::outputColumns() const {
   return column_names_;
 }
 
-Vector<String> SelectExpressionNode::allColumns(
-    const Option<String>& table_name) const {
-  return column_names_;
+Vector<QualifiedColumn> SelectExpressionNode::allColumns() const {
+  String qualifier;
+
+  Vector<QualifiedColumn> cols;
+  for (const auto& c : column_names_) {
+    cols.emplace_back(QualifiedColumn{
+      .short_name = c,
+      .qualified_name = qualifier + c
+    });
+  }
+
+  return cols;
 }
 
 size_t SelectExpressionNode::getColumnIndex(

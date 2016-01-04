@@ -51,8 +51,7 @@ public:
 
   Vector<String> outputColumns() const override;
 
-  Vector<String> allColumns(
-      const Option<String>& table_name) const override;
+  Vector<QualifiedColumn> allColumns() const override;
 
   const Vector<InputColumnRef>& inputColumnMap() const;
 

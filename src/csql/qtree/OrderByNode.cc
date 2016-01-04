@@ -29,8 +29,8 @@ Vector<String> OrderByNode::outputColumns() const {
   return table_.asInstanceOf<TableExpressionNode>()->outputColumns();
 }
 
-Vector<String> OrderByNode::allColumns(const Option<String>& table_name) const {
-  return table_.asInstanceOf<TableExpressionNode>()->allColumns(table_name);
+Vector<QualifiedColumn> OrderByNode::allColumns() const {
+  return table_.asInstanceOf<TableExpressionNode>()->allColumns();
 }
 
 size_t OrderByNode::getColumnIndex(
