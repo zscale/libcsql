@@ -1811,4 +1811,40 @@ TEST_CASE(RuntimeTest, TestNaturalJoin, [] () {
     EXPECT_EQ(result.getRow(2)[1], "sales");
     EXPECT_EQ(result.getRow(2)[2], "hans");
   }
+
+  {
+    ResultList result;
+    auto query = R"(
+      SELECT *
+      FROM departments
+      NATURAL JOIN openinghours
+      NATURAL JOIN users
+      ORDER BY name;
+    )";
+
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 5);
+    EXPECT_EQ(result.getColumns()[0], "deptid");
+    EXPECT_EQ(result.getColumns()[1], "name");
+    EXPECT_EQ(result.getColumns()[2], "start_time");
+    EXPECT_EQ(result.getColumns()[3], "end_time");
+    EXPECT_EQ(result.getColumns()[4], "username");
+    EXPECT_EQ(result.getNumRows(), 3);
+    EXPECT_EQ(result.getRow(0)[0], "1");
+    EXPECT_EQ(result.getRow(0)[1], "eng");
+    EXPECT_EQ(result.getRow(0)[2], "13:00");
+    EXPECT_EQ(result.getRow(0)[3], "22:00");
+    EXPECT_EQ(result.getRow(0)[4], "laura");
+    EXPECT_EQ(result.getRow(1)[0], "1");
+    EXPECT_EQ(result.getRow(1)[1], "eng");
+    EXPECT_EQ(result.getRow(1)[2], "13:00");
+    EXPECT_EQ(result.getRow(1)[3], "22:00");
+    EXPECT_EQ(result.getRow(1)[4], "paul");
+    EXPECT_EQ(result.getRow(2)[0], "2");
+    EXPECT_EQ(result.getRow(2)[1], "sales");
+    EXPECT_EQ(result.getRow(2)[2], "10:00");
+    EXPECT_EQ(result.getRow(2)[3], "19:00");
+    EXPECT_EQ(result.getRow(2)[4], "hans");
+  }
 });
