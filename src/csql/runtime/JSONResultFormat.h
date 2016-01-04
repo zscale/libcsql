@@ -28,10 +28,12 @@ public:
 protected:
 
   void renderStatement(
+      RefPtr<QueryTreeNode> qtree,
       Statement* stmt,
       ExecutionContext* context);
 
   void renderTable(
+      RefPtr<QueryTreeNode> qtree,
       TableExpression* stmt,
       ExecutionContext* context);
 

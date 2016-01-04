@@ -25,13 +25,14 @@ void JSONResultFormat::formatResults(
   json_->beginArray();
 
   for (int i = 0; i < query->numStatements(); ++i) {
+    auto qtree = query->getStatementQTree(i);
     auto stmt = query->getStatement(i);
 
     if (i > 0) {
       json_->addComma();
     }
 
-    renderStatement(stmt, context);
+    renderStatement(qtree, stmt, context);
   }
 
   json_->endArray();
@@ -39,11 +40,12 @@ void JSONResultFormat::formatResults(
 }
 
 void JSONResultFormat::renderStatement(
+    RefPtr<QueryTreeNode> qtree,
     Statement* stmt,
     ExecutionContext* context) {
   auto table_expr = dynamic_cast<TableExpression*>(stmt);
   if (table_expr) {
-    renderTable(table_expr, context);
+    renderTable(qtree, table_expr, context);
     return;
   }
 
@@ -57,6 +59,7 @@ void JSONResultFormat::renderStatement(
 }
 
 void JSONResultFormat::renderTable(
+    RefPtr<QueryTreeNode> qtree,
     TableExpression* stmt,
     ExecutionContext* context) {
   json_->beginObject();
@@ -67,7 +70,7 @@ void JSONResultFormat::renderTable(
   json_->addObjectEntry("columns");
   json_->beginArray();
 
-  auto columns = stmt->columnNames();
+  auto columns = qtree.asInstanceOf<TableExpressionNode>()->outputColumns();
   for (int n = 0; n < columns.size(); ++n) {
     if (n > 0) {
       json_->addComma();
@@ -81,21 +84,31 @@ void JSONResultFormat::renderTable(
   json_->beginArray();
 
   size_t j = 0;
+  size_t m = columns.size();
   stmt->execute(
       context,
-      [this, &j] (int argc, const csql::SValue* argv) -> bool {
+      [this, &j, m] (int argc, const csql::SValue* argv) -> bool {
     if (++j > 1) {
       json_->addComma();
     }
 
     json_->beginArray();
 
-    for (int n = 0; n < argc; ++n) {
+    size_t n = 0;
+    for (; n < m && n < argc; ++n) {
       if (n > 0) {
         json_->addComma();
       }
 
       json_->addString(argv[n].toString());
+    }
+
+    for (; n < m; ++n) {
+      if (n > 0) {
+        json_->addComma();
+      }
+
+      json_->addNull();
     }
 
     json_->endArray();
