@@ -708,6 +708,12 @@ ASTNode* Parser::tableReference() {
 }
 
 ASTNode* Parser::joinExpression(ASTNode* base) {
+  bool natural = false;
+  if (*cur_token_ == Token::T_NATURAL) {
+    consumeToken();
+    natural = true;
+  }
+
   switch (cur_token_->getType()) {
 
     // comma join (implicit inner join)
@@ -726,14 +732,17 @@ ASTNode* Parser::joinExpression(ASTNode* base) {
       /* fallthrough */
 
     case Token::T_JOIN: {
-      auto join = new ASTNode(ASTNode::T_INNER_JOIN);
+      auto join = new ASTNode(
+          natural ? ASTNode::T_NATURAL_INNER_JOIN : ASTNode::T_INNER_JOIN);
       consumeToken();
       join->appendChild(base);
       join->appendChild(tableFactor());
 
-      auto cond = joinCondition();
-      if (cond) {
-        join->appendChild(cond);
+      if (!natural) {
+        auto cond = joinCondition();
+        if (cond) {
+          join->appendChild(cond);
+        }
       }
 
       return joinExpression(join);
@@ -744,8 +753,8 @@ ASTNode* Parser::joinExpression(ASTNode* base) {
     case Token::T_RIGHT: {
       auto join_type =
           *cur_token_ == Token::T_LEFT ?
-          ASTNode::T_LEFT_JOIN :
-          ASTNode::T_RIGHT_JOIN;
+          (natural ? ASTNode::T_NATURAL_LEFT_JOIN : ASTNode::T_LEFT_JOIN) :
+          (natural ? ASTNode::T_NATURAL_RIGHT_JOIN : ASTNode::T_RIGHT_JOIN);
 
       consumeToken();
       consumeIf(Token::T_OUTER);
@@ -755,24 +764,14 @@ ASTNode* Parser::joinExpression(ASTNode* base) {
       join->appendChild(base);
       join->appendChild(tableFactor());
 
-      auto cond = joinCondition();
-      if (!cond) {
-        RAISE(kParseError, "LEFT/RIGHT JOIN needs a JOIN CONDITION");
+      if (!natural) {
+        auto cond = joinCondition();
+        if (!cond) {
+          RAISE(kParseError, "LEFT/RIGHT JOIN needs a JOIN CONDITION");
+        }
+
+        join->appendChild(cond);
       }
-
-      join->appendChild(cond);
-
-      return joinExpression(join.release());
-    }
-
-    // natural join
-    case Token::T_NATURAL: {
-      consumeIf(Token::T_OUTER);
-      expectAndConsume(Token::T_JOIN);
-      std::unique_ptr<ASTNode> join(new ASTNode(ASTNode::T_NATURAL_JOIN));
-
-      join->appendChild(base);
-      join->appendChild(tableFactor());
 
       return joinExpression(join.release());
     }

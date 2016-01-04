@@ -175,8 +175,14 @@ void ASTNode::debugPrint(int indent /* = 0 */) const {
     case T_RIGHT_JOIN:
       printf("- RIGHT_JOIN");
       break;
-    case T_NATURAL_JOIN:
-      printf("- NATURAL_JOIN");
+    case T_NATURAL_INNER_JOIN:
+      printf("- NATURAL_INNER_JOIN");
+      break;
+    case T_NATURAL_LEFT_JOIN:
+      printf("- NATURAL_LEFT_JOIN");
+      break;
+    case T_NATURAL_RIGHT_JOIN:
+      printf("- NATURAL_RIGHT_JOIN");
       break;
     case T_FROM:
       printf("- FROM");
