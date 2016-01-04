@@ -55,6 +55,12 @@ Users can also define their own functions and operators.
 [max](#max),
 [mean](#mean)
 
+###### Conversion Functions
+[to_str](#to_str),
+[to_int](#to_int),
+[to_float](#to_float),
+[to_bool](#to_bool)
+
 ---
 ##### Operator Precedence
 
