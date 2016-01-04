@@ -1,4 +1,5 @@
 - rename SequentialScan -> TableScan
+- test multi-way joins
 - fold 1:1 mapping subqueries into lower tablescan
 - push down all JOIN conjunctions from higher-level join condtitions and WHERE clause
 - fold nested loop joins

@@ -971,6 +971,7 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
         if (tmp_column_set.count(col.short_name) > 0) {
           all_columns.emplace_back(col);
           common_columns.emplace(col.short_name, Vector<String>{});
+          tmp_column_set.erase(col.short_name);
         }
       }
     }
@@ -995,21 +996,29 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
 
     RefPtr<ValueExpressionNode> pred;
     for (const auto& c : common_columns) {
-      auto cpred = mkRef<ValueExpressionNode>(
-          new csql::CallExpressionNode(
-              "eq",
-              Vector<RefPtr<csql::ValueExpressionNode>>{
-                new csql::ColumnReferenceNode(c.second[0]),
-                new csql::ColumnReferenceNode(c.second[1])
-              }));
+      for (size_t i1 = 0; i1 < c.second.size(); ++i1) {
+        for (size_t i2 = 0; i2 < c.second.size(); ++i2) {
+          if (i1 == i2) {
+            continue;
+          }
 
-      if (pred.get() == nullptr) {
-        pred = cpred;
-      } else {
-        pred = mkRef<ValueExpressionNode>(
-            new csql::CallExpressionNode(
-                "logical_and",
-                Vector<RefPtr<csql::ValueExpressionNode>>{ pred, cpred }));
+          auto cpred = mkRef<ValueExpressionNode>(
+              new csql::CallExpressionNode(
+                  "eq",
+                  Vector<RefPtr<csql::ValueExpressionNode>>{
+                    new csql::ColumnReferenceNode(c.second[i1]),
+                    new csql::ColumnReferenceNode(c.second[i2])
+                  }));
+
+          if (pred.get() == nullptr) {
+            pred = cpred;
+          } else {
+            pred = mkRef<ValueExpressionNode>(
+                new csql::CallExpressionNode(
+                    "logical_and",
+                    Vector<RefPtr<csql::ValueExpressionNode>>{ pred, cpred }));
+          }
+        }
       }
     }
 
