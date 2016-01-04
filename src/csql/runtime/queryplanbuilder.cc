@@ -921,21 +921,46 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
 
   auto child_sl = mkScoped(new ASTNode(ASTNode::T_SELECT_LIST));
 
-  auto base_table = buildTableReference(
+  auto base_table = mkRef(buildTableReference(
       txn,
       table_ref->getChildren()[0],
       child_sl.get(),
       where_clause,
       tables,
-      true);
+      true));
 
-  auto joined_table = buildTableReference(
+  auto joined_table = mkRef(buildTableReference(
       txn,
       table_ref->getChildren()[1],
       child_sl.get(),
       where_clause,
       tables,
-      true);
+      true));
+
+  Vector<Pair<String, String>> all_columns;
+  {
+    RefPtr<TableExpressionNode> primary_table;
+    RefPtr<TableExpressionNode> secondary_table;
+    if (join_type == JoinType::RIGHT) {
+      primary_table = joined_table.asInstanceOf<TableExpressionNode>();
+      secondary_table = base_table.asInstanceOf<TableExpressionNode>();
+    } else {
+      primary_table = base_table.asInstanceOf<TableExpressionNode>();
+      secondary_table = joined_table.asInstanceOf<TableExpressionNode>();
+    }
+
+    Set<String> column_set;
+    for (const auto& col : primary_table->allColumns()) {
+      all_columns.emplace_back(col, col);
+      column_set.insert(col);
+    }
+
+    for (const auto& col : secondary_table->allColumns()) {
+      if (column_set.count(col) == 0) {
+        all_columns.emplace_back(col, col);
+      }
+    }
+  }
 
   Vector<RefPtr<SelectListNode>> select_list_expressions;
   for (const auto& select_expr : select_list->getChildren()) {
@@ -948,7 +973,11 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
     }
 
     if (*select_expr == ASTNode::T_ALL) {
-      RAISE(kNotYetImplementedError);
+      for (const auto& col : all_columns) {
+        auto sl = new SelectListNode(new ColumnReferenceNode(col.first));
+        sl->setAlias(col.second);
+        select_list_expressions.emplace_back(sl);
+      }
     } else {
       select_list_expressions.emplace_back(buildSelectList(txn, select_expr));
     }
