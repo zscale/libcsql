@@ -65,6 +65,12 @@ Option<RefPtr<ValueExpressionNode>> SequentialScanNode::whereExpression() const 
   return where_expr_;
 }
 
+void SequentialScanNode::setWhereExpression(RefPtr<ValueExpressionNode> e) {
+  where_expr_ = Some(e);
+  constraints_.clear();
+  findConstraints(e);
+}
+
 const String& SequentialScanNode::tableName() const {
   return table_name_;
 }
