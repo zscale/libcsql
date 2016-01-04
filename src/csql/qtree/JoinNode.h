@@ -20,7 +20,7 @@ using namespace stx;
 namespace csql {
 
 enum class JoinType {
-  CARTESIAN, INNER, LEFT, RIGHT
+  CARTESIAN, INNER, OUTER
 };
 
 class JoinNode : public TableExpressionNode {
