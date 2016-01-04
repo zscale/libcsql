@@ -1,17 +1,15 @@
 - rename SequentialScan -> TableScan
 - test multi-way joins
-- fold 1:1 mapping subqueries into lower tablescan
 - push down all JOIN conjunctions from higher-level join condtitions and WHERE clause
 - fold nested loop joins
 - join where push down for SUBQUERY
 - join relation extraction
 - fold hashjoins
-- fold nestedloopjions
+- fold 1:1 mapping subqueries into lower tablescan
 - join column list
 - select expression with where
 - show tables/describe tables with where
 - fold limit (without order) into lower tablescan??
-- natural join
 - CAST
 - CONVERT
 - CASE
