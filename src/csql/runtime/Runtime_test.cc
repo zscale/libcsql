@@ -1667,3 +1667,35 @@ TEST_CASE(RuntimeTest, TestConversionFunctions, [] () {
   }
 });
 
+TEST_CASE(RuntimeTest, TestWildcardInnerJoin, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newTransaction();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new backends::csv::CSVTableProvider(
+          "customers",
+          "src/csql/testdata/testtbl2.csv",
+          '\t'));
+  estrat->addTableProvider(
+      new backends::csv::CSVTableProvider(
+          "orders",
+          "src/csql/testdata/testtbl3.csv",
+          '\t'));
+
+  {
+    ResultList result;
+    auto query = R"(
+      SELECT *
+      FROM orders
+      JOIN customers
+      WHERE orders.customerid = customers.customerid
+      LIMIT 10;
+    )";
+
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 11);
+    EXPECT_EQ(result.getNumRows(), 10);
+  }
+});

@@ -895,19 +895,6 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
       RAISE(kRuntimeError, "invalid JOIN type");
   }
 
-  Vector<RefPtr<SelectListNode>> select_list_expressions;
-  for (const auto& select_expr : select_list->getChildren()) {
-    if (hasAggregationWithinRecord(select_expr)) {
-      RAISE(
-          kRuntimeError,
-          "WITHIN RECORD can't be used together with JOIN in the same SELECT"
-          " statement. consider moving the WITHIN RECORD expression into a"
-          " subquery");
-    }
-
-    select_list_expressions.emplace_back(buildSelectList(txn, select_expr));
-  }
-
   Option<RefPtr<ValueExpressionNode>> where_expr;
   if (!in_join && where_clause) {
     if (!(*where_clause == ASTNode::T_WHERE)) {
@@ -949,6 +936,23 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
       where_clause,
       tables,
       true);
+
+  Vector<RefPtr<SelectListNode>> select_list_expressions;
+  for (const auto& select_expr : select_list->getChildren()) {
+    if (hasAggregationWithinRecord(select_expr)) {
+      RAISE(
+          kRuntimeError,
+          "WITHIN RECORD can't be used together with JOIN in the same SELECT"
+          " statement. consider moving the WITHIN RECORD expression into a"
+          " subquery");
+    }
+
+    if (*select_expr == ASTNode::T_ALL) {
+      RAISE(kNotYetImplementedError);
+    } else {
+      select_list_expressions.emplace_back(buildSelectList(txn, select_expr));
+    }
+  }
 
   Option<RefPtr<ValueExpressionNode>> join_cond;
   if (table_ref->getChildren().size() > 2) {

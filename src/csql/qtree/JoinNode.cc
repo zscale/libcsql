@@ -79,7 +79,7 @@ Vector<String> JoinNode::outputColumns() const {
 
 Vector<String> JoinNode::allColumns(
     const Option<String>& table_name) const {
-  RAISE(kNotYetImplementedError);
+  return column_names_;
 }
 
 size_t JoinNode::getColumnIndex(
