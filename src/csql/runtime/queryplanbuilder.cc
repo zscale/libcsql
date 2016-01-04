@@ -786,7 +786,9 @@ QueryTreeNode* QueryPlanBuilder::buildJoin(
     case ASTNode::T_INNER_JOIN:
     case ASTNode::T_LEFT_JOIN:
     case ASTNode::T_RIGHT_JOIN:
-    case ASTNode::T_NATURAL_JOIN:
+    case ASTNode::T_NATURAL_INNER_JOIN:
+    case ASTNode::T_NATURAL_LEFT_JOIN:
+    case ASTNode::T_NATURAL_RIGHT_JOIN:
       break;
     default:
       return nullptr;
@@ -819,7 +821,9 @@ QueryTreeNode* QueryPlanBuilder::buildTableReference(
     case ASTNode::T_INNER_JOIN:
     case ASTNode::T_LEFT_JOIN:
     case ASTNode::T_RIGHT_JOIN:
-    case ASTNode::T_NATURAL_JOIN:
+    case ASTNode::T_NATURAL_INNER_JOIN:
+    case ASTNode::T_NATURAL_LEFT_JOIN:
+    case ASTNode::T_NATURAL_RIGHT_JOIN:
       return buildJoinTableReference(
           txn,
           table_ref,
@@ -878,20 +882,24 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
   bool natural_join = false;
 
   switch (table_ref->getType()) {
+    case ASTNode::T_NATURAL_INNER_JOIN:
+      natural_join = true;
+      /* fallthrough */
     case ASTNode::T_INNER_JOIN:
       join_type = JoinType::INNER;
       break;
+    case ASTNode::T_NATURAL_LEFT_JOIN:
+      natural_join = true;
+      /* fallthrough */
     case ASTNode::T_LEFT_JOIN:
       join_type = JoinType::LEFT;
       break;
+    case ASTNode::T_NATURAL_RIGHT_JOIN:
+      natural_join = true;
+      /* fallthrough */
     case ASTNode::T_RIGHT_JOIN:
       join_type = JoinType::RIGHT;
       break;
-    case ASTNode::T_NATURAL_JOIN:
-      RAISE(
-          kRuntimeError,
-          "NATURAL JOINs are currently not supported, please list the join"
-          " conditions explicitly.");
     default:
       RAISE(kRuntimeError, "invalid JOIN type");
   }
@@ -950,26 +958,42 @@ QueryTreeNode* QueryPlanBuilder::buildJoinTableReference(
       secondary_table = joined_table.asInstanceOf<TableExpressionNode>();
     }
 
-    Set<String> column_set;
-    for (const auto& col : primary_table->allColumns()) {
-      all_columns.emplace_back(col);
-      column_set.insert(col.short_name);
+    Set<String> common_column_set;
+    {
+      Set<String> tmp_column_set;
+      for (const auto& col : secondary_table->allColumns()) {
+        tmp_column_set.insert(col.short_name);
+      }
+
+      for (const auto& col : primary_table->allColumns()) {
+        if (tmp_column_set.count(col.short_name) > 0) {
+          all_columns.emplace_back(col);
+          common_column_set.insert(col.short_name);
+        }
+      }
     }
 
-    for (const auto& col : secondary_table->allColumns()) {
-      if (column_set.count(col.short_name) == 0) {
+    for (const auto& col :
+            base_table.asInstanceOf<TableExpressionNode>()->allColumns()) {
+      if (common_column_set.count(col.short_name) == 0) {
+        all_columns.emplace_back(col);
+      }
+    }
+
+    for (const auto& col :
+            joined_table.asInstanceOf<TableExpressionNode>()->allColumns()) {
+      if (common_column_set.count(col.short_name) == 0) {
         all_columns.emplace_back(col);
       }
     }
   } else {
-    auto primary_table = base_table.asInstanceOf<TableExpressionNode>();
-    auto secondary_table = joined_table.asInstanceOf<TableExpressionNode>();
-
-    for (const auto& col : primary_table->allColumns()) {
+    for (const auto& col :
+            base_table.asInstanceOf<TableExpressionNode>()->allColumns()) {
       all_columns.emplace_back(col);
     }
 
-    for (const auto& col : secondary_table->allColumns()) {
+    for (const auto& col :
+            joined_table.asInstanceOf<TableExpressionNode>()->allColumns()) {
       all_columns.emplace_back(col);
     }
   }
