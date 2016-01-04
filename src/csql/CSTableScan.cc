@@ -68,11 +68,9 @@ void CSTableScan::execute(
     }
   }
 
-  for (auto& slnode : stmt_->selectList()) {
-    resolveColumns(slnode->expression());
-  }
-
   for (const auto& slnode : stmt_->selectList()) {
+    resolveColumns(slnode->expression());
+
     select_list_.emplace_back(
         ctx_,
         findMaxRepetitionLevel(slnode->expression()),
@@ -402,9 +400,10 @@ void CSTableScan::findColumns(
 void CSTableScan::resolveColumns(RefPtr<ValueExpressionNode> expr) const {
   auto fieldref = dynamic_cast<ColumnReferenceNode*>(expr.get());
   if (fieldref != nullptr) {
-    auto col = columns_.find(fieldref->fieldName());
+    auto colname = fieldref->fieldName();
+    auto col = columns_.find(colname);
     if (col == columns_.end()) {
-      fieldref->setColumnIndex(size_t(-1));
+      RAISEF(kNotFoundError, "column not found: $0", colname);
     } else {
       fieldref->setColumnIndex(col->second.index);
     }
