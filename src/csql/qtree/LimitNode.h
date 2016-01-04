@@ -27,6 +27,9 @@ public:
 
   Vector<String> outputColumns() const override;
 
+  Vector<String> allColumns(
+      const Option<String>& table_name) const override;
+
   size_t getColumnIndex(
       const String& column_name,
       bool allow_add = false) override;

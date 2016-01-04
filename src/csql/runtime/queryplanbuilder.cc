@@ -406,7 +406,7 @@ QueryTreeNode* QueryPlanBuilder::buildGroupBy(
   Vector<RefPtr<SelectListNode>> select_list_expressions;
   for (const auto& select_expr : select_list->getChildren()) {
     if (*select_expr == ASTNode::T_ALL) {
-      for (const auto& col : subtree_tbl->outputColumns()) {
+      for (const auto& col : subtree_tbl->allColumns()) {
         auto sl = new SelectListNode(new ColumnReferenceNode(col));
         sl->setAlias(col);
         select_list_expressions.emplace_back(sl);
@@ -459,12 +459,6 @@ bool QueryPlanBuilder::buildGroupBySelectList(
       node->setID(col_index);
       node->clearChildren();
       node->clearToken();
-      return true;
-    }
-
-    /* push down T_ALL */
-    case ASTNode::T_ALL: {
-      target_select_list->appendChild(ASTNode::T_ALL);
       return true;
     }
 
@@ -1081,7 +1075,7 @@ QueryTreeNode* QueryPlanBuilder::buildSubqueryTableReference(
   Vector<RefPtr<SelectListNode>> select_list_expressions;
   for (const auto& select_expr : select_list->getChildren()) {
     if (*select_expr == ASTNode::T_ALL) {
-      for (const auto& col : subquery_tbl->outputColumns()) {
+      for (const auto& col : subquery_tbl->allColumns()) {
         auto sl = new SelectListNode(new ColumnReferenceNode(col));
         sl->setAlias(col);
         QueryTreeUtil::resolveColumns(sl->expression(), resolver);

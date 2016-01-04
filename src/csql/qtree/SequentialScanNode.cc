@@ -118,6 +118,11 @@ Vector<String> SequentialScanNode::outputColumns() const {
   return output_columns_;
 }
 
+Vector<String> SequentialScanNode::allColumns(
+    const Option<String>& table_name) const {
+  return table_columns_;
+}
+
 void SequentialScanNode::normalizeColumnNames() {
   auto normalizer = [this] (RefPtr<ColumnReferenceNode> expr) {
     expr->setColumnName(normalizeColumnName(expr->columnName()));
