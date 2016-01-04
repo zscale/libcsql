@@ -6,4 +6,6 @@
 - select expression with where
 - show tables/describe tables with where
 - natural join
-
+- CAST
+- CONVERT
+- CASE
