@@ -875,6 +875,10 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
       argv[2].toString());
 }
 
+void timeAtExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
+
+}
+
 
 }
 }

@@ -1298,6 +1298,18 @@ TEST_CASE(RuntimeTest, TestDateTimeDateAddExpression, [] () {
   }
 });
 
+TEST_CASE(RuntimeTest, TestDateTimeTimeAtExpression, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newTransaction();
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("time_at('now')"));
+    EXPECT_EQ(v.toString(), "2015-11-16 11:00:25");
+  }
+});
+
 TEST_CASE(RuntimeTest, TestEscaping, [] () {
   auto runtime = Runtime::getDefaultRuntime();
   auto ctx = runtime->newTransaction();
