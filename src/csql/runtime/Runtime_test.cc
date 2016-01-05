@@ -1305,8 +1305,10 @@ TEST_CASE(RuntimeTest, TestDateTimeTimeAtExpression, [] () {
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("time_at('now')"));
-    EXPECT_EQ(v.toString(), "2015-11-16 11:00:25");
+        String("time_at('NOW')"));
+    EXPECT_EQ(
+        v.toString(),
+        SValue(SValue::TimeType(WallClock::now())).toString());
   }
 });
 
