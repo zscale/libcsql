@@ -37,7 +37,8 @@ void NestedLoopJoin::prepare(ExecutionContext* context) {
   joined_table_->prepare(context);
 }
 
-// FIXME max rows
+static const size_t kMaxInMemoryRows = 1000000;
+
 void NestedLoopJoin::execute(
     ExecutionContext* context,
     Function<bool (int argc, const SValue* argv)> fn) {
@@ -46,6 +47,12 @@ void NestedLoopJoin::execute(
       context,
       [&base_tbl_data] (int argc, const SValue* argv) -> bool {
     base_tbl_data.emplace_back(argv, argv + argc);
+    if (base_tbl_data.size() >= kMaxInMemoryRows) {
+      RAISE(
+          kRuntimeError,
+          "Nested Loop JOIN intermediate result set is too large, try using an"
+          " equi-join instead.");
+    }
     return true;
   });
   context->incrNumSubtasksCompleted(1);
@@ -55,6 +62,12 @@ void NestedLoopJoin::execute(
       context,
       [&joined_tbl_data] (int argc, const SValue* argv) -> bool {
     joined_tbl_data.emplace_back(argv, argv + argc);
+    if (joined_tbl_data.size() >= kMaxInMemoryRows) {
+      RAISE(
+          kRuntimeError,
+          "Nested Loop JOIN intermediate result set is too large, try using an"
+          " equi-join instead.");
+    }
     return true;
   });
   context->incrNumSubtasksCompleted(1);
