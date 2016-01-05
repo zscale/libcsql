@@ -956,8 +956,6 @@ void timeAtExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
       *out = SValue(SValue::TimeType(now - num * kMicrosPerYear));
       return;
     }
-
-    iputs("duration, time_suffix $0, $1", num, unit);
   }
 
 
