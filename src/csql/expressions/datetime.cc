@@ -12,6 +12,8 @@
 #include <assert.h>
 #include <math.h>
 #include <string.h>
+#include <stx/inspect.h>
+#include <stx/wallclock.h>
 #include <csql/expressions/datetime.h>
 #include <csql/svalue.h>
 
@@ -876,7 +878,20 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
 }
 
 void timeAtExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
+  checkArgs("TIME_AT", argc, 1);
 
+  auto val = argv[0].toString();
+  StringUtil::toLower(&val);
+
+  if (val == "now") {
+    *out = SValue(SValue::TimeType(WallClock::now()));
+    return;
+  }
+
+  RAISEF(
+      kRuntimeError,
+      "TIME_AT: invalid argument $0",
+      val);
 }
 
 
