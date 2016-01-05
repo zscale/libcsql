@@ -663,6 +663,72 @@ TEST_CASE(RuntimeTest, TestWildcardSelectWithOrderLimit, [] () {
   }
 });
 
+TEST_CASE(RuntimeTest, TestWildcardSelectWithSubqueries, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newTransaction();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new backends::csv::CSVTableProvider(
+          "testtable",
+          "src/csql/testdata/testtbl1.csv",
+          '\t'));
+
+  {
+    ResultList result;
+    auto query = R"(
+      select value, time from testtable;
+    )";
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 2);
+    EXPECT_EQ(result.getColumns()[0], "value");
+    EXPECT_EQ(result.getColumns()[1], "time");
+    EXPECT_EQ(result.getNumRows(), 19);
+  }
+
+  {
+    ResultList result;
+    auto query = R"(
+      select * from (select value, time from testtable);
+    )";
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 2);
+    EXPECT_EQ(result.getColumns()[0], "value");
+    EXPECT_EQ(result.getColumns()[1], "time");
+    EXPECT_EQ(result.getNumRows(), 19);
+  }
+
+  {
+    ResultList result;
+    auto query = R"(
+      select * from (select * from (select value, time from testtable));
+    )";
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 2);
+    EXPECT_EQ(result.getColumns()[0], "value");
+    EXPECT_EQ(result.getColumns()[1], "time");
+    EXPECT_EQ(result.getNumRows(), 19);
+  }
+
+  {
+    ResultList result;
+    auto query = R"(
+      select * from (select * from (select * from testtable));
+    )";
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
+    EXPECT_EQ(result.getNumColumns(), 4);
+    EXPECT_EQ(result.getColumns()[0], "time");
+    EXPECT_EQ(result.getColumns()[1], "value");
+    EXPECT_EQ(result.getColumns()[2], "segment1");
+    EXPECT_EQ(result.getColumns()[3], "segment2");
+    EXPECT_EQ(result.getNumRows(), 19);
+  }
+});
+
 TEST_CASE(RuntimeTest, TestSelectWithInternalAggrGroupColumns, [] () {
   auto runtime = Runtime::getDefaultRuntime();
   auto ctx = runtime->newTransaction();
