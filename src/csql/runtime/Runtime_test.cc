@@ -1896,14 +1896,13 @@ TEST_CASE(RuntimeTest, TestNaturalJoin, [] () {
     ResultList result;
     auto query = R"(
       SELECT *
-      FROM (SELECT * FROM departments)
-      NATURAL JOIN (SELECT deptid, start_time, end_time FROM openinghours)
-      NATURAL JOIN (SELECT * FROM users)
+      FROM (SELECT * FROM departments) t1
+      NATURAL JOIN (SELECT deptid, start_time, end_time FROM openinghours) t2
+      NATURAL JOIN (SELECT * FROM users) t3
       ORDER BY name;
     )";
 
     auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
-    result.debugPrint();
     runtime->executeStatement(ctx.get(), qplan->getStatement(0), &result);
     EXPECT_EQ(result.getNumColumns(), 5);
     EXPECT_EQ(result.getColumns()[0], "deptid");
