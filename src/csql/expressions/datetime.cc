@@ -888,6 +888,79 @@ void timeAtExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
     return;
   }
 
+  if (StringUtil::beginsWith(val, "-")) {
+    unsigned long long num;
+    String unit;
+
+    try {
+      size_t sz;
+      auto time_interval = val.substr(1);
+      num = std::stoull(time_interval, &sz);
+      unit = time_interval.substr(sz);
+      StringUtil::toLower(&unit);
+
+    } catch (std::invalid_argument e) {
+      RAISEF(
+        kRuntimeError,
+        "TIME_AT: invalid argument $0",
+        val);
+    }
+
+    auto now = uint64_t(WallClock::now());
+    if (unit == "sec" ||
+        unit == "secs" ||
+        unit == "second" ||
+        unit == "seconds") {
+      *out = SValue(SValue::TimeType(now - num * kMicrosPerSecond));
+      return;
+    }
+
+    if (unit == "min" ||
+        unit == "mins" ||
+        unit == "minute" ||
+        unit == "minutes") {
+      *out = SValue(SValue::TimeType(now - num * kMicrosPerMinute));
+      return;
+    }
+
+    if (unit == "h" ||
+        unit == "hour" ||
+        unit == "hours") {
+      *out = SValue(SValue::TimeType(now - num * kMicrosPerHour));
+      return;
+    }
+
+    if (unit == "d" ||
+        unit == "day" ||
+        unit == "days") {
+      *out = SValue(SValue::TimeType(now - num * kMicrosPerDay));
+      return;
+    }
+
+    if (unit == "w" ||
+        unit == "week" ||
+        unit == "weeks") {
+      *out = SValue(SValue::TimeType(now - num * kMicrosPerWeek));
+      return;
+    }
+
+    if (unit == "month" ||
+        unit == "months") {
+      *out = SValue(SValue::TimeType(now - num * kMicrosPerDay * 31));
+      return;
+    }
+
+    if (unit == "y" ||
+        unit == "year" ||
+        unit == "years") {
+      *out = SValue(SValue::TimeType(now - num * kMicrosPerYear));
+      return;
+    }
+
+    iputs("duration, time_suffix $0, $1", num, unit);
+  }
+
+
   RAISEF(
       kRuntimeError,
       "TIME_AT: invalid argument $0",
