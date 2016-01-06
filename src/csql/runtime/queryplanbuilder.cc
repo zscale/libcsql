@@ -23,7 +23,7 @@
 #include <csql/qtree/DescribeTableNode.h>
 #include <csql/qtree/RegexExpressionNode.h>
 #include <csql/qtree/LikeExpressionNode.h>
-#include <csql/qtree/SubQueryNode.h>
+#include <csql/qtree/SubqueryNode.h>
 #include <csql/qtree/QueryTreeUtil.h>
 #include <csql/qtree/ValueExpressionNode.h>
 #include <csql/qtree/JoinNode.h>
