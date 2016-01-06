@@ -938,7 +938,7 @@ void timeAtExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
 }
 
 Option<uint64_t> timeFromNow(String time_interval) {
-  unsigned long long num;
+  uint64_t num;
   String unit;
 
   try {
@@ -953,7 +953,6 @@ Option<uint64_t> timeFromNow(String time_interval) {
       "TIME_AT: invalid argument $0",
       time_interval);
   }
-
 
   auto now = uint64_t(WallClock::now());
   if (unit == "sec" ||
