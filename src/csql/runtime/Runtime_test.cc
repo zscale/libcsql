@@ -1321,6 +1321,13 @@ TEST_CASE(RuntimeTest, TestDateTimeTimeAtExpression, [] () {
         SValue(SValue::TimeType(now - 7 * kMicrosPerDay)).toString());
   }
 
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("time_at('1451910364')"));
+    EXPECT_EQ(v.toString(), "2016-01-04 12:26:04");
+  }
+
 });
 
 TEST_CASE(RuntimeTest, TestEscaping, [] () {
