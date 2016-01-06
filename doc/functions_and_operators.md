@@ -413,13 +413,10 @@ SELECT DATE_ADD('1447671624', '1', 'SECOND')
 
 ---
 ### time_at
-Returns a DateTime value for a given point in time or time interval from now.
+Returns a DateTime value for a time value or a time interval from now.
 
-The valid point in time values are:
-
-    Unix Timestamp
-    now
-    time string (%Y-%m-%d %H:%M:%S)
+Time values can be a unix timestamp, the literal 'now' or a time string in the
+format %Y-%m-%d %H:%M:%S
 
 ```
 SELECT TIME_AT('1451910364')
