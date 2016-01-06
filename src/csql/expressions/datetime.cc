@@ -880,17 +880,27 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
 void timeAtExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("TIME_AT", argc, 1);
 
-  auto val = argv[0].toString();
-  StringUtil::toLower(&val);
+  SValue time_val = argv[0];
+  try {
+    if (time_val.tryTimeConversion()) {
+      *out = SValue(time_val.getTimestamp());
+      return;
+    }
+  } catch (...) {
+    /* fallthrough */
+  }
 
-  if (val == "now") {
+  String time_interval = time_val.toString();
+  StringUtil::toLower(&time_interval);
+
+  if (time_interval == "now") {
     *out = SValue(SValue::TimeType(WallClock::now()));
     return;
   }
 
-  if (StringUtil::beginsWith(val, "-")) {
+  if (StringUtil::beginsWith(time_interval, "-")) {
     try {
-      Option<uint64_t> time_val = timeFromNow(val.substr(1));
+      Option<uint64_t> time_val = timeFromNow(time_interval.substr(1));
       if (!time_val.isEmpty()) {
         *out = SValue(SValue::TimeType(time_val.get()));
         return;
@@ -900,13 +910,14 @@ void timeAtExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
       RAISEF(
         kRuntimeError,
         "TIME_AT: invalid argument $0",
-        val);
+        time_interval);
     }
   }
 
-  if (StringUtil::endsWith(val, "ago")) {
+  if (StringUtil::endsWith(time_interval, "ago")) {
     try {
-      Option<uint64_t> time_val = timeFromNow(val.substr(0, val.length() - 4));
+      Option<uint64_t> time_val = timeFromNow(
+          time_interval.substr(0, time_interval.length() - 4));
       if (!time_val.isEmpty()) {
         *out = SValue(SValue::TimeType(time_val.get()));
         return;
@@ -916,27 +927,14 @@ void timeAtExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
       RAISEF(
         kRuntimeError,
         "TIME_AT: invalid argument $0",
-        val);
+        time_interval);
     }
-  }
-
-  if (StringUtil::isNumber(val)) {
-    //FIXME take a smart guess if seconds, microseconds, milliseconds
-    *out = SValue(SValue::TimeType(
-        UnixTime(std::stoull(val) * kMicrosPerSecond)));
-    return;
-  }
-
-  Option<UnixTime> time = UnixTime::parseString(val);
-  if (!time.isEmpty()) {
-    *out = SValue(SValue::TimeType(time.get()));
-    return;
   }
 
   RAISEF(
       kRuntimeError,
       "TIME_AT: invalid argument $0",
-      val);
+      time_interval);
 }
 
 Option<uint64_t> timeFromNow(String time_interval) {
