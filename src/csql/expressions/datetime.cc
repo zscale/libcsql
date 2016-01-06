@@ -965,6 +965,12 @@ void timeAtExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
     return;
   }
 
+  Option<UnixTime> time = UnixTime::parseString(val);
+  if (!time.isEmpty()) {
+    *out = SValue(SValue::TimeType(time.get()));
+    return;
+  }
+
 
   RAISEF(
       kRuntimeError,
