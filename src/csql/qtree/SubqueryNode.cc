@@ -73,10 +73,10 @@ Vector<QualifiedColumn> SubqueryNode::allColumns() const {
   Vector<QualifiedColumn> cols;
   for (const auto& c :
         subquery_.asInstanceOf<TableExpressionNode>()->outputColumns()) {
-    cols.emplace_back(QualifiedColumn{
-      .short_name = c,
-      .qualified_name = qualifier + c
-    });
+    QualifiedColumn qc;
+    qc.short_name = c;
+    qc.qualified_name = qualifier + c;
+    cols.emplace_back(qc);
   }
 
   return cols;
