@@ -12,6 +12,8 @@
 #include <assert.h>
 #include <math.h>
 #include <string.h>
+#include <stx/inspect.h>
+#include <stx/wallclock.h>
 #include <csql/expressions/datetime.h>
 #include <csql/svalue.h>
 
@@ -873,6 +875,131 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
       kRuntimeError,
       "DATE_SUB: invalid unit $0",
       argv[2].toString());
+}
+
+void timeAtExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
+  checkArgs("TIME_AT", argc, 1);
+
+  SValue time_val = argv[0];
+  try {
+    if (time_val.tryTimeConversion()) {
+      *out = SValue(time_val.getTimestamp());
+      return;
+    }
+  } catch (...) {
+    /* fallthrough */
+  }
+
+  String time_interval = time_val.toString();
+  StringUtil::toLower(&time_interval);
+
+  if (time_interval == "now") {
+    *out = SValue(SValue::TimeType(WallClock::now()));
+    return;
+  }
+
+  if (StringUtil::beginsWith(time_interval, "-")) {
+    try {
+      Option<uint64_t> time_val = timeFromNow(time_interval.substr(1));
+      if (!time_val.isEmpty()) {
+        *out = SValue(SValue::TimeType(time_val.get()));
+        return;
+      }
+
+    } catch (...) {
+      RAISEF(
+        kRuntimeError,
+        "TIME_AT: invalid argument $0",
+        time_interval);
+    }
+  }
+
+  if (StringUtil::endsWith(time_interval, "ago")) {
+    try {
+      Option<uint64_t> time_val = timeFromNow(
+          time_interval.substr(0, time_interval.length() - 4));
+      if (!time_val.isEmpty()) {
+        *out = SValue(SValue::TimeType(time_val.get()));
+        return;
+      }
+
+    } catch (...) {
+      RAISEF(
+        kRuntimeError,
+        "TIME_AT: invalid argument $0",
+        time_interval);
+    }
+  }
+
+  RAISEF(
+      kRuntimeError,
+      "TIME_AT: invalid argument $0",
+      time_interval);
+}
+
+Option<uint64_t> timeFromNow(String time_interval) {
+  unsigned long long num;
+  String unit;
+
+  try {
+    size_t sz;
+    num = std::stoull(time_interval, &sz);
+    unit = time_interval.substr(sz);
+    StringUtil::toLower(&unit);
+
+  } catch (std::invalid_argument e) {
+    RAISEF(
+      kRuntimeError,
+      "TIME_AT: invalid argument $0",
+      time_interval);
+  }
+
+
+  auto now = uint64_t(WallClock::now());
+  if (unit == "sec" ||
+      unit == "secs" ||
+      unit == "second" ||
+      unit == "seconds") {
+    return Some(now - num * kMicrosPerSecond);
+  }
+
+  if (unit == "min" ||
+      unit == "mins" ||
+      unit == "minute" ||
+      unit == "minutes") {
+    return Some(now - num * kMicrosPerMinute);
+  }
+
+  if (unit == "h" ||
+      unit == "hour" ||
+      unit == "hours") {
+    return Some(now - num * kMicrosPerHour);
+  }
+
+  if (unit == "d" ||
+      unit == "day" ||
+      unit == "days") {
+    return Some(now - num * kMicrosPerDay);
+  }
+
+  if (unit == "w" ||
+      unit == "week" ||
+      unit == "weeks") {
+    return Some(now - num * kMicrosPerWeek);
+  }
+
+  if (unit == "month" ||
+      unit == "months") {
+    return Some(now - num * kMicrosPerDay * 31);
+  }
+
+  if (unit == "y" ||
+      unit == "year" ||
+      unit == "years") {
+    return Some(now - num * kMicrosPerYear);
+  }
+
+  return None<uint64_t>();
 }
 
 

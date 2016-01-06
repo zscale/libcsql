@@ -1298,6 +1298,54 @@ TEST_CASE(RuntimeTest, TestDateTimeDateAddExpression, [] () {
   }
 });
 
+TEST_CASE(RuntimeTest, TestDateTimeTimeAtExpression, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newTransaction();
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("time_at('NOW')"));
+    EXPECT_EQ(
+        v.toString(),
+        SValue(SValue::TimeType(WallClock::now())).toString());
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("time_at('1451910364')"));
+    EXPECT_EQ(v.toString(), "2016-01-04 12:26:04");
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("time_at('2016-01-04 12:26:04')"));
+    EXPECT_EQ(v.toString(), "2016-01-04 12:26:04");
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("time_at('-7DAYS')"));
+    auto now = uint64_t(WallClock::now());
+    EXPECT_EQ(
+        v.toString(),
+        SValue(SValue::TimeType(now - 7 * kMicrosPerDay)).toString());
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("time_at('2days ago')"));
+    auto now = uint64_t(WallClock::now());
+    EXPECT_EQ(
+        v.toString(),
+        SValue(SValue::TimeType(now - 2 * kMicrosPerDay)).toString());
+  }
+});
+
 TEST_CASE(RuntimeTest, TestEscaping, [] () {
   auto runtime = Runtime::getDefaultRuntime();
   auto ctx = runtime->newTransaction();
