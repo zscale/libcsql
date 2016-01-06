@@ -430,8 +430,8 @@ Interval values can be written using the following syntax:
   [sign]<quantity><unit> [direction]
 ```
 
-where sign can be '-' or empty, direction can be ago or empty but either sign or
-direction have to be given, quantity is an integer and unit is one of the following
+where *sign* can be '-' or empty, *direction* can be 'ago' or empty but either sign or
+direction have to be given, *quantity* is an integer and *unit* is one of the following
 possible time units:
 
     s/sec/secs/second/seconds
