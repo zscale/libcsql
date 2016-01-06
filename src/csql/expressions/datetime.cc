@@ -958,6 +958,13 @@ void timeAtExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
     }
   }
 
+  if (StringUtil::isNumber(val)) {
+    //FIXME take a smart guess if seconds, microseconds, milliseconds
+    *out = SValue(SValue::TimeType(
+        UnixTime(std::stoull(val) * kMicrosPerSecond)));
+    return;
+  }
+
 
   RAISEF(
       kRuntimeError,
