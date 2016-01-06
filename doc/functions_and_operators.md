@@ -47,6 +47,7 @@ Users can also define their own functions and operators.
 [from_timestamp](#from_timestamp),
 [date_trunc](#date_trunc)
 [date_add](#date_add)
+[time_at](#time_at)
 
 ###### Aggregate Functions
 [sum](#sum),
@@ -409,6 +410,49 @@ Unit is a string specifying the expression's unit.
 SELECT DATE_ADD('1447671624', '1', 'SECOND')
 -> '2015-11-16 11:00:25'
 ```
+
+---
+### time_at
+Returns a DateTime value for a given point in time or time interval from now.
+
+The valid point in time values are:
+
+    Unix Timestamp
+    now
+    time string (%Y-%m-%d %H:%M:%S)
+
+```
+SELECT TIME_AT('1451910364')
+--> '2016-01-04 12:26:04'
+```
+
+
+Interval values can be written using the following syntax:
+
+```
+  [sign]<quantity><unit> [direction]
+```
+
+where sign can be '-' or empty, direction can be ago or empty but either sign or
+direction have to be given, quantity is an integer and unit is one of the following
+possible time units:
+
+    s/sec/secs/second/seconds
+    min/mins/minute/minutes
+    h/hour/hours
+    d/day/days
+    w/week/weeks
+    month/months
+    y/year/years
+
+
+```
+SELECT TIME_AT('-7days')
+SELECT TIME_AT('7days ago')
+```
+This would return the DateTime value for the current timestamp - 7 days.
+
+
 
 <br /><br />
 Aggregate Functions
