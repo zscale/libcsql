@@ -17,6 +17,7 @@
 #include "csql/qtree/ColumnReferenceNode.h"
 #include "csql/qtree/CallExpressionNode.h"
 #include "csql/qtree/LiteralExpressionNode.h"
+#include "csql/qtree/QueryTreeUtil.h"
 #include "csql/CSTableScanProvider.h"
 
 using namespace stx;
@@ -353,3 +354,64 @@ TEST_CASE(QTreeTest, TestSimpleConstantFolding, [] () {
   EXPECT_FALSE(where_expr.isEmpty());
   EXPECT_EQ(where_expr.get()->toSQL(), "gt(`time`,\"FUbar\")");
 });
+
+TEST_CASE(QTreeTest, TestPruneConstraints, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto txn = runtime->newTransaction();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new CSTableScanProvider(
+          "testtable",
+          "src/csql/testdata/testtbl.cst"));
+
+  String query = "select 1 from testtable where 1000 + 200 + 30 + 4 > time AND session_id != 400 + 44 AND time >= 1111 * 6;";
+  csql::Parser parser;
+  parser.parse(query.data(), query.size());
+
+  auto qtree_builder = runtime->queryPlanBuilder();
+  auto qtrees = qtree_builder->build(
+      txn.get(),
+      parser.getStatements(),
+      estrat->tableProvider());
+
+  EXPECT_EQ(qtrees.size(), 1);
+  auto qtree = qtrees[0];
+  EXPECT_TRUE(dynamic_cast<SequentialScanNode*>(qtree.get()) != nullptr);
+  auto seqscan = qtree.asInstanceOf<SequentialScanNode>();
+  auto where_expr = seqscan->whereExpression().get();
+
+  EXPECT_EQ(
+      where_expr->toSQL(),
+      "logical_and(logical_and(gt(1234,`time`),neq(`session_id`,444)),gte(`time`,6666))");
+
+  {
+    ScanConstraint constraint;
+    constraint.column_name = "time";
+    constraint.type = ScanConstraintType::GREATER_THAN_OR_EQUAL_TO;
+    constraint.value = SValue(SValue::IntegerType(6666));
+    auto pruned_expr = QueryTreeUtil::removeConstraintFromPredicate(
+        where_expr,
+        constraint);
+
+    EXPECT_EQ(
+        pruned_expr->toSQL(),
+        "logical_and(logical_and(gt(1234,`time`),neq(`session_id`,444)),true)");
+  }
+
+  {
+    ScanConstraint constraint;
+    constraint.column_name = "time";
+    constraint.type = ScanConstraintType::LESS_THAN;
+    constraint.value = SValue(SValue::IntegerType(1234));
+    auto pruned_expr = QueryTreeUtil::removeConstraintFromPredicate(
+        where_expr,
+        constraint);
+
+    EXPECT_EQ(
+        pruned_expr->toSQL(),
+        "logical_and(logical_and(true,neq(`session_id`,444)),gte(`time`,6666))");
+  }
+});
+
+

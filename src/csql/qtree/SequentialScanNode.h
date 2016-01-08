@@ -72,6 +72,9 @@ struct ScanConstraint {
   String column_name;
   ScanConstraintType type;
   SValue value;
+
+  bool operator==(const ScanConstraint& other) const;
+  bool operator!=(const ScanConstraint& other) const;
 };
 
 class SequentialScanNode : public TableExpressionNode {
@@ -126,8 +129,6 @@ public:
   String toString() const override;
 
 protected:
-
-  void findConstraints(RefPtr<ValueExpressionNode> expr);
 
   void findSelectedColumnNames(
     RefPtr<ValueExpressionNode> expr,

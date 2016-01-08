@@ -12,6 +12,7 @@
 #include <stx/autoref.h>
 #include <csql/qtree/ValueExpressionNode.h>
 #include <csql/qtree/ColumnReferenceNode.h>
+#include <csql/qtree/SequentialScanNode.h>
 #include <csql/Transaction.h>
 
 using namespace stx;
@@ -67,6 +68,32 @@ public:
       RefPtr<ValueExpressionNode> expr,
       const Set<String>& column_whitelist);
 
+  /**
+   * Removes the provided scan constraint from the provided predicate
+   * expression
+   *
+   * This method does _not_ preserve the full correctness of the provided
+   * expression: The pruned predicate expression may match on more inputs than
+   * the original expression did. However, it is guaranteed that all inputs
+   * that match the original expression will still match the pruned expression.
+   */
+  static RefPtr<ValueExpressionNode> removeConstraintFromPredicate(
+      RefPtr<ValueExpressionNode> expr,
+      const ScanConstraint& constraint);
+
+  /**
+   * Extracts all constraints from the provided predicate expression
+   */
+  static void findConstraints(
+      RefPtr<ValueExpressionNode> expr,
+      Vector<ScanConstraint>* constraints);
+
+  /**
+   * Extract a single ScanConstraint from an expression of the format
+   * "column <OP> constvalue" or "constvalue <OP> columns"
+   */
+  static Option<ScanConstraint> findConstraint(
+      RefPtr<ValueExpressionNode> expr);
 };
 
 
