@@ -17,6 +17,17 @@ using namespace stx;
 
 namespace csql {
 
+bool ScanConstraint::operator==(const ScanConstraint& other) const {
+  return
+      column_name == other.column_name &&
+      type == other.type &&
+      value == other.value;
+}
+
+bool ScanConstraint::operator!=(const ScanConstraint& other) const {
+  return !(*this == other);
+}
+
 SequentialScanNode::SequentialScanNode(
     const TableInfo& table_info,
     Vector<RefPtr<SelectListNode>> select_list,
@@ -41,7 +52,7 @@ SequentialScanNode::SequentialScanNode(
   }
 
   if (!where_expr_.isEmpty()) {
-    findConstraints(where_expr_.get());
+    QueryTreeUtil::findConstraints(where_expr_.get(), &constraints_);
   }
 }
 
@@ -68,7 +79,7 @@ Option<RefPtr<ValueExpressionNode>> SequentialScanNode::whereExpression() const 
 void SequentialScanNode::setWhereExpression(RefPtr<ValueExpressionNode> e) {
   where_expr_ = Some(e);
   constraints_.clear();
-  findConstraints(e);
+  QueryTreeUtil::findConstraints(e, &constraints_);
 }
 
 const String& SequentialScanNode::tableName() const {
@@ -255,106 +266,6 @@ String SequentialScanNode::toString() const {
 
 const Vector<ScanConstraint>& SequentialScanNode::constraints() const {
   return constraints_;
-}
-
-void SequentialScanNode::findConstraints(RefPtr<ValueExpressionNode> expr) {
-  auto call_expr = dynamic_cast<CallExpressionNode*>(expr.get());
-
-  // logical ands allow chaining multiple constraints
-  if (call_expr && call_expr->symbol() == "logical_and") {
-    for (const auto& arg : call_expr->arguments()) {
-      findConstraints(arg);
-    }
-
-    return;
-  }
-
-  // extract constraints of format "column <OP> value"
-  {
-    RefPtr<LiteralExpressionNode> literal;
-    RefPtr<ColumnReferenceNode> column;
-    bool reverse_expr = false;
-    auto args = expr->arguments();
-    if (args.size() == 2) {
-      for (size_t i = 0; i < args.size(); ++i) {
-        auto literal_expr = dynamic_cast<LiteralExpressionNode*>(args[i].get());
-        if (literal_expr) {
-          literal = mkRef(literal_expr);
-        }
-        auto colref_expr = dynamic_cast<ColumnReferenceNode*>(args[i].get());
-        if (colref_expr) {
-          column = mkRef(colref_expr);
-          reverse_expr = i > 0;
-        }
-      }
-    }
-
-    if (literal.get() != nullptr && column.get() != nullptr) {
-
-      // EQUAL_TO
-      if (call_expr && call_expr->symbol() == "eq") {
-        ScanConstraint constraint;
-        constraint.column_name = column->fieldName();
-        constraint.type = ScanConstraintType::EQUAL_TO;
-        constraint.value = literal->value();
-        constraints_.emplace_back(constraint);
-      }
-
-      // NOT_EQUAL_TO
-      if (call_expr && call_expr->symbol() == "neq") {
-        ScanConstraint constraint;
-        constraint.column_name = column->fieldName();
-        constraint.type = ScanConstraintType::NOT_EQUAL_TO;
-        constraint.value = literal->value();
-        constraints_.emplace_back(constraint);
-      }
-
-      // LESS_THAN
-      if (call_expr && call_expr->symbol() == "lt") {
-        ScanConstraint constraint;
-        constraint.column_name = column->fieldName();
-        constraint.type = reverse_expr ?
-            ScanConstraintType::GREATER_THAN :
-            ScanConstraintType::LESS_THAN;
-        constraint.value = literal->value();
-        constraints_.emplace_back(constraint);
-      }
-
-      // LESS_THAN_OR_EQUALS
-      if (call_expr && call_expr->symbol() == "lte") {
-        ScanConstraint constraint;
-        constraint.column_name = column->fieldName();
-        constraint.type = reverse_expr ?
-            ScanConstraintType::GREATER_THAN_OR_EQUAL_TO :
-            ScanConstraintType::LESS_THAN_OR_EQUAL_TO;
-        constraint.value = literal->value();
-        constraints_.emplace_back(constraint);
-      }
-
-      // GREATER_THAN
-      if (call_expr && call_expr->symbol() == "gt") {
-        ScanConstraint constraint;
-        constraint.column_name = column->fieldName();
-        constraint.type = reverse_expr ?
-            ScanConstraintType::LESS_THAN :
-            ScanConstraintType::GREATER_THAN;
-        constraint.value = literal->value();
-        constraints_.emplace_back(constraint);
-      }
-
-      // GREATER_THAN_OR_EQUAL_TO
-      if (call_expr && call_expr->symbol() == "gte") {
-        ScanConstraint constraint;
-        constraint.column_name = column->fieldName();
-        constraint.type = reverse_expr ?
-            ScanConstraintType::LESS_THAN_OR_EQUAL_TO :
-            ScanConstraintType::GREATER_THAN_OR_EQUAL_TO;
-        constraint.value = literal->value();
-        constraints_.emplace_back(constraint);
-      }
-
-    }
-  }
 }
 
 } // namespace csql
