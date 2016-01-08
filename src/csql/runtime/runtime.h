@@ -63,6 +63,11 @@ public:
 
   void executeStatement(
       Transaction* ctx,
+      RefPtr<TableExpressionNode> qtree,
+      ResultList* result);
+
+  void executeStatement(
+      Transaction* ctx,
       Statement* statement,
       ResultList* result);
 

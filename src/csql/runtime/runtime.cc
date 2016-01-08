@@ -132,6 +132,33 @@ void Runtime::executeQuery(
 
 void Runtime::executeStatement(
     Transaction* txn,
+    RefPtr<TableExpressionNode> qtree,
+    ResultList* result) {
+
+  auto expr = query_builder_->buildTableExpression(
+      txn,
+      qtree.get(),
+      txn->getTableProvider(),
+      this);
+
+  result->addHeader(qtree->outputColumns());
+
+  csql::ExecutionContext context(&tpool_);
+  if (!cachedir_.isEmpty()) {
+    context.setCacheDir(cachedir_.get());
+  }
+
+  expr->prepare(&context);
+  expr->execute(
+      &context,
+      [result] (int argc, const csql::SValue* argv) -> bool {
+    result->addRow(argv, argc);
+    return true;
+  });
+}
+
+void Runtime::executeStatement(
+    Transaction* txn,
     Statement* statement,
     ResultList* result) {
   auto table_expr = dynamic_cast<TableExpression*>(statement);
