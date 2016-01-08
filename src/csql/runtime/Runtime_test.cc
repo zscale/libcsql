@@ -2042,3 +2042,64 @@ TEST_CASE(RuntimeTest, TestNaturalJoin, [] () {
     EXPECT_EQ(result.getRow(2)[4], "hans");
   }
 });
+
+TEST_CASE(RuntimeTest, TestShowAndDescribeTables, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto txn = runtime->newTransaction();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new backends::csv::CSVTableProvider(
+          "departments",
+          "src/csql/testdata/testtbl5.csv",
+          '\t'));
+  estrat->addTableProvider(
+      new backends::csv::CSVTableProvider(
+          "users",
+          "src/csql/testdata/testtbl6.csv",
+          '\t'));
+
+  txn->setTableProvider(estrat->tableProvider());
+
+  {
+    ResultList result;
+    auto query = R"(show tables;)";
+    auto qplan = runtime->buildQueryPlan(txn.get(), query, estrat.get());
+    runtime->executeStatement(
+        txn.get(),
+        qplan->getStatementQTree(0).asInstanceOf<TableExpressionNode>(),
+        &result);
+
+    EXPECT_EQ(result.getNumColumns(), 2);
+    EXPECT_EQ(result.getNumRows(), 2);
+    EXPECT_EQ(result.getColumns()[0], "table_name");
+    EXPECT_EQ(result.getColumns()[1], "description");
+    EXPECT_EQ(result.getRow(0)[0], "departments");
+    EXPECT_EQ(result.getRow(1)[0], "users");
+  }
+
+  {
+    ResultList result;
+    auto query = R"(describe departments;)";
+    auto qplan = runtime->buildQueryPlan(txn.get(), query, estrat.get());
+    runtime->executeStatement(
+        txn.get(),
+        qplan->getStatementQTree(0).asInstanceOf<TableExpressionNode>(),
+        &result);
+
+    EXPECT_EQ(result.getNumColumns(), 4);
+    EXPECT_EQ(result.getNumRows(), 2);
+    EXPECT_EQ(result.getColumns()[0], "column_name");
+    EXPECT_EQ(result.getColumns()[1], "type");
+    EXPECT_EQ(result.getColumns()[2], "nullable");
+    EXPECT_EQ(result.getColumns()[3], "description");
+    EXPECT_EQ(result.getRow(0)[0], "name");
+    EXPECT_EQ(result.getRow(0)[1], "string");
+    EXPECT_EQ(result.getRow(0)[2], "YES");
+    EXPECT_EQ(result.getRow(1)[0], "deptid");
+    EXPECT_EQ(result.getRow(1)[1], "string");
+    EXPECT_EQ(result.getRow(1)[2], "YES");
+  }
+});
+
+

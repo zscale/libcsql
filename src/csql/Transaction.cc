@@ -32,4 +32,12 @@ UnixTime Transaction::now() const {
   return now_;
 }
 
+void Transaction::setTableProvider(RefPtr<TableProvider> provider) {
+  table_provider_ = provider;
+}
+
+RefPtr<TableProvider> Transaction::getTableProvider() const {
+  return table_provider_;
+}
+
 } // namespace csql

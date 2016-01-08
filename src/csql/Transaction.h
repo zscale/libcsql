@@ -9,8 +9,9 @@
  */
 #pragma once
 #include <stx/stdtypes.h>
-#include <csql/csql.h>
 #include <stx/UnixTime.h>
+#include <csql/csql.h>
+#include <csql/runtime/tablerepository.h>
 
 using namespace stx;
 
@@ -33,9 +34,13 @@ public:
 
   SymbolTable* getSymbolTable() const;
 
+  void setTableProvider(RefPtr<TableProvider> provider);
+  RefPtr<TableProvider> getTableProvider() const;
+
 protected:
   Runtime* runtime_;
   UnixTime now_;
+  RefPtr<TableProvider> table_provider_;
 };
 
 

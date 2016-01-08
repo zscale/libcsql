@@ -30,11 +30,25 @@ const String& DescribeTableNode::tableName() const {
 }
 
 Vector<String> DescribeTableNode::outputColumns() const {
-  return Vector<String>{}; // FIXME
+  return Vector<String> {
+    "column_name",
+    "type",
+    "nullable",
+    "description"
+  };
 }
 
 Vector<QualifiedColumn> DescribeTableNode::allColumns() const {
-  return Vector<QualifiedColumn>{}; // FIXME
+  Vector<QualifiedColumn> cols;
+
+  for (const auto& c : outputColumns()) {
+    QualifiedColumn  qc;
+    qc.short_name = c;
+    qc.qualified_name = c;
+    cols.emplace_back(qc);
+  }
+
+  return cols;
 }
 
 size_t DescribeTableNode::getColumnIndex(
