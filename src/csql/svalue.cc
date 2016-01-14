@@ -105,38 +105,25 @@ SValue::SValue(const SValue& copy) {
 }
 
 SValue& SValue::operator=(const SValue& copy) {
-  switch (data_.type) {
-
-    case SQL_STRING:
-      free(data_.u.t_string.ptr);
-      break;
-
-    default:
-      break;
-
+  if (data_.type == SQL_STRING) {
+    free(data_.u.t_string.ptr);
   }
 
-  switch (copy.data_.type) {
+  if (copy.data_.type == SQL_STRING) {
+    data_.type = SQL_STRING;
+    data_.u.t_string.len = copy.data_.u.t_string.len;
+    data_.u.t_string.ptr = static_cast<char *>(malloc(data_.u.t_string.len));
 
-    case SQL_STRING:
-      data_.type = SQL_STRING;
-      data_.u.t_string.len = copy.data_.u.t_string.len;
-      data_.u.t_string.ptr = static_cast<char *>(malloc(data_.u.t_string.len));
+    if (data_.u.t_string.ptr == nullptr) {
+      RAISE(kRuntimeError, "could not allocate SValue");
+    }
 
-      if (data_.u.t_string.ptr == nullptr) {
-        RAISE(kRuntimeError, "could not allocate SValue");
-      }
-
-      memcpy(
-          data_.u.t_string.ptr,
-          copy.data_.u.t_string.ptr,
-          data_.u.t_string.len);
-      break;
-
-    default:
-      memcpy(&data_, &copy.data_, sizeof(data_));
-      break;
-
+    memcpy(
+        data_.u.t_string.ptr,
+        copy.data_.u.t_string.ptr,
+        data_.u.t_string.len);
+  } else {
+    memcpy(&data_, &copy.data_, sizeof(data_));
   }
 
   return *this;
