@@ -28,10 +28,7 @@ int main() {
   auto ctx = runtime->newTransaction();
 
   auto estrat = mkRef(new DefaultExecutionStrategy());
-  estrat->addTableProvider(
-      new CSTableScanProvider(
-          "testtable",
-          "/Users/paul/benchmark.tbl"));
+  estrat->addTableProvider(new CSTableScanProvider("testtable", "benchmark.cst"));
 
   ResultList result;
   auto query = R"(
