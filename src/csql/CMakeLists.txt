@@ -118,3 +118,6 @@ target_link_libraries(test-chartsql-qtree ${CSQL_LIBS})
 
 add_executable(test-chartsql-parser parser/Parser_test.cc)
 target_link_libraries(test-chartsql-parser ${CSQL_LIBS})
+
+add_executable(csql_bench csql_bench.cc)
+target_link_libraries(csql_bench ${CSQL_LIBS})
