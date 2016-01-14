@@ -117,15 +117,6 @@ void VM::accumulate(
   }
 }
 
-void VM::evaluate(
-    Transaction* ctx,
-    const Program* program,
-    int argc,
-    const SValue* argv,
-    SValue* out) {
-  return evaluate(ctx, program, nullptr, program->entry_, argc, argv, out);
-}
-
 void VM::merge(
     Transaction* ctx,
     const Program* program,
