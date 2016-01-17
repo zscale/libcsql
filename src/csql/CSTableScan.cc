@@ -166,7 +166,7 @@ void CSTableScan::scan(
             reader->readBoolean(&r, &d, &v);
 
             if (d < reader->maxDefinitionLevel()) {
-              in_row[col.second.index] = SValue();
+              in_row[col.second.index] = SValue(SValue::BoolType(false));
             } else {
               in_row[col.second.index] = SValue(SValue::BoolType(v));
             }
