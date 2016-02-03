@@ -24,7 +24,7 @@ CSTableScan::CSTableScan(
     const String& cstable_filename,
     QueryBuilder* runtime) :
     ctx_(ctx),
-    stmt_(stmt),
+    stmt_(stmt->deepCopyAs<SequentialScanNode>()),
     cstable_filename_(cstable_filename),
     runtime_(runtime),
     colindex_(0),
