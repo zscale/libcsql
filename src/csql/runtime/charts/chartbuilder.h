@@ -149,7 +149,7 @@ protected:
 
   template <typename TX>
   AnySeriesAdapter* mkSeriesAdapter1D(SValue* row) {
-    if (!row[x_ind_].testType<TX>()) {
+    if (!row[x_ind_].isConvertibleTo<TX>()) {
       return nullptr;
     }
 
@@ -166,7 +166,7 @@ protected:
 
   template <typename TX, typename TY>
   AnySeriesAdapter* mkSeriesAdapter2D(SValue* row) {
-    if (!row[y_ind_].testType<TY>()) {
+    if (!row[y_ind_].isConvertibleTo<TY>()) {
       return nullptr;
     }
 
@@ -186,7 +186,7 @@ protected:
 
   template <typename TX, typename TY, typename TZ>
   AnySeriesAdapter* mkSeriesAdapter3D(SValue* row) {
-    if (!row[z_ind_].testType<TZ>()) {
+    if (!row[z_ind_].isConvertibleTo<TZ>()) {
       return nullptr;
     }
 

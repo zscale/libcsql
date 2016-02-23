@@ -75,7 +75,7 @@ SValue::SValue(SValue::BoolType bool_value) {
 
 SValue::SValue(SValue::TimeType time_value) {
   data_.type = SQL_TIMESTAMP;
-  data_.u.t_timestamp = static_cast<uint64_t>(time_value) / kMicrosPerSecond;
+  data_.u.t_timestamp = static_cast<uint64_t>(time_value);
 }
 
 SValue::SValue(const SValue& copy) {
@@ -164,6 +164,39 @@ bool SValue::operator==(const SValue& other) const {
 
 sql_type SValue::getType() const {
   return data_.type;
+}
+
+template <> SValue::BoolType SValue::getValue<SValue::BoolType>() const {
+  return getBool();
+}
+
+template <> SValue::IntegerType SValue::getValue<SValue::IntegerType>() const {
+  return getInteger();
+}
+
+template <> SValue::FloatType SValue::getValue<SValue::FloatType>() const {
+  return getFloat();
+}
+
+template <> SValue::StringType SValue::getValue<SValue::StringType>() const {
+  return toString();
+}
+
+template <> SValue::TimeType SValue::getValue<SValue::TimeType>() const {
+  return getTimestamp();
+}
+
+// FIXPAUL: smarter type detection
+template <> bool SValue::isConvertibleTo<SValue::BoolType>() const {
+  return data_.type == SQL_BOOL;
+}
+
+template <> bool SValue::isConvertibleTo<SValue::TimeType>() const {
+  if (data_.type == SQL_TIMESTAMP) {
+    return true;
+  }
+
+  return isConvertibleToNumeric();
 }
 
 SValue::IntegerType SValue::getInteger() const {
@@ -281,21 +314,18 @@ SValue::BoolType SValue::toBool() const {
 }
 
 SValue::TimeType SValue::getTimestamp() const {
-  switch (getType()) {
+  if (isTimestamp()) {
+    return data_.u.t_timestamp;
+  }
 
-    case SQL_TIMESTAMP:
-      return data_.u.t_timestamp * kMicrosPerSecond;
-
-    case SQL_NULL:
-      return 0;
-
-    default:
-      RAISE(
-         kTypeError,
-          "can't convert %s '%s' to DateTime",
-          SValue::getTypeName(data_.type),
-          toString().c_str());
-
+  if (isConvertibleTo<TimeType>()) {
+    return toTimestamp().getTimestamp();
+  } else {
+    RAISE(
+       kTypeError,
+        "can't convert %s '%s' to TIMESTAMP",
+        SValue::getTypeName(data_.type),
+        toString().c_str());
   }
 }
 
@@ -377,7 +407,7 @@ String SValue::toSQL() const {
     }
 
     case SQL_TIMESTAMP: {
-      return StringUtil::format("\"$0\"", toString());
+      return StringUtil::toString(toInteger());
     }
 
     case SQL_FLOAT: {
@@ -421,38 +451,11 @@ const char* SValue::getTypeName() const {
   return SValue::getTypeName(data_.type);
 }
 
-template <> SValue::BoolType SValue::getValue<SValue::BoolType>() const {
-  return getBool();
-}
-
-template <> SValue::IntegerType SValue::getValue<SValue::IntegerType>() const {
-  return getInteger();
-}
-
-template <> SValue::FloatType SValue::getValue<SValue::FloatType>() const {
-  return getFloat();
-}
-
-template <> SValue::StringType SValue::getValue<SValue::StringType>() const {
-  return toString();
-}
-
-template <> SValue::TimeType SValue::getValue<SValue::TimeType>() const {
-  return getTimestamp();
-}
-
-// FIXPAUL: smarter type detection
-template <> bool SValue::testType<SValue::BoolType>() const {
-  return data_.type == SQL_BOOL;
-}
-
-template <> bool SValue::testType<SValue::TimeType>() const {
-  return data_.type == SQL_TIMESTAMP;
-}
-
-template <> bool SValue::testType<SValue::IntegerType>() const {
-  if (data_.type == SQL_INTEGER) {
-    return true;
+template <> bool SValue::isConvertibleTo<SValue::IntegerType>() const {
+  switch (data_.type) {
+    case SQL_INTEGER:
+    case SQL_TIMESTAMP:
+      return true;
   }
 
   auto str = toString();
@@ -476,9 +479,12 @@ template <> bool SValue::testType<SValue::IntegerType>() const {
   return true;
 }
 
-template <> bool SValue::testType<SValue::FloatType>() const {
-  if (data_.type == SQL_FLOAT) {
-    return true;
+template <> bool SValue::isConvertibleTo<SValue::FloatType>() const {
+  switch (data_.type) {
+    case SQL_FLOAT:
+    case SQL_INTEGER:
+    case SQL_TIMESTAMP:
+      return true;
   }
 
   auto str = toString();
@@ -509,65 +515,68 @@ template <> bool SValue::testType<SValue::FloatType>() const {
   return true;
 }
 
-template <> bool SValue::testType<std::string>() const {
+template <> bool SValue::isConvertibleTo<std::string>() const {
   return true;
 }
 
-sql_type SValue::testTypeWithNumericConversion() const {
-  if (testType<SValue::IntegerType>()) return SQL_INTEGER;
-  if (testType<SValue::FloatType>()) return SQL_FLOAT;
-  return getType();
-}
-
-bool SValue::tryNumericConversion() {
-  if (testType<SValue::IntegerType>()) {
-    SValue::IntegerType val = getValue<SValue::IntegerType>();
-    data_.type = SQL_INTEGER;
-    data_.u.t_integer = val;
-    return true;
+SValue SValue::toTimestamp() const {
+  if (isTimestamp()) {
+    return *this;
   }
 
-  if (testType<SValue::FloatType>()) {
-    SValue::FloatType val = getValue<SValue::FloatType>();
-    data_.type = SQL_FLOAT;
-    data_.u.t_float = val;
-    return true;
+  if (isConvertibleToNumeric()) {
+    return SValue(SValue::TimeType(toNumeric().getFloat()));
   }
 
-  return false;
+  RAISE(
+      kTypeError,
+      "can't convert %s '%s' to TIMESTAMP",
+      SValue::getTypeName(data_.type),
+      toString().c_str());
 }
 
-bool SValue::tryTimeConversion() {
-  uint64_t ts;
+SValue SValue::toNumeric() const {
+  if (isNumeric()) {
+    return *this;
+  }
 
+  if (isConvertibleTo<SValue::IntegerType>()) {
+    return SValue(SValue::IntegerType(getInteger()));
+  }
+
+  if (isConvertibleTo<SValue::FloatType>()) {
+    return SValue(SValue::FloatType(getFloat()));
+  }
+
+  RAISE(
+      kTypeError,
+      "can't convert %s '%s' to NUMERIC",
+      SValue::getTypeName(data_.type),
+      toString().c_str());
+}
+
+bool SValue::isTimestamp() const {
+  return data_.type == SQL_TIMESTAMP;
+}
+
+bool SValue::isNumeric() const {
   switch (data_.type) {
-    case SQL_TIMESTAMP:
-      return true;
-    case SQL_INTEGER:
-      ts = getInteger();
-      break;
     case SQL_FLOAT:
-      ts = getFloat();
-      break;
-    default: {
-      auto time_opt = stx::Human::parseTime(getString());
-      if (time_opt.isEmpty()) {
-        RAISEF(
-           kTypeError,
-            "can't convert $0 '$1' to DateTime",
-            SValue::getTypeName(data_.type),
-            toString());
-      } else {
-        ts = time_opt.get().unixMicros() / kMicrosPerSecond;
-      }
-      break;
-    }
+    case SQL_INTEGER:
+      return true;
+    default:
+      return false;
   }
+}
 
-  data_.type = SQL_TIMESTAMP;
-  // FIXPAUL take a smart guess if this is milli, micro, etc
-  data_.u.t_timestamp = ts;
-  return true;
+bool SValue::isConvertibleToNumeric() const {
+  if (isConvertibleTo<SValue::IntegerType>() ||
+      isConvertibleTo<SValue::FloatType>() ||
+      isTimestamp()) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 void SValue::encode(OutputStream* os) const {
@@ -611,7 +620,7 @@ void SValue::decode(InputStream* is) {
       *this = SValue(SValue::BoolType(is->readUInt8() == 1));
       return;
     case SQL_TIMESTAMP: {
-      *this = SValue(SValue::TimeType(is->readUInt64() * kMicrosPerSecond));
+      *this = SValue(SValue::TimeType(is->readUInt64()));
       return;
     }
     case SQL_NULL:

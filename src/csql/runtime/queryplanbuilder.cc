@@ -1491,8 +1491,7 @@ ValueExpressionNode* QueryPlanBuilder::buildLiteral(
       break;
 
     case Token::T_NUMERIC:
-      literal = SValue(token->getString());
-      literal.tryNumericConversion();
+      literal = SValue(token->getString()).toNumeric();
       break;
 
     case Token::T_STRING:

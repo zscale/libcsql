@@ -22,20 +22,33 @@
 using namespace stx;
 
 namespace csql {
-class Token;
 
 class SValue {
 public:
-  typedef String StringType;
+  typedef std::string StringType;
   typedef double FloatType;
   typedef int64_t IntegerType;
   typedef bool BoolType;
   typedef stx::UnixTime TimeType;
 
+  static SValue newNull();
+  static SValue newString(const StringType& value);
+  static SValue newString(const char* value);
+  static SValue newInteger(IntegerType value);
+  static SValue newFloat(FloatType value);
+  static SValue newBool(BoolType value);
+  static SValue newTimestamp(TimeType value);
+
   static const char* getTypeName(sql_type type);
   const char* getTypeName() const;
 
   explicit SValue();
+  SValue(const SValue& copy);
+  SValue& operator=(const SValue& copy);
+  bool operator==(const SValue& other) const;
+  ~SValue();
+
+  // deprecated constructors
   explicit SValue(const StringType& string_value);
   explicit SValue(char const* string_value); // FIXPAUL HACK!!!
   explicit SValue(IntegerType integer_value);
@@ -43,39 +56,42 @@ public:
   explicit SValue(BoolType bool_value);
   explicit SValue(TimeType time_value);
 
-  SValue(const SValue& copy);
-  SValue& operator=(const SValue& copy);
-  bool operator==(const SValue& other) const;
-  ~SValue();
-
-  static std::string makeUniqueKey(SValue* arr, size_t len);
+  sql_type getType() const;
+  bool isString() const;
+  bool isNumeric() const;
+  bool isInteger() const;
+  bool isFloat() const;
+  bool isBool() const;
+  bool isTimestamp() const;
 
   template <typename T> T getValue() const;
-  template <typename T> bool testType() const;
-  sql_type getType() const;
-  sql_type testTypeWithNumericConversion() const;
-
+  StringType getString() const;
   IntegerType getInteger() const;
-  IntegerType toInteger() const;
-
   FloatType getFloat() const;
-  FloatType toFloat() const;
-
   BoolType getBool() const;
-  BoolType toBool() const;
-
   TimeType getTimestamp() const;
 
-  StringType getString() const;
-  std::string toString() const;
+  template <typename T> bool isConvertibleTo() const;
+  bool isConvertibleToString() const;
+  bool isConvertibleToNumeric() const;
+  bool isConvertibleToInteger() const;
+  bool isConvertibleToFloat() const;
+  bool isConvertibleToBool() const;
+  bool isConvertibleToTimestamp() const;
 
-  bool tryNumericConversion();
-  bool tryTimeConversion();
+  SValue toNumeric() const;
+  std::string toString() const;
+  IntegerType toInteger() const;
+  FloatType toFloat() const;
+  BoolType toBool() const;
+  SValue toTimestamp() const;
 
   void encode(OutputStream* os) const;
   void decode(InputStream* is);
 
   String toSQL() const;
+
+  static std::string makeUniqueKey(SValue* arr, size_t len);
 
 protected:
   struct {

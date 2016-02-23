@@ -13,6 +13,7 @@
 #include <math.h>
 #include <string.h>
 #include <stx/inspect.h>
+#include <stx/human.h>
 #include <stx/wallclock.h>
 #include <csql/expressions/datetime.h>
 #include <csql/svalue.h>
@@ -31,22 +32,109 @@ static void checkArgs(const char* symbol, int argc, int argc_expected) {
   }
 }
 
+static int64_t parseTimestamp(SValue* arg) {
+  switch (arg->getType()) {
+    case SQL_TIMESTAMP:
+      return arg->getInteger();
+    case SQL_INTEGER:
+      return arg->getInteger() * kMicrosPerSecond;
+    case SQL_FLOAT:
+      return arg->getFloat() * kMicrosPerSecond;
+    default: {
+      if (arg->isConvertibleToNumeric()) {
+        return arg->toNumeric().getFloat() * kMicrosPerSecond;
+      }
+    }
+  }
+
+  RAISEF(
+     kTypeError,
+      "can't convert $0 '$1' to TIMESTAMP",
+      SValue::getTypeName(arg->getType()),
+      arg->toString());
+}
+
+static Option<uint64_t> parseInterval(String time_interval) {
+  uint64_t num;
+  String unit;
+
+  try {
+    size_t sz;
+    num = std::stoull(time_interval, &sz);
+    unit = time_interval.substr(sz);
+    StringUtil::toLower(&unit);
+
+  } catch (std::invalid_argument e) {
+    RAISEF(
+      kRuntimeError,
+      "TIME_AT: invalid argument $0",
+      time_interval);
+  }
+
+  if (unit == "sec" ||
+      unit == "secs" ||
+      unit == "second" ||
+      unit == "seconds") {
+    return Some(num * kMicrosPerSecond);
+  }
+
+  if (unit == "min" ||
+      unit == "mins" ||
+      unit == "minute" ||
+      unit == "minutes") {
+    return Some(num * kMicrosPerMinute);
+  }
+
+  if (unit == "h" ||
+      unit == "hour" ||
+      unit == "hours") {
+    return Some(num * kMicrosPerHour);
+  }
+
+  if (unit == "d" ||
+      unit == "day" ||
+      unit == "days") {
+    return Some(num * kMicrosPerDay);
+  }
+
+  if (unit == "w" ||
+      unit == "week" ||
+      unit == "weeks") {
+    return Some(num * kMicrosPerWeek);
+  }
+
+  if (unit == "month" ||
+      unit == "months") {
+    return Some(num * kMicrosPerDay * 31);
+  }
+
+  if (unit == "y" ||
+      unit == "year" ||
+      unit == "years") {
+    return Some(num * kMicrosPerYear);
+  }
+
+  return None<uint64_t>();
+}
+
 void fromTimestamp(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("FROM_TIMESTAMP", argc, 1);
 
-  SValue tmp = *argv;
-  tmp.tryTimeConversion();
-  *out = SValue(tmp.getTimestamp());
+  switch (argv->getType()) {
+    case SQL_TIMESTAMP:
+      *out = *argv;
+      break;
+    default:
+      *out = SValue(SValue::TimeType(parseTimestamp(argv)));
+      break;
+  }
 }
 
 void dateTruncExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("DATE_TRUNC", argc, 2);
 
-  SValue val = argv[1];
-  val.tryTimeConversion();
-
-  auto tmp = val.getTimestamp();
   auto time_suffix = argv[0].toString();
+  uint64_t val = argv[1].getTimestamp().unixMicros();
   unsigned long long dur = 1;
 
   if (StringUtil::isNumber(time_suffix.substr(0, 1))) {
@@ -61,7 +149,7 @@ void dateTruncExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
       time_suffix == "millisecond" ||
       time_suffix == "milliseconds") {
     *out = SValue(SValue::TimeType(
-        (uint64_t(tmp) / (kMicrosPerMilli * dur)) * kMicrosPerMilli * dur));
+        (uint64_t(val) / (kMicrosPerMilli * dur)) * kMicrosPerMilli * dur));
     return;
   }
 
@@ -71,7 +159,7 @@ void dateTruncExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
       time_suffix == "second" ||
       time_suffix == "seconds") {
     *out = SValue(SValue::TimeType(
-        (uint64_t(tmp) / (kMicrosPerSecond * dur)) * kMicrosPerSecond * dur));
+        (uint64_t(val) / (kMicrosPerSecond * dur)) * kMicrosPerSecond * dur));
     return;
   }
 
@@ -81,7 +169,7 @@ void dateTruncExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
       time_suffix == "minute" ||
       time_suffix == "minutes") {
     *out = SValue(SValue::TimeType(
-        (uint64_t(tmp) / (kMicrosPerMinute * dur)) * kMicrosPerMinute * dur));
+        (uint64_t(val) / (kMicrosPerMinute * dur)) * kMicrosPerMinute * dur));
     return;
   }
 
@@ -89,7 +177,7 @@ void dateTruncExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
       time_suffix == "hour" ||
       time_suffix == "hours") {
     *out = SValue(SValue::TimeType(
-        (uint64_t(tmp) / (kMicrosPerHour * dur)) * kMicrosPerHour * dur));
+        (uint64_t(val) / (kMicrosPerHour * dur)) * kMicrosPerHour * dur));
     return;
   }
 
@@ -97,7 +185,7 @@ void dateTruncExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
       time_suffix == "day" ||
       time_suffix == "days") {
     *out = SValue(SValue::TimeType(
-        (uint64_t(tmp) / (kMicrosPerDay * dur)) * kMicrosPerDay * dur));
+        (uint64_t(val) / (kMicrosPerDay * dur)) * kMicrosPerDay * dur));
     return;
   }
 
@@ -105,7 +193,7 @@ void dateTruncExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
       time_suffix == "week" ||
       time_suffix == "weeks") {
     *out = SValue(SValue::TimeType(
-        (uint64_t(tmp) / (kMicrosPerWeek * dur)) * kMicrosPerWeek * dur));
+        (uint64_t(val) / (kMicrosPerWeek * dur)) * kMicrosPerWeek * dur));
     return;
   }
 
@@ -113,7 +201,7 @@ void dateTruncExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
       time_suffix == "month" ||
       time_suffix == "months") {
     *out = SValue(SValue::TimeType(
-        (uint64_t(tmp) / (kMicrosPerDay * 31 * dur)) * kMicrosPerDay * 31 * dur));
+        (uint64_t(val) / (kMicrosPerDay * 31 * dur)) * kMicrosPerDay * 31 * dur));
     return;
   }
 
@@ -121,7 +209,7 @@ void dateTruncExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
       time_suffix == "year" ||
       time_suffix == "years") {
     *out = SValue(SValue::TimeType(
-        (uint64_t(tmp) / (kMicrosPerYear * dur)) * kMicrosPerYear * dur));
+        (uint64_t(val) / (kMicrosPerYear * dur)) * kMicrosPerYear * dur));
     return;
   }
 
@@ -135,28 +223,15 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("DATE_ADD", argc, 3);
 
   SValue val = argv[0];
-  val.tryTimeConversion();
-
   auto date = val.getTimestamp();
   auto unit = argv[2].toString();
   StringUtil::toLower(&unit);
 
   if (unit == "second") {
-    if (argv[1].tryNumericConversion()) {
-      switch (argv[1].getType()) {
-        case SQL_INTEGER:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) + (argv[1].getInteger() * kMicrosPerSecond)));
-          return;
-
-        case SQL_FLOAT:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) + (argv[1].getFloat() * kMicrosPerSecond)));
-          return;
-
-        default:
-          break;
-      }
+    if (argv[1].isConvertibleToNumeric()) {
+      *out = SValue(SValue::TimeType(
+          uint64_t(date) + (argv[1].getFloat() * kMicrosPerSecond)));
+      return;
     }
 
     RAISEF(
@@ -167,21 +242,10 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   }
 
   if (unit == "minute") {
-    if (argv[1].tryNumericConversion()) {
-      switch (argv[1].getType()) {
-        case SQL_INTEGER:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) + (argv[1].getInteger() * kMicrosPerMinute)));
-          return;
-
-        case SQL_FLOAT:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) + (argv[1].getFloat() * kMicrosPerMinute)));
-          return;
-
-        default:
-          break;
-      }
+    if (argv[1].isConvertibleToNumeric()) {
+      *out = SValue(SValue::TimeType(
+          uint64_t(date) + (argv[1].getFloat() * kMicrosPerMinute)));
+        return;
     }
 
     RAISEF(
@@ -192,21 +256,10 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   }
 
   if (unit == "hour") {
-    if (argv[1].tryNumericConversion()) {
-      switch (argv[1].getType()) {
-        case SQL_INTEGER:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) + (argv[1].getInteger() * kMicrosPerHour)));
-          return;
-
-        case SQL_FLOAT:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) + (argv[1].getFloat() * kMicrosPerHour)));
-          return;
-
-        default:
-          break;
-      }
+    if (argv[1].isConvertibleToNumeric()) {
+      *out = SValue(SValue::TimeType(
+          uint64_t(date) + (argv[1].getFloat() * kMicrosPerHour)));
+      return;
     }
 
     RAISEF(
@@ -217,21 +270,10 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   }
 
   if (unit == "day") {
-    if (argv[1].tryNumericConversion()) {
-      switch (argv[1].getType()) {
-        case SQL_INTEGER:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) + (argv[1].getInteger() * kMicrosPerDay)));
-          return;
-
-        case SQL_FLOAT:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) + (argv[1].getFloat() * kMicrosPerDay)));
-          return;
-
-        default:
-          break;
-      }
+    if (argv[1].isConvertibleToNumeric()) {
+      *out = SValue(SValue::TimeType(
+          uint64_t(date) + (argv[1].getFloat() * kMicrosPerDay)));
+      return;
     }
 
     RAISEF(
@@ -242,21 +284,10 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   }
 
   if (unit == "week") {
-    if (argv[1].tryNumericConversion()) {
-      switch (argv[1].getType()) {
-        case SQL_INTEGER:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) + (argv[1].getInteger() * kMicrosPerWeek)));
-          return;
-
-        case SQL_FLOAT:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) + (argv[1].getFloat() * kMicrosPerWeek)));
-          return;
-
-        default:
-          break;
-      }
+    if (argv[1].isConvertibleToNumeric()) {
+      *out = SValue(SValue::TimeType(
+          uint64_t(date) + (argv[1].getFloat() * kMicrosPerWeek)));
+      return;
     }
 
     RAISEF(
@@ -267,22 +298,12 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   }
 
   if (unit == "month") {
-    if (argv[1].tryNumericConversion()) {
-      switch (argv[1].getType()) {
-        case SQL_INTEGER:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) + (argv[1].getInteger() * kMicrosPerDay * 31)));
-          return;
-
-        case SQL_FLOAT:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) + (argv[1].getFloat() * kMicrosPerDay * 31)));
-          return;
-
-        default:
-          break;
-      }
+    if (argv[1].isConvertibleToNumeric()) {
+      *out = SValue(SValue::TimeType(
+          uint64_t(date) + (argv[1].getFloat() * kMicrosPerDay * 31)));
+      return;
     }
+
     RAISEF(
         kRuntimeError,
         "DATE_ADD: invalid expression $0 for unit $1",
@@ -291,21 +312,10 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   }
 
   if (unit == "year") {
-    if (argv[1].tryNumericConversion()) {
-      switch (argv[1].getType()) {
-        case SQL_INTEGER:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) + (argv[1].getInteger() * kMicrosPerYear)));
-          return;
-
-        case SQL_FLOAT:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) + (argv[1].getFloat() * kMicrosPerYear)));
-          return;
-
-        default:
-          break;
-      }
+    if (argv[1].isConvertibleToNumeric()) {
+      *out = SValue(SValue::TimeType(
+          uint64_t(date) + (argv[1].getFloat() * kMicrosPerYear)));
+      return;
     }
 
     RAISEF(
@@ -508,28 +518,15 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("DATE_SUB", argc, 3);
 
   SValue val = argv[0];
-  val.tryTimeConversion();
-
   auto date = val.getTimestamp();
   auto unit = argv[2].toString();
   StringUtil::toLower(&unit);
 
   if (unit == "second") {
-    if (argv[1].tryNumericConversion()) {
-      switch (argv[1].getType()) {
-        case SQL_INTEGER:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) - (argv[1].getInteger() * kMicrosPerSecond)));
-          return;
-
-        case SQL_FLOAT:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) - (argv[1].getFloat() * kMicrosPerSecond)));
-          return;
-
-        default:
-          break;
-      }
+    if (argv[1].isConvertibleToNumeric()) {
+      *out = SValue(SValue::TimeType(
+          uint64_t(date) - (argv[1].getFloat() * kMicrosPerSecond)));
+      return;
     }
 
     RAISEF(
@@ -540,21 +537,10 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   }
 
   if (unit == "minute") {
-    if (argv[1].tryNumericConversion()) {
-      switch (argv[1].getType()) {
-        case SQL_INTEGER:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) - (argv[1].getInteger() * kMicrosPerMinute)));
-          return;
-
-        case SQL_FLOAT:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) - (argv[1].getFloat() * kMicrosPerMinute)));
-          return;
-
-        default:
-          break;
-      }
+    if (argv[1].isConvertibleToNumeric()) {
+      *out = SValue(SValue::TimeType(
+          uint64_t(date) - (argv[1].getFloat() * kMicrosPerMinute)));
+      return;
     }
 
     RAISEF(
@@ -565,21 +551,10 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   }
 
   if (unit == "hour") {
-    if (argv[1].tryNumericConversion()) {
-      switch (argv[1].getType()) {
-        case SQL_INTEGER:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) - (argv[1].getInteger() * kMicrosPerHour)));
-          return;
-
-        case SQL_FLOAT:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) - (argv[1].getFloat() * kMicrosPerHour)));
-          return;
-
-        default:
-          break;
-      }
+    if (argv[1].isConvertibleToNumeric()) {
+      *out = SValue(SValue::TimeType(
+          uint64_t(date) - (argv[1].getFloat() * kMicrosPerHour)));
+      return;
     }
 
     RAISEF(
@@ -590,21 +565,10 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   }
 
   if (unit == "day") {
-    if (argv[1].tryNumericConversion()) {
-      switch (argv[1].getType()) {
-        case SQL_INTEGER:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) - (argv[1].getInteger() * kMicrosPerDay)));
-          return;
-
-        case SQL_FLOAT:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) - (argv[1].getFloat() * kMicrosPerDay)));
-          return;
-
-        default:
-          break;
-      }
+    if (argv[1].isConvertibleToNumeric()) {
+      *out = SValue(SValue::TimeType(
+          uint64_t(date) - (argv[1].getFloat() * kMicrosPerDay)));
+      return;
     }
 
     RAISEF(
@@ -615,21 +579,10 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   }
 
   if (unit == "week") {
-    if (argv[1].tryNumericConversion()) {
-      switch (argv[1].getType()) {
-        case SQL_INTEGER:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) - (argv[1].getInteger() * kMicrosPerWeek)));
-          return;
-
-        case SQL_FLOAT:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) - (argv[1].getFloat() * kMicrosPerWeek)));
-          return;
-
-        default:
-          break;
-      }
+    if (argv[1].isConvertibleToNumeric()) {
+      *out = SValue(SValue::TimeType(
+          uint64_t(date) - (argv[1].getFloat() * kMicrosPerWeek)));
+      return;
     }
 
     RAISEF(
@@ -640,21 +593,10 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   }
 
   if (unit == "month") {
-    if (argv[1].tryNumericConversion()) {
-      switch (argv[1].getType()) {
-        case SQL_INTEGER:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) - (argv[1].getInteger() * kMicrosPerDay * 31)));
-          return;
-
-        case SQL_FLOAT:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) - (argv[1].getFloat() * kMicrosPerDay * 31)));
-          return;
-
-        default:
-          break;
-      }
+    if (argv[1].isConvertibleToNumeric()) {
+      *out = SValue(SValue::TimeType(
+          uint64_t(date) - (argv[1].getFloat() * kMicrosPerDay * 31)));
+      return;
     }
     RAISEF(
         kRuntimeError,
@@ -664,21 +606,10 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   }
 
   if (unit == "year") {
-    if (argv[1].tryNumericConversion()) {
-      switch (argv[1].getType()) {
-        case SQL_INTEGER:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) - (argv[1].getInteger() * kMicrosPerYear)));
-          return;
-
-        case SQL_FLOAT:
-          *out = SValue(SValue::TimeType(
-              uint64_t(date) - (argv[1].getFloat() * kMicrosPerYear)));
-          return;
-
-        default:
-          break;
-      }
+    if (argv[1].isConvertibleToNumeric()) {
+      *out = SValue(SValue::TimeType(
+          uint64_t(date) - (argv[1].getFloat() * kMicrosPerYear)));
+      return;
     }
 
     RAISEF(
@@ -880,127 +811,76 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
 void timeAtExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("TIME_AT", argc, 1);
 
-  SValue time_val = argv[0];
-  try {
-    if (time_val.tryTimeConversion()) {
-      *out = SValue(time_val.getTimestamp());
+  uint64_t ts;
+  switch (argv->getType()) {
+    case SQL_TIMESTAMP:
+      *out = *argv;
       return;
-    }
-  } catch (...) {
-    /* fallthrough */
-  }
-
-  String time_interval = time_val.toString();
-  StringUtil::toLower(&time_interval);
-
-  if (time_interval == "now") {
-    *out = SValue(SValue::TimeType(WallClock::now()));
-    return;
-  }
-
-  if (StringUtil::beginsWith(time_interval, "-")) {
-    try {
-      Option<uint64_t> time_val = timeFromNow(time_interval.substr(1));
-      if (!time_val.isEmpty()) {
-        *out = SValue(SValue::TimeType(time_val.get()));
-        return;
+    case SQL_INTEGER:
+    case SQL_FLOAT:
+      ts = parseTimestamp(argv);
+    default: {
+      if (argv->isConvertibleToNumeric()) {
+        ts = parseTimestamp(argv);
+        break;
       }
 
-    } catch (...) {
-      RAISEF(
-        kRuntimeError,
-        "TIME_AT: invalid argument $0",
-        time_interval);
-    }
-  }
-
-  if (StringUtil::endsWith(time_interval, "ago")) {
-    try {
-      Option<uint64_t> time_val = timeFromNow(
-          time_interval.substr(0, time_interval.length() - 4));
-      if (!time_val.isEmpty()) {
-        *out = SValue(SValue::TimeType(time_val.get()));
-        return;
+      String time_str = argv->getString();
+      StringUtil::toLower(&time_str);
+      if (time_str == "now") {
+        ts = WallClock::unixMicros();
+        break;
       }
 
-    } catch (...) {
-      RAISEF(
-        kRuntimeError,
-        "TIME_AT: invalid argument $0",
-        time_interval);
+      if (StringUtil::beginsWith(time_str, "-")) {
+        try {
+          auto now = uint64_t(WallClock::now());
+          Option<uint64_t> time_val = parseInterval(time_str.substr(1));
+          if (!time_val.isEmpty()) {
+            ts = now - time_val.get();
+            break;
+          }
+        } catch (...) {
+          RAISEF(
+            kRuntimeError,
+            "TIME_AT: invalid argument $0",
+            time_str);
+        }
+      }
+
+      if (StringUtil::endsWith(time_str, "ago")) {
+        try {
+          auto now = uint64_t(WallClock::now());
+          Option<uint64_t> time_val = parseInterval(
+              time_str.substr(0, time_str.length() - 4));
+          if (!time_val.isEmpty()) {
+            ts = now - time_val.get();
+            break;
+          }
+        } catch (...) {
+          RAISEF(
+            kRuntimeError,
+            "TIME_AT: invalid argument $0",
+            time_str);
+        }
+      }
+
+      auto time_opt = stx::Human::parseTime(time_str);
+      if (time_opt.isEmpty()) {
+        RAISEF(
+           kTypeError,
+            "can't convert $0 '$1' to TIMESTAMP",
+            SValue::getTypeName(argv->getType()),
+            argv->toString());
+      }
+
+      ts = time_opt.get().unixMicros();
+      break;
     }
   }
 
-  RAISEF(
-      kRuntimeError,
-      "TIME_AT: invalid argument $0",
-      time_interval);
+  *out = SValue(SValue::TimeType(ts));
 }
-
-Option<uint64_t> timeFromNow(String time_interval) {
-  uint64_t num;
-  String unit;
-
-  try {
-    size_t sz;
-    num = std::stoull(time_interval, &sz);
-    unit = time_interval.substr(sz);
-    StringUtil::toLower(&unit);
-
-  } catch (std::invalid_argument e) {
-    RAISEF(
-      kRuntimeError,
-      "TIME_AT: invalid argument $0",
-      time_interval);
-  }
-
-  auto now = uint64_t(WallClock::now());
-  if (unit == "sec" ||
-      unit == "secs" ||
-      unit == "second" ||
-      unit == "seconds") {
-    return Some(now - num * kMicrosPerSecond);
-  }
-
-  if (unit == "min" ||
-      unit == "mins" ||
-      unit == "minute" ||
-      unit == "minutes") {
-    return Some(now - num * kMicrosPerMinute);
-  }
-
-  if (unit == "h" ||
-      unit == "hour" ||
-      unit == "hours") {
-    return Some(now - num * kMicrosPerHour);
-  }
-
-  if (unit == "d" ||
-      unit == "day" ||
-      unit == "days") {
-    return Some(now - num * kMicrosPerDay);
-  }
-
-  if (unit == "w" ||
-      unit == "week" ||
-      unit == "weeks") {
-    return Some(now - num * kMicrosPerWeek);
-  }
-
-  if (unit == "month" ||
-      unit == "months") {
-    return Some(now - num * kMicrosPerDay * 31);
-  }
-
-  if (unit == "y" ||
-      unit == "year" ||
-      unit == "years") {
-    return Some(now - num * kMicrosPerYear);
-  }
-
-  return None<uint64_t>();
-}
-
 
 }
 }

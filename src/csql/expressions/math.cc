@@ -27,45 +27,24 @@ void addExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   SValue* lhs = argv;
   SValue* rhs = argv + 1;
 
-  switch(lhs->testTypeWithNumericConversion()) {
-    case SQL_INTEGER:
-      switch(rhs->testTypeWithNumericConversion()) {
-        case SQL_INTEGER:
-          *out = SValue((int64_t) (lhs->getInteger() + rhs->getInteger()));
-          return;
-        case SQL_FLOAT:
-          *out = SValue((double) (lhs->getInteger() + rhs->getFloat()));
-          return;
-        case SQL_NULL:
-          *out = SValue();
-          return;
-        default:
-          break;
-      }
-      break;
-    case SQL_FLOAT:
-      switch(rhs->testTypeWithNumericConversion()) {
-        case SQL_INTEGER:
-          *out = SValue((double) (lhs->getFloat() + rhs->getInteger()));
-          return;
-        case SQL_FLOAT:
-          *out = SValue((double) (lhs->getFloat() + rhs->getFloat()));
-          return;
-        case SQL_NULL:
-          *out = SValue();
-          return;
-        default:
-          break;
-      }
-      break;
-    case SQL_NULL:
-      *out = SValue();
-      return;
-    default:
-      break;
+  if (lhs->getType() == SQL_NULL || rhs->getType() == SQL_NULL) {
+    *out = SValue();
+    return;
   }
 
-  *out = SValue(lhs->toString() + rhs->toString());
+  if (!lhs->isConvertibleToNumeric() || !rhs->isConvertibleToNumeric()) {
+    *out = SValue(lhs->getString() + rhs->getString());
+    return;
+  }
+
+  SValue lhs_num = lhs->toNumeric();
+  SValue rhs_num = rhs->toNumeric();
+
+  if (lhs_num.getType() == SQL_INTEGER && rhs_num.getType() == SQL_INTEGER) {
+    *out = SValue((int64_t) (lhs_num.getInteger() + rhs_num.getInteger()));
+  } else {
+    *out = SValue((double) (lhs_num.getFloat() + rhs_num.getFloat()));
+  }
 }
 
 void subExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
@@ -78,47 +57,25 @@ void subExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   SValue* lhs = argv;
   SValue* rhs = argv + 1;
 
-  switch(lhs->testTypeWithNumericConversion()) {
-    case SQL_INTEGER:
-      switch(rhs->testTypeWithNumericConversion()) {
-        case SQL_INTEGER:
-          *out = SValue((int64_t) (lhs->getInteger() - rhs->getInteger()));
-          return;
-        case SQL_FLOAT:
-          *out = SValue((double) (lhs->getInteger() - rhs->getFloat()));
-          return;
-        case SQL_NULL:
-          *out = SValue();
-          return;
-        default:
-          break;
-      }
-      break;
-    case SQL_FLOAT:
-      switch(rhs->testTypeWithNumericConversion()) {
-        case SQL_INTEGER:
-          *out = SValue((double) (lhs->getFloat() - rhs->getInteger()));
-          return;
-        case SQL_FLOAT:
-          *out = SValue((double) (lhs->getFloat() - rhs->getFloat()));
-          return;
-        case SQL_NULL:
-          *out = SValue();
-          return;
-        default:
-          break;
-      }
-      break;
-    case SQL_NULL:
-      *out = SValue();
-      return;
-    default:
-      break;
+  if (lhs->getType() == SQL_NULL || rhs->getType() == SQL_NULL) {
+    *out = SValue();
+    return;
   }
 
-  RAISE(kRuntimeError, "can't subtract %s and %s",
+  if (!lhs->isConvertibleToNumeric() || !rhs->isConvertibleToNumeric()) {
+    RAISE(kRuntimeError, "can't subtract %s and %s",
       lhs->getTypeName(),
       rhs->getTypeName());
+  }
+
+  SValue lhs_num = lhs->toNumeric();
+  SValue rhs_num = rhs->toNumeric();
+
+  if (lhs_num.getType() == SQL_INTEGER && rhs_num.getType() == SQL_INTEGER) {
+    *out = SValue((int64_t) (lhs_num.getInteger() - rhs_num.getInteger()));
+  } else {
+    *out = SValue((double) (lhs_num.getFloat() - rhs_num.getFloat()));
+  }
 }
 
 void mulExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
@@ -131,47 +88,25 @@ void mulExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   SValue* lhs = argv;
   SValue* rhs = argv + 1;
 
-  switch(lhs->testTypeWithNumericConversion()) {
-    case SQL_INTEGER:
-      switch(rhs->testTypeWithNumericConversion()) {
-        case SQL_INTEGER:
-          *out = SValue((int64_t) (lhs->getInteger() * rhs->getInteger()));
-          return;
-        case SQL_FLOAT:
-          *out = SValue((double) (lhs->getInteger() * rhs->getFloat()));
-          return;
-        case SQL_NULL:
-          *out = SValue();
-          return;
-        default:
-          break;
-      }
-      break;
-    case SQL_FLOAT:
-      switch(rhs->testTypeWithNumericConversion()) {
-        case SQL_INTEGER:
-          *out = SValue((double) (lhs->getFloat() * rhs->getInteger()));
-          return;
-        case SQL_FLOAT:
-          *out = SValue((double) (lhs->getFloat() * rhs->getFloat()));
-          return;
-        case SQL_NULL:
-          *out = SValue();
-          return;
-        default:
-          break;
-      }
-      break;
-    case SQL_NULL:
-      *out = SValue();
-      return;
-    default:
-      break;
+  if (lhs->getType() == SQL_NULL || rhs->getType() == SQL_NULL) {
+    *out = SValue();
+    return;
   }
 
-  RAISE(kRuntimeError, "can't multiply %s and %s",
+  if (!lhs->isConvertibleToNumeric() || !rhs->isConvertibleToNumeric()) {
+    RAISE(kRuntimeError, "can't multiply %s and %s",
       lhs->getTypeName(),
       rhs->getTypeName());
+  }
+
+  SValue lhs_num = lhs->toNumeric();
+  SValue rhs_num = rhs->toNumeric();
+
+  if (lhs_num.getType() == SQL_INTEGER && rhs_num.getType() == SQL_INTEGER) {
+    *out = SValue((int64_t) (lhs_num.getInteger() * rhs_num.getInteger()));
+  } else {
+    *out = SValue((double) (lhs_num.getFloat() * rhs_num.getFloat()));
+  }
 }
 
 void divExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
@@ -184,31 +119,21 @@ void divExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   SValue* lhs = argv;
   SValue* rhs = argv + 1;
 
-  switch(lhs->testTypeWithNumericConversion()) {
-    case SQL_INTEGER:
-    case SQL_FLOAT:
-      switch(rhs->testTypeWithNumericConversion()) {
-        case SQL_INTEGER:
-        case SQL_FLOAT:
-          *out = SValue((double) (lhs->getFloat() / rhs->getFloat()));
-          return;
-        case SQL_NULL:
-          *out = SValue();
-          return;
-        default:
-          break;
-      }
-      break;
-    case SQL_NULL:
-      *out = SValue();
-      return;
-    default:
-      break;
+  if (lhs->getType() == SQL_NULL || rhs->getType() == SQL_NULL) {
+    *out = SValue();
+    return;
   }
 
-  RAISE(kRuntimeError, "can't divide %s and %s",
+  if (!lhs->isConvertibleToNumeric() || !rhs->isConvertibleToNumeric()) {
+    RAISE(kRuntimeError, "can't divide %s and %s",
       lhs->getTypeName(),
       rhs->getTypeName());
+  }
+
+  SValue lhs_num = lhs->toNumeric();
+  SValue rhs_num = rhs->toNumeric();
+
+  *out = SValue((double) (lhs_num.getFloat() / rhs_num.getFloat()));
 }
 
 void modExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
@@ -221,47 +146,25 @@ void modExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   SValue* lhs = argv;
   SValue* rhs = argv + 1;
 
-  switch(lhs->testTypeWithNumericConversion()) {
-    case SQL_INTEGER:
-      switch(rhs->testTypeWithNumericConversion()) {
-        case SQL_INTEGER:
-          *out = SValue((int64_t) (lhs->getInteger() % rhs->getInteger()));
-          return;
-        case SQL_FLOAT:
-          *out = SValue(fmod(lhs->getInteger(), rhs->getFloat()));
-          return;
-        case SQL_NULL:
-          *out = SValue();
-          return;
-        default:
-          break;
-      }
-      break;
-    case SQL_FLOAT:
-      switch(rhs->testTypeWithNumericConversion()) {
-        case SQL_INTEGER:
-          *out = SValue(fmod(lhs->getFloat(), rhs->getInteger()));
-          return;
-        case SQL_FLOAT:
-          *out = SValue(fmod(lhs->getFloat(), rhs->getFloat()));
-          return;
-        case SQL_NULL:
-          *out = SValue();
-          return;
-        default:
-          break;
-      }
-      break;
-    case SQL_NULL:
-      *out = SValue();
-      return;
-    default:
-      break;
+  if (lhs->getType() == SQL_NULL || rhs->getType() == SQL_NULL) {
+    *out = SValue();
+    return;
   }
 
-  RAISE(kRuntimeError, "can't modulo %s and %s",
+  if (!lhs->isConvertibleToNumeric() || !rhs->isConvertibleToNumeric()) {
+    RAISE(kRuntimeError, "can't modulo %s and %s",
       lhs->getTypeName(),
       rhs->getTypeName());
+  }
+
+  SValue lhs_num = lhs->toNumeric();
+  SValue rhs_num = rhs->toNumeric();
+
+  if (lhs_num.getType() == SQL_INTEGER && rhs_num.getType() == SQL_INTEGER) {
+    *out = SValue((int64_t) (lhs_num.getInteger() % rhs_num.getInteger()));
+  } else {
+    *out = SValue((double) fmod(lhs_num.getFloat(), rhs_num.getFloat()));
+  }
 }
 
 void powExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
@@ -274,47 +177,25 @@ void powExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   SValue* lhs = argv;
   SValue* rhs = argv + 1;
 
-  switch(lhs->testTypeWithNumericConversion()) {
-    case SQL_INTEGER:
-      switch(rhs->testTypeWithNumericConversion()) {
-        case SQL_INTEGER:
-          *out = SValue((int64_t) pow(lhs->getInteger(), rhs->getInteger()));
-          return;
-        case SQL_FLOAT:
-          *out = SValue((double) pow(lhs->getInteger(), rhs->getFloat()));
-          return;
-        case SQL_NULL:
-          *out = SValue();
-          return;
-        default:
-          break;
-      }
-      break;
-    case SQL_FLOAT:
-      switch(rhs->testTypeWithNumericConversion()) {
-        case SQL_INTEGER:
-          *out = SValue((double) pow(lhs->getFloat(), rhs->getInteger()));
-          return;
-        case SQL_FLOAT:
-          *out = SValue((double) pow(lhs->getFloat(), rhs->getFloat()));
-          return;
-        case SQL_NULL:
-          *out = SValue();
-          return;
-        default:
-          break;
-      }
-      break;
-    case SQL_NULL:
-      *out = SValue();
-      return;
-    default:
-      break;
+  if (lhs->getType() == SQL_NULL || rhs->getType() == SQL_NULL) {
+    *out = SValue();
+    return;
   }
 
-  RAISE(kRuntimeError, "can't pow %s and %s",
+  if (!lhs->isConvertibleToNumeric() || !rhs->isConvertibleToNumeric()) {
+    RAISE(kRuntimeError, "can't modulo %s and %s",
       lhs->getTypeName(),
       rhs->getTypeName());
+  }
+
+  SValue lhs_num = lhs->toNumeric();
+  SValue rhs_num = rhs->toNumeric();
+
+  if (lhs_num.getType() == SQL_INTEGER && rhs_num.getType() == SQL_INTEGER) {
+    *out = SValue((int64_t) pow(lhs_num.getInteger(), rhs_num.getInteger()));
+  } else {
+    *out = SValue((double) pow(lhs_num.getFloat(), rhs_num.getFloat()));
+  }
 }
 
 void roundExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
@@ -341,7 +222,7 @@ void truncateExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
     // truncate to integer
     case 1: {
       SValue* val = argv;
-      switch(val->testTypeWithNumericConversion()) {
+      switch(val->getType()) {
         case SQL_INTEGER:
         case SQL_FLOAT:
           *out = SValue(SValue::IntegerType(val->getFloat()));
