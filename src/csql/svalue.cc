@@ -21,6 +21,50 @@
 
 namespace csql {
 
+SValue SValue::newNull() {
+  return SValue();
+}
+
+SValue SValue::newString(const String& value) {
+  return SValue(value);
+}
+
+SValue SValue::newString(const char* value) {
+  return SValue(value);
+}
+
+SValue SValue::newInteger(IntegerType value) {
+  return SValue(SValue::IntegerType(value));
+}
+
+SValue SValue::newInteger(const String& value) {
+  return SValue(value).toInteger();
+}
+
+SValue SValue::newFloat(FloatType value) {
+  return SValue(value);
+}
+
+SValue SValue::newFloat(const String& value) {
+  return SValue(value).toFloat();
+}
+
+SValue SValue::newBool(BoolType value) {
+  return SValue(value);
+}
+
+SValue SValue::newBool(const String& value) {
+  return SValue(value).toBool();
+}
+
+SValue SValue::newTimestamp(TimeType value) {
+  return SValue(value);
+}
+
+SValue SValue::newTimestamp(const String& value) {
+  return SValue(value).toTimestamp();
+}
+
 SValue::SValue() {
   memset(&data_, 0, sizeof(data_));
   data_.type = SQL_NULL;
