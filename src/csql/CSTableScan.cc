@@ -132,8 +132,28 @@ void CSTableScan::scan(
             if (d < reader->maxDefinitionLevel()) {
               in_row[col.second.index] = SValue();
             } else {
-              in_row[col.second.index] = SValue(v);
+              switch (col.second.type) {
+                case SQL_NULL:
+                  in_row[col.second.index] = SValue::newNull();
+                  break;
+                case SQL_STRING:
+                  in_row[col.second.index] = SValue::newString(v);
+                  break;
+                case SQL_FLOAT:
+                  in_row[col.second.index] = SValue::newFloat(v);
+                  break;
+                case SQL_INTEGER:
+                  in_row[col.second.index] = SValue::newInteger(v);
+                  break;
+                case SQL_BOOL:
+                  in_row[col.second.index] = SValue::newBool(v);
+                  break;
+                case SQL_TIMESTAMP:
+                  in_row[col.second.index] = SValue::newTimestamp(v);
+                  break;
+              }
             }
+
             break;
           }
 
@@ -144,8 +164,28 @@ void CSTableScan::scan(
             if (d < reader->maxDefinitionLevel()) {
               in_row[col.second.index] = SValue();
             } else {
-              in_row[col.second.index] = SValue(SValue::IntegerType(v));
+              switch (col.second.type) {
+                case SQL_NULL:
+                  in_row[col.second.index] = SValue::newNull();
+                  break;
+                case SQL_STRING:
+                  in_row[col.second.index] = SValue::newInteger(v).toString();
+                  break;
+                case SQL_FLOAT:
+                  in_row[col.second.index] = SValue::newFloat(v);
+                  break;
+                case SQL_INTEGER:
+                  in_row[col.second.index] = SValue::newInteger(v);
+                  break;
+                case SQL_BOOL:
+                  in_row[col.second.index] = SValue::newBool(v);
+                  break;
+                case SQL_TIMESTAMP:
+                  in_row[col.second.index] = SValue::newTimestamp(v);
+                  break;
+              }
             }
+
             break;
           }
 
@@ -156,8 +196,28 @@ void CSTableScan::scan(
             if (d < reader->maxDefinitionLevel()) {
               in_row[col.second.index] = SValue();
             } else {
-              in_row[col.second.index] = SValue(SValue::IntegerType(v));
+              switch (col.second.type) {
+                case SQL_NULL:
+                  in_row[col.second.index] = SValue::newNull();
+                  break;
+                case SQL_STRING:
+                  in_row[col.second.index] = SValue::newInteger(v).toString();
+                  break;
+                case SQL_FLOAT:
+                  in_row[col.second.index] = SValue::newFloat(v);
+                  break;
+                case SQL_INTEGER:
+                  in_row[col.second.index] = SValue::newInteger(v);
+                  break;
+                case SQL_BOOL:
+                  in_row[col.second.index] = SValue::newBool(v);
+                  break;
+                case SQL_TIMESTAMP:
+                  in_row[col.second.index] = SValue::newTimestamp(v);
+                  break;
+              }
             }
+
             break;
           }
 
@@ -168,8 +228,28 @@ void CSTableScan::scan(
             if (d < reader->maxDefinitionLevel()) {
               in_row[col.second.index] = SValue(SValue::BoolType(false));
             } else {
-              in_row[col.second.index] = SValue(SValue::BoolType(v));
+              switch (col.second.type) {
+                case SQL_NULL:
+                  in_row[col.second.index] = SValue::newNull();
+                  break;
+                case SQL_STRING:
+                  in_row[col.second.index] = SValue::newBool(v).toString();
+                  break;
+                case SQL_FLOAT:
+                  in_row[col.second.index] = SValue::newFloat(v);
+                  break;
+                case SQL_INTEGER:
+                  in_row[col.second.index] = SValue::newInteger(v);
+                  break;
+                case SQL_BOOL:
+                  in_row[col.second.index] = SValue::newBool(v);
+                  break;
+                case SQL_TIMESTAMP:
+                  in_row[col.second.index] = SValue::newTimestamp(v);
+                  break;
+              }
             }
+
             break;
           }
 
@@ -180,8 +260,28 @@ void CSTableScan::scan(
             if (d < reader->maxDefinitionLevel()) {
               in_row[col.second.index] = SValue();
             } else {
-              in_row[col.second.index] = SValue(SValue::FloatType(v));
+              switch (col.second.type) {
+                case SQL_NULL:
+                  in_row[col.second.index] = SValue::newNull();
+                  break;
+                case SQL_STRING:
+                  in_row[col.second.index] = SValue::newFloat(v).toString();
+                  break;
+                case SQL_FLOAT:
+                  in_row[col.second.index] = SValue::newFloat(v);
+                  break;
+                case SQL_INTEGER:
+                  in_row[col.second.index] = SValue::newInteger(v);
+                  break;
+                case SQL_BOOL:
+                  in_row[col.second.index] = SValue::newBool(v);
+                  break;
+                case SQL_TIMESTAMP:
+                  in_row[col.second.index] = SValue::newTimestamp(v);
+                  break;
+              }
             }
+
             break;
           }
 
@@ -192,8 +292,27 @@ void CSTableScan::scan(
             if (d < reader->maxDefinitionLevel()) {
               in_row[col.second.index] = SValue();
             } else {
-              in_row[col.second.index] = SValue(SValue::TimeType(v));
+              switch (col.second.type) {
+                case SQL_NULL:
+                  in_row[col.second.index] = SValue::newNull();
+                  break;
+                case SQL_STRING:
+                  in_row[col.second.index] = SValue::newTimestamp(v).toString();
+                  break;
+                case SQL_FLOAT:
+                  in_row[col.second.index] = SValue::newTimestamp(v).toFloat();
+                  break;
+                case SQL_INTEGER:
+                  in_row[col.second.index] = SValue::newTimestamp(v).toInteger();
+                  break;
+                case SQL_TIMESTAMP:
+                  in_row[col.second.index] = SValue::newTimestamp(v);
+                  break;
+                default:
+                  RAISE(kIllegalStateError);
+              }
             }
+
             break;
           }
 
@@ -223,7 +342,7 @@ void CSTableScan::scan(
           in_row.data(),
           &where_tmp);
 
-      where_pred = where_tmp.toBool();
+      where_pred = where_tmp.getBool();
     }
 
     if (where_pred) {
@@ -328,7 +447,7 @@ void CSTableScan::scanWithoutColumns(
     if (where_expr_.program() != nullptr) {
       SValue where_tmp;
       VM::evaluate(ctx_, where_expr_.program(), 0, nullptr, &where_tmp);
-      where_pred = where_tmp.toBool();
+      where_pred = where_tmp.getBool();
     }
 
     if (where_pred) {

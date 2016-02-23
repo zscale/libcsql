@@ -51,7 +51,7 @@ static int64_t parseTimestamp(SValue* arg) {
      kTypeError,
       "can't convert $0 '$1' to TIMESTAMP",
       SValue::getTypeName(arg->getType()),
-      arg->toString());
+      arg->getString());
 }
 
 static Option<uint64_t> parseInterval(String time_interval) {
@@ -133,7 +133,7 @@ void fromTimestamp(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
 void dateTruncExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("DATE_TRUNC", argc, 2);
 
-  auto time_suffix = argv[0].toString();
+  auto time_suffix = argv[0].getString();
   uint64_t val = argv[1].getTimestamp().unixMicros();
   unsigned long long dur = 1;
 
@@ -224,7 +224,7 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
 
   SValue val = argv[0];
   auto date = val.getTimestamp();
-  auto unit = argv[2].toString();
+  auto unit = argv[2].getString();
   StringUtil::toLower(&unit);
 
   if (unit == "second") {
@@ -237,8 +237,8 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
     RAISEF(
         kRuntimeError,
         "DATE_ADD: invalid expression $0 for unit $1",
-        argv[1].toString(),
-        argv[2].toString());
+        argv[1].getString(),
+        argv[2].getString());
   }
 
   if (unit == "minute") {
@@ -251,8 +251,8 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
     RAISEF(
         kRuntimeError,
         "DATE_ADD: invalid expression $0 for unit $1",
-        argv[1].toString(),
-        argv[2].toString());
+        argv[1].getString(),
+        argv[2].getString());
   }
 
   if (unit == "hour") {
@@ -265,8 +265,8 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
     RAISEF(
         kRuntimeError,
         "DATE_ADD: invalid expression $0 for unit $1",
-        argv[1].toString(),
-        argv[2].toString());
+        argv[1].getString(),
+        argv[2].getString());
   }
 
   if (unit == "day") {
@@ -279,8 +279,8 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
     RAISEF(
         kRuntimeError,
         "DATE_ADD: invalid expression $0 for unit $1",
-        argv[1].toString(),
-        argv[2].toString());
+        argv[1].getString(),
+        argv[2].getString());
   }
 
   if (unit == "week") {
@@ -293,8 +293,8 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
     RAISEF(
         kRuntimeError,
         "DATE_ADD: invalid expression $0 for unit $1",
-        argv[1].toString(),
-        argv[2].toString());
+        argv[1].getString(),
+        argv[2].getString());
   }
 
   if (unit == "month") {
@@ -307,8 +307,8 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
     RAISEF(
         kRuntimeError,
         "DATE_ADD: invalid expression $0 for unit $1",
-        argv[1].toString(),
-        argv[2].toString());
+        argv[1].getString(),
+        argv[2].getString());
   }
 
   if (unit == "year") {
@@ -321,11 +321,11 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
     RAISEF(
         kRuntimeError,
         "DATE_ADD: invalid expression $0 for unit $1",
-        argv[1].toString(),
-        argv[2].toString());
+        argv[1].getString(),
+        argv[2].getString());
   }
 
-  auto expr = argv[1].toString();
+  auto expr = argv[1].getString();
   if (unit == "minute_second") {
     auto values = StringUtil::split(expr, ":");
     if (values.size() == 2 &&
@@ -347,7 +347,7 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
         kRuntimeError,
         "DATE_ADD: invalid expression $0 for unit $1",
         expr,
-        argv[2].toString());
+        argv[2].getString());
   }
 
   if (unit == "hour_second") {
@@ -373,7 +373,7 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
         kRuntimeError,
         "DATE_ADD: invalid expression $0 for unit $1",
         expr,
-        argv[2].toString());
+        argv[2].getString());
   }
 
   if (unit == "hour_minute") {
@@ -397,7 +397,7 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
         kRuntimeError,
         "DATE_ADD: invalid expression $0 for unit $1",
         expr,
-        argv[2].toString());
+        argv[2].getString());
   }
 
   if (unit == "day_second") {
@@ -428,7 +428,7 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
         kRuntimeError,
         "DATE_ADD: invalid expression $0 for unit $1",
         expr,
-        argv[2].toString());
+        argv[2].getString());
   }
 
   if (unit == "day_minute") {
@@ -457,7 +457,7 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
         kRuntimeError,
         "DATE_ADD: invalid expression $0 for unit $1",
         expr,
-        argv[2].toString());
+        argv[2].getString());
   }
 
   if (unit == "day_hour") {
@@ -481,7 +481,7 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
         kRuntimeError,
         "DATE_ADD: invalid expression $0 for unit $1",
         expr,
-        argv[2].toString());
+        argv[2].getString());
   }
 
   if (unit == "year_month") {
@@ -505,13 +505,13 @@ void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
         kRuntimeError,
         "DATE_ADD: invalid expression $0 for unit $1",
         expr,
-        argv[2].toString());
+        argv[2].getString());
   }
 
   RAISEF(
       kRuntimeError,
       "DATE_ADD: invalid unit $0",
-      argv[2].toString());
+      argv[2].getString());
 }
 
 void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
@@ -519,7 +519,7 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
 
   SValue val = argv[0];
   auto date = val.getTimestamp();
-  auto unit = argv[2].toString();
+  auto unit = argv[2].getString();
   StringUtil::toLower(&unit);
 
   if (unit == "second") {
@@ -532,8 +532,8 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
     RAISEF(
         kRuntimeError,
         "DATE_SUB: invalid expression $0 for unit $1",
-        argv[1].toString(),
-        argv[2].toString());
+        argv[1].getString(),
+        argv[2].getString());
   }
 
   if (unit == "minute") {
@@ -546,8 +546,8 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
     RAISEF(
         kRuntimeError,
         "DATE_SUB: invalid expression $0 for unit $1",
-        argv[1].toString(),
-        argv[2].toString());
+        argv[1].getString(),
+        argv[2].getString());
   }
 
   if (unit == "hour") {
@@ -560,8 +560,8 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
     RAISEF(
         kRuntimeError,
         "DATE_SUB: invalid expression $0 for unit $1",
-        argv[1].toString(),
-        argv[2].toString());
+        argv[1].getString(),
+        argv[2].getString());
   }
 
   if (unit == "day") {
@@ -574,8 +574,8 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
     RAISEF(
         kRuntimeError,
         "DATE_SUB: invalid expression $0 for unit $1",
-        argv[1].toString(),
-        argv[2].toString());
+        argv[1].getString(),
+        argv[2].getString());
   }
 
   if (unit == "week") {
@@ -588,8 +588,8 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
     RAISEF(
         kRuntimeError,
         "DATE_SUB: invalid expression $0 for unit $1",
-        argv[1].toString(),
-        argv[2].toString());
+        argv[1].getString(),
+        argv[2].getString());
   }
 
   if (unit == "month") {
@@ -601,8 +601,8 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
     RAISEF(
         kRuntimeError,
         "DATE_SUB: invalid expression $0 for unit $1",
-        argv[1].toString(),
-        argv[2].toString());
+        argv[1].getString(),
+        argv[2].getString());
   }
 
   if (unit == "year") {
@@ -615,11 +615,11 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
     RAISEF(
         kRuntimeError,
         "DATE_SUB: invalid expression $0 for unit $1",
-        argv[1].toString(),
-        argv[2].toString());
+        argv[1].getString(),
+        argv[2].getString());
   }
 
-  auto expr = argv[1].toString();
+  auto expr = argv[1].getString();
   if (unit == "minute_second") {
     auto values = StringUtil::split(expr, ":");
     if (values.size() == 2 &&
@@ -641,7 +641,7 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
         kRuntimeError,
         "DATE_SUB: invalid expression $0 for unit $1",
         expr,
-        argv[2].toString());
+        argv[2].getString());
   }
 
   if (unit == "hour_second") {
@@ -667,7 +667,7 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
         kRuntimeError,
         "DATE_SUB: invalid expression $0 for unit $1",
         expr,
-        argv[2].toString());
+        argv[2].getString());
   }
 
   if (unit == "hour_minute") {
@@ -691,7 +691,7 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
         kRuntimeError,
         "DATE_SUB: invalid expression $0 for unit $1",
         expr,
-        argv[2].toString());
+        argv[2].getString());
   }
 
   if (unit == "day_second") {
@@ -722,7 +722,7 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
         kRuntimeError,
         "DATE_SUB: invalid expression $0 for unit $1",
         expr,
-        argv[2].toString());
+        argv[2].getString());
   }
 
   if (unit == "day_minute") {
@@ -751,7 +751,7 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
         kRuntimeError,
         "DATE_SUB: invalid expression $0 for unit $1",
         expr,
-        argv[2].toString());
+        argv[2].getString());
   }
 
   if (unit == "day_hour") {
@@ -775,7 +775,7 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
         kRuntimeError,
         "DATE_SUB: invalid expression $0 for unit $1",
         expr,
-        argv[2].toString());
+        argv[2].getString());
   }
 
   if (unit == "year_month") {
@@ -799,13 +799,13 @@ void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
         kRuntimeError,
         "DATE_SUB: invalid expression $0 for unit $1",
         expr,
-        argv[2].toString());
+        argv[2].getString());
   }
 
   RAISEF(
       kRuntimeError,
       "DATE_SUB: invalid unit $0",
-      argv[2].toString());
+      argv[2].getString());
 }
 
 void timeAtExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
@@ -871,7 +871,7 @@ void timeAtExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
            kTypeError,
             "can't convert $0 '$1' to TIMESTAMP",
             SValue::getTypeName(argv->getType()),
-            argv->toString());
+            argv->getString());
       }
 
       ts = time_opt.get().unixMicros();

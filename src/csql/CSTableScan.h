@@ -57,6 +57,7 @@ protected:
   struct ColumnRef {
     ColumnRef(RefPtr<cstable::ColumnReader> r, size_t i);
     RefPtr<cstable::ColumnReader> reader;
+    sql_type type;
     size_t index;
   };
 

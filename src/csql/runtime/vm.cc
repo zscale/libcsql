@@ -281,7 +281,7 @@ void VM::evaluate(
       evaluate(ctx, program, instance, cond_expr, argc, argv, &cond);
 
       auto branch = cond_expr->next;
-      if (!cond.toBool()) {
+      if (!cond.getBool()) {
         branch = branch->next;
       }
 
@@ -354,7 +354,7 @@ void VM::evaluate(
       auto subj_expr = expr->child;
       evaluate(ctx, program, instance, subj_expr, argc, argv, &subj);
 
-      auto match = ((RegExp*) expr->arg0)->match(subj.toString());
+      auto match = ((RegExp*) expr->arg0)->match(subj.getString());
       *out = SValue(SValue::BoolType(match));
 
       return;
@@ -365,7 +365,7 @@ void VM::evaluate(
       auto subj_expr = expr->child;
       evaluate(ctx, program, instance, subj_expr, argc, argv, &subj);
 
-      auto match = ((LikePattern*) expr->arg0)->match(subj.toString());
+      auto match = ((LikePattern*) expr->arg0)->match(subj.getString());
       *out = SValue(SValue::BoolType(match));
 
       return;

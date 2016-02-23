@@ -22,7 +22,7 @@ void toStringExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   if (argv->getType() == SQL_STRING) {
     *out = *argv;
   } else {
-    *out = SValue(SValue::StringType(argv->toString()));
+    *out = argv->toString();
   }
 }
 
@@ -36,7 +36,7 @@ void toIntExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   if (argv->getType() == SQL_INTEGER) {
     *out = *argv;
   } else {
-    *out = SValue(SValue::IntegerType(argv->toInteger()));
+    *out = argv->toInteger();
   }
 }
 
@@ -50,7 +50,7 @@ void toFloatExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   if (argv->getType() == SQL_FLOAT) {
     *out = *argv;
   } else {
-    *out = SValue(SValue::FloatType(argv->toFloat()));
+    *out = argv->toFloat();
   }
 }
 
@@ -64,7 +64,7 @@ void toBoolExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   if (argv->getType() == SQL_BOOL) {
     *out = *argv;
   } else {
-    *out = SValue(SValue::BoolType(argv->toBool()));
+    *out = argv->toBool();
   }
 }
 

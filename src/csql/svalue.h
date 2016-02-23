@@ -32,12 +32,16 @@ public:
   typedef stx::UnixTime TimeType;
 
   static SValue newNull();
-  static SValue newString(const StringType& value);
+  static SValue newString(const String& value);
   static SValue newString(const char* value);
   static SValue newInteger(IntegerType value);
+  static SValue newInteger(const String& value);
   static SValue newFloat(FloatType value);
+  static SValue newFloat(const String& value);
   static SValue newBool(BoolType value);
+  static SValue newBool(const String& value);
   static SValue newTimestamp(TimeType value);
+  static SValue newTimestamp(const String& value);
 
   static const char* getTypeName(sql_type type);
   const char* getTypeName() const;
@@ -80,10 +84,10 @@ public:
   bool isConvertibleToTimestamp() const;
 
   SValue toNumeric() const;
-  std::string toString() const;
-  IntegerType toInteger() const;
-  FloatType toFloat() const;
-  BoolType toBool() const;
+  SValue toString() const;
+  SValue toInteger() const;
+  SValue toFloat() const;
+  SValue toBool() const;
   SValue toTimestamp() const;
 
   void encode(OutputStream* os) const;

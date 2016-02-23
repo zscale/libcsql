@@ -179,7 +179,7 @@ template <> SValue::FloatType SValue::getValue<SValue::FloatType>() const {
 }
 
 template <> SValue::StringType SValue::getValue<SValue::StringType>() const {
-  return toString();
+  return getString();
 }
 
 template <> SValue::TimeType SValue::getValue<SValue::TimeType>() const {
@@ -229,15 +229,19 @@ SValue::IntegerType SValue::getInteger() const {
           kTypeError,
           "can't convert %s '%s' to Integer",
           SValue::getTypeName(data_.type),
-          toString().c_str());
+          getString().c_str());
 
   }
 
   return 0;
 }
 
-SValue::IntegerType SValue::toInteger() const {
-  return getInteger();
+SValue SValue::toInteger() const {
+  if (data_.type == SQL_INTEGER) {
+    return *this;
+  } else {
+    return SValue::newInteger(getInteger());
+  }
 }
 
 SValue::FloatType SValue::getFloat() const {
@@ -270,15 +274,27 @@ SValue::FloatType SValue::getFloat() const {
           kTypeError,
           "can't convert %s '%s' to Float",
           SValue::getTypeName(data_.type),
-          toString().c_str());
+          getString().c_str());
 
   }
 
   return 0;
 }
 
-SValue::FloatType SValue::toFloat() const {
-  return getFloat();
+SValue SValue::toFloat() const {
+  if (data_.type == SQL_FLOAT) {
+    return *this;
+  } else {
+    return SValue::newFloat(getFloat());
+  }
+}
+
+SValue SValue::toBool() const {
+  if (data_.type == SQL_BOOL) {
+    return *this;
+  } else {
+    return SValue::newBool(getBool());
+  }
 }
 
 SValue::BoolType SValue::getBool() const {
@@ -304,13 +320,9 @@ SValue::BoolType SValue::getBool() const {
          kTypeError,
           "can't convert $0 '$1' to Boolean",
           SValue::getTypeName(data_.type),
-          toString());
+          getString());
 
   }
-}
-
-SValue::BoolType SValue::toBool() const {
-  return getBool();
 }
 
 SValue::TimeType SValue::getTimestamp() const {
@@ -325,15 +337,7 @@ SValue::TimeType SValue::getTimestamp() const {
        kTypeError,
         "can't convert %s '%s' to TIMESTAMP",
         SValue::getTypeName(data_.type),
-        toString().c_str());
-  }
-}
-
-SValue::StringType SValue::getString() const {
-  if (data_.type == SQL_STRING) {
-    return std::string(data_.u.t_string.ptr, data_.u.t_string.len);
-  } else {
-    return toString();
+        getString().c_str());
   }
 }
 
@@ -341,14 +345,27 @@ std::string SValue::makeUniqueKey(SValue* arr, size_t len) {
   std::string key;
 
   for (int i = 0; i < len; ++i) {
-    key.append(arr[i].toString());
+    key.append(arr[i].getString());
     key.append("\x00");
   }
 
   return key;
 }
 
-std::string SValue::toString() const {
+SValue SValue::toString() const {
+  if (data_.type == SQL_STRING) {
+    return *this;
+  } else {
+    return SValue::newString(getString());
+  }
+}
+
+
+std::string SValue::getString() const {
+  if (data_.type == SQL_STRING) {
+    return std::string(data_.u.t_string.ptr, data_.u.t_string.len);
+  }
+
   char buf[512];
   const char* str;
   size_t len;
@@ -403,19 +420,19 @@ String SValue::toSQL() const {
   switch (data_.type) {
 
     case SQL_INTEGER: {
-      return toString();
+      return getString();
     }
 
     case SQL_TIMESTAMP: {
-      return StringUtil::toString(toInteger());
+      return StringUtil::toString(getInteger());
     }
 
     case SQL_FLOAT: {
-      return toString();
+      return getString();
     }
 
     case SQL_BOOL: {
-      return toString();
+      return getString();
     }
 
     case SQL_STRING: {
@@ -456,9 +473,11 @@ template <> bool SValue::isConvertibleTo<SValue::IntegerType>() const {
     case SQL_INTEGER:
     case SQL_TIMESTAMP:
       return true;
+    default:
+      break;
   }
 
-  auto str = toString();
+  auto str = getString();
   const char* cur = str.c_str();
   const char* end = cur + str.size();
 
@@ -485,9 +504,11 @@ template <> bool SValue::isConvertibleTo<SValue::FloatType>() const {
     case SQL_INTEGER:
     case SQL_TIMESTAMP:
       return true;
+    default:
+      break;
   }
 
-  auto str = toString();
+  auto str = getString();
   bool dot = false;
   const char* c = str.c_str();
 
@@ -532,7 +553,7 @@ SValue SValue::toTimestamp() const {
       kTypeError,
       "can't convert %s '%s' to TIMESTAMP",
       SValue::getTypeName(data_.type),
-      toString().c_str());
+      getString().c_str());
 }
 
 SValue SValue::toNumeric() const {
@@ -552,7 +573,7 @@ SValue SValue::toNumeric() const {
       kTypeError,
       "can't convert %s '%s' to NUMERIC",
       SValue::getTypeName(data_.type),
-      toString().c_str());
+      getString().c_str());
 }
 
 bool SValue::isTimestamp() const {
@@ -650,7 +671,7 @@ std::string inspect<sql_type>(
 template <>
 std::string inspect<csql::SValue>(
     const csql::SValue& sval) {
-  return sval.toString();
+  return sval.getString();
 }
 
 }
@@ -658,7 +679,7 @@ std::string inspect<csql::SValue>(
 namespace std {
 
 size_t hash<csql::SValue>::operator()(const csql::SValue& sval) const {
-  return hash<std::string>()(sval.toString()); // FIXPAUL
+  return hash<std::string>()(sval.getString()); // FIXPAUL
 }
 
 }

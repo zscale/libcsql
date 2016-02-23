@@ -35,7 +35,7 @@ void ASCIITableFormat::formatResults(
         [this] (int argc, const csql::SValue* argv) -> bool {
       Vector<String> row;
       for (int n = 0; n < argc; ++n) {
-        row.emplace_back(argv[n].toString());
+        row.emplace_back(argv[n].getString());
       }
 
       output_->write(stx::inspect(row));

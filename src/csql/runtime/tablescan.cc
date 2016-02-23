@@ -75,7 +75,7 @@ void TableScan::execute(
           inbuf.data(),
           &pred);
 
-      if (!pred.toBool()) {
+      if (!pred.getBool()) {
         continue;
       }
     }
