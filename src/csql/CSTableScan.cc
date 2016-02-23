@@ -29,7 +29,24 @@ CSTableScan::CSTableScan(
     runtime_(runtime),
     colindex_(0),
     aggr_strategy_(stmt_->aggregationStrategy()),
-    rows_scanned_(0) {
+    rows_scanned_(0),
+    opened_(false) {
+  column_names_ = stmt_->outputColumns();
+}
+
+CSTableScan::CSTableScan(
+    Transaction* ctx,
+    RefPtr<SequentialScanNode> stmt,
+    RefPtr<cstable::CSTableReader> cstable,
+    QueryBuilder* runtime) :
+    ctx_(ctx),
+    stmt_(stmt->deepCopyAs<SequentialScanNode>()),
+    cstable_(cstable),
+    runtime_(runtime),
+    colindex_(0),
+    aggr_strategy_(stmt_->aggregationStrategy()),
+    rows_scanned_(0),
+    opened_(false) {
   column_names_ = stmt_->outputColumns();
 }
 
@@ -37,18 +54,12 @@ void CSTableScan::prepare(ExecutionContext* context) {
   context->incrNumSubtasksTotal(1);
 }
 
-void CSTableScan::execute(
-    ExecutionContext* context,
-    Function<bool (int argc, const SValue* argv)> fn) {
-  auto cstable = cstable::CSTableReader::openFile(cstable_filename_);
-  execute(cstable.get(), context, fn);
-}
+void CSTableScan::open() {
+  opened_ = true;
 
-void CSTableScan::execute(
-    cstable::CSTableReader* cstable,
-    ExecutionContext* context,
-    Function<bool (int argc, const SValue* argv)> fn) {
-  logTrace("sql", "Scanning cstable: $0", cstable_filename_);
+  if (cstable_.get() == nullptr) {
+    cstable_ = cstable::CSTableReader::openFile(cstable_filename_);
+  }
 
   Set<String> column_names;
   for (const auto& slnode : stmt_->selectList()) {
@@ -61,11 +72,11 @@ void CSTableScan::execute(
   }
 
   for (const auto& col : column_names) {
-    if (!cstable->hasColumn(col)) {
+    if (!cstable_->hasColumn(col)) {
       continue;
     }
 
-    auto reader = cstable->getColumnReader(col);
+    auto reader = cstable_->getColumnReader(col);
 
     sql_type type;
     switch (reader->type()) {
@@ -104,18 +115,27 @@ void CSTableScan::execute(
     resolveColumns(where_expr.get());
     where_expr_ = runtime_->buildValueExpression(ctx_, where_expr.get());
   }
+}
+
+void CSTableScan::execute(
+    ExecutionContext* context,
+    Function<bool (int argc, const SValue* argv)> fn) {
+  logTrace("sql", "Scanning cstable: $0", cstable_filename_);
+
+  if (!opened_) {
+    open();
+  }
 
   if (columns_.empty()) {
-    scanWithoutColumns(cstable, fn);
+    scanWithoutColumns(fn);
   } else {
-    scan(cstable, fn);
+    scan(fn);
   }
 
   context->incrNumSubtasksCompleted(1);
 }
 
 void CSTableScan::scan(
-    cstable::CSTableReader* cstable,
     Function<bool (int argc, const SValue* argv)> fn) {
   uint64_t select_level = 0;
   uint64_t fetch_level = 0;
@@ -125,7 +145,7 @@ void CSTableScan::scan(
   Vector<SValue> out_row(select_list_.size(), SValue{});
 
   size_t num_records = 0;
-  size_t total_records = cstable->numRecords();
+  size_t total_records = cstable_->numRecords();
   while (num_records < total_records) {
     ++rows_scanned_;
     uint64_t next_level = 0;
@@ -459,11 +479,10 @@ void CSTableScan::scan(
 }
 
 void CSTableScan::scanWithoutColumns(
-    cstable::CSTableReader* cstable,
     Function<bool (int argc, const SValue* argv)> fn) {
   Vector<SValue> out_row(select_list_.size(), SValue{});
 
-  size_t total_records = cstable->numRecords();
+  size_t total_records = cstable_->numRecords();
   for (size_t i = 0; i < total_records; ++i) {
     bool where_pred = true;
     if (where_expr_.program() != nullptr) {

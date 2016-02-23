@@ -685,7 +685,8 @@ void SValue::decode(InputStream* is) {
       *this = SValue(SValue::BoolType(is->readUInt8() == 1));
       return;
     case SQL_TIMESTAMP: {
-      *this = SValue(SValue::TimeType(is->readUInt64()));
+      auto v = is->readUInt64();
+      *this = SValue(SValue::TimeType(v));
       return;
     }
     case SQL_NULL:
