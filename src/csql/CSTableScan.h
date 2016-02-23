@@ -30,6 +30,14 @@ public:
       const String& cstable_filename,
       QueryBuilder* runtime);
 
+
+  CSTableScan(
+      Transaction* ctx,
+      RefPtr<SequentialScanNode> stmt,
+      TableInfo table_info,
+      const String& cstable_filename,
+      QueryBuilder* runtime);
+
   virtual Vector<String> columnNames() const override;
 
   virtual size_t numColumns() const override;
@@ -55,7 +63,7 @@ public:
 protected:
 
   struct ColumnRef {
-    ColumnRef(RefPtr<cstable::ColumnReader> r, size_t i);
+    ColumnRef(RefPtr<cstable::ColumnReader> r, size_t i, sql_type t);
     RefPtr<cstable::ColumnReader> reader;
     sql_type type;
     size_t index;
@@ -99,6 +107,7 @@ protected:
   Vector<String> column_names_;
   ScratchMemory scratch_;
   RefPtr<SequentialScanNode> stmt_;
+  TableInfo table_info_;
   String cstable_filename_;
   QueryBuilder* runtime_;
   HashMap<String, ColumnRef> columns_;

@@ -23,6 +23,14 @@ CSTableScan::CSTableScan(
     RefPtr<SequentialScanNode> stmt,
     const String& cstable_filename,
     QueryBuilder* runtime) :
+    CSTableScan(ctx, stmt, TableInfo{}, cstable_filename, runtime) {}
+
+CSTableScan::CSTableScan(
+    Transaction* ctx,
+    RefPtr<SequentialScanNode> stmt,
+    TableInfo table_info,
+    const String& cstable_filename,
+    QueryBuilder* runtime) :
     ctx_(ctx),
     stmt_(stmt->deepCopyAs<SequentialScanNode>()),
     cstable_filename_(cstable_filename),
@@ -61,11 +69,33 @@ void CSTableScan::execute(
   }
 
   for (const auto& col : column_names) {
-    if (cstable->hasColumn(col)) {
-      columns_.emplace(
-          col,
-          ColumnRef(cstable->getColumnReader(col), colindex_++));
+    if (!cstable->hasColumn(col)) {
+      continue;
     }
+
+    auto reader = cstable->getColumnReader(col);
+
+    sql_type type;
+    switch (reader->type()) {
+      case cstable::ColumnType::STRING:
+        type = SQL_STRING;
+        break;
+      case cstable::ColumnType::SIGNED_INT:
+      case cstable::ColumnType::UNSIGNED_INT:
+        type = SQL_INTEGER;
+        break;
+      case cstable::ColumnType::FLOAT:
+        type = SQL_FLOAT;
+        break;
+      case cstable::ColumnType::BOOLEAN:
+      case cstable::ColumnType::DATETIME:
+        type = SQL_TIMESTAMP;
+        break;
+      case cstable::ColumnType::SUBRECORD:
+        RAISE(kIllegalStateError);
+    }
+
+    columns_.emplace(col, ColumnRef(reader, colindex_++, type));
   }
 
   for (const auto& slnode : stmt_->selectList()) {
@@ -584,9 +614,11 @@ void CSTableScan::setFilter(Function<bool ()> filter_fn) {
 
 CSTableScan::ColumnRef::ColumnRef(
     RefPtr<cstable::ColumnReader> r,
-    size_t i) :
+    size_t i,
+    sql_type t) :
     reader(r),
-    index(i) {}
+    index(i),
+    type(t) {}
 
 CSTableScan::ExpressionRef::ExpressionRef(
     Transaction* _ctx,
