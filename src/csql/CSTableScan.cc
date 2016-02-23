@@ -604,6 +604,15 @@ void CSTableScan::setFilter(Function<bool ()> filter_fn) {
   filter_fn_ = filter_fn;
 }
 
+void CSTableScan::setColumnType(String column, sql_type type) {
+  const auto& col = columns_.find(column);
+  if (col == columns_.end()) {
+    return;
+  }
+
+  col->second.type = type;
+}
+
 CSTableScan::ColumnRef::ColumnRef(
     RefPtr<cstable::ColumnReader> r,
     size_t i,
