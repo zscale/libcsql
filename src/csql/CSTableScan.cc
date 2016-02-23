@@ -23,14 +23,6 @@ CSTableScan::CSTableScan(
     RefPtr<SequentialScanNode> stmt,
     const String& cstable_filename,
     QueryBuilder* runtime) :
-    CSTableScan(ctx, stmt, TableInfo{}, cstable_filename, runtime) {}
-
-CSTableScan::CSTableScan(
-    Transaction* ctx,
-    RefPtr<SequentialScanNode> stmt,
-    TableInfo table_info,
-    const String& cstable_filename,
-    QueryBuilder* runtime) :
     ctx_(ctx),
     stmt_(stmt->deepCopyAs<SequentialScanNode>()),
     cstable_filename_(cstable_filename),
