@@ -196,6 +196,8 @@ ASTNode* Parser::methodCall() {
     if (*cur_token_ == Token::T_ASTERISK) {
       e->appendChild(ASTNode::T_VOID);
       consumeToken();
+    } else if (*cur_token_ == Token::T_RPAREN) {
+      break;
     } else {
       e->appendChild(expr());
     }

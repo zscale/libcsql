@@ -117,6 +117,10 @@ static Option<uint64_t> parseInterval(String time_interval) {
   return None<uint64_t>();
 }
 
+void nowExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
+  *out = SValue::newTimestamp(WallClock::unixMicros());
+}
+
 void fromTimestamp(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("FROM_TIMESTAMP", argc, 1);
 
