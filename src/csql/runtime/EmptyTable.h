@@ -9,12 +9,12 @@
  */
 #pragma once
 #include <stx/stdtypes.h>
-#include <csql/runtime/TableExpression.h>
+#include <csql/tasks/Task.h>
 #include <csql/runtime/defaultruntime.h>
 
 namespace csql {
 
-class EmptyTable : public TableExpression {
+class EmptyTable : public Task {
 public:
 
   EmptyTable(const Vector<String>& column_names);

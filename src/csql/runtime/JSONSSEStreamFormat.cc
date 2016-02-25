@@ -18,7 +18,7 @@ JSONSSEStreamFormat::JSONSSEStreamFormat(
     output_(output) {}
 
 void JSONSSEStreamFormat::formatResults(
-    RefPtr<QueryPlan> query,
+    ScopedPtr<QueryPlan> query,
     ExecutionContext* context) {
   try {
     context->onStatusChange([this, context] (const csql::ExecutionStatus& status) {

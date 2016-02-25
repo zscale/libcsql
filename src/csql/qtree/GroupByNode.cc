@@ -82,6 +82,10 @@ size_t GroupByNode::getColumnIndex(
   return -1;
 }
 
+Vector<TaskID> GroupByNode::build(Transaction* txn, TaskDAG* tree) const {
+  RAISE(kNotYetImplementedError, "not yet implemented");
+}
+
 Vector<RefPtr<ValueExpressionNode>> GroupByNode::groupExpressions() const {
   return group_exprs_;
 }

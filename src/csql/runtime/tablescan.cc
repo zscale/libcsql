@@ -9,19 +9,23 @@
  */
 #include <csql/parser/astutil.h>
 #include <csql/qtree/QueryTreeUtil.h>
-#include <csql/runtime/tablescan.h>
 #include <csql/runtime/QueryBuilder.h>
+#include <csql/runtime/runtime.h>
+#include <csql/runtime/tablescan.h>
 
 namespace csql {
 
 TableScan::TableScan(
     Transaction* txn,
-    QueryBuilder* qbuilder,
     RefPtr<SequentialScanNode> stmt,
-    ScopedPtr<TableIterator> iter) :
+    ScopedPtr<TableIterator> iter,
+    RowSinkFn output) :
     txn_(txn),
-    iter_(std::move(iter)) {
+    iter_(std::move(iter)),
+    output_(output) {
   output_columns_ = stmt->outputColumns();
+
+  auto qbuilder = txn->getRuntime()->queryBuilder();
 
   for (const auto& slnode : stmt->selectList()) {
     QueryTreeUtil::resolveColumns(
@@ -63,6 +67,10 @@ void TableScan::prepare(ExecutionContext* context) {
 void TableScan::execute(
     ExecutionContext* context,
     Function<bool (int argc, const SValue* argv)> fn) {
+  RAISE(kNotImplementedError);
+}
+
+void TableScan::onInputsReady() {
   Vector<SValue> inbuf(iter_->numColumns());
   Vector<SValue> outbuf(select_exprs_.size());
   while (iter_->nextRow(inbuf.data())) {
@@ -75,7 +83,7 @@ void TableScan::execute(
           inbuf.data(),
           &pred);
 
-      if (!pred.getBool()) {
+      if (!pred.toBool()) {
         continue;
       }
     }
@@ -89,12 +97,10 @@ void TableScan::execute(
           &outbuf[i]);
     }
 
-    if (!fn(outbuf.size(), outbuf.data())) {
+    if (!output_(outbuf.data(), outbuf.size())) {
       return;
     }
   }
-
-  context->incrNumSubtasksCompleted(1);
 }
 
 }

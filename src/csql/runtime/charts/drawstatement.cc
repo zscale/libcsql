@@ -20,7 +20,7 @@ namespace csql {
 DrawStatement::DrawStatement(
     Transaction* ctx,
     RefPtr<DrawStatementNode> node,
-    Vector<ScopedPtr<TableExpression>> sources,
+    Vector<ScopedPtr<Task>> sources,
     Runtime* runtime) :
     ctx_(ctx),
     node_(node),
@@ -115,7 +115,7 @@ void DrawStatement::applyAxisDefinitions(stx::chart::Drawable* chart) const {
         auto axis_title = runtime_->evaluateConstExpression(
             ctx_,
             prop->getChildren()[0]);
-        axis->setTitle(axis_title.getString());
+        axis->setTitle(axis_title.toString());
         continue;
       }
 
@@ -255,7 +255,7 @@ void DrawStatement::applyTitle(stx::chart::Drawable* chart) const {
     auto title_eval = runtime_->evaluateConstExpression(
         ctx_,
         child->getChildren()[0]);
-    auto title_str = title_eval.getString();
+    auto title_str = title_eval.toString();
 
     switch (child->getToken()->getType()) {
       case Token::T_TITLE:
@@ -364,7 +364,7 @@ void DrawStatement::applyLegend(stx::chart::Drawable* chart) const {
               ctx_,
               prop->getChildren()[0]);
 
-          title = sval.getString();
+          title = sval.toString();
           break;
         }
         default:

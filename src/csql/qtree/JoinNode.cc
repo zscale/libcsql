@@ -168,6 +168,10 @@ Option<RefPtr<ValueExpressionNode>> JoinNode::joinCondition() const {
   return join_cond_;
 }
 
+Vector<TaskID> JoinNode::build(Transaction* txn, TaskDAG* tree) const {
+  RAISE(kNotYetImplementedError, "not yet implemented");
+}
+
 RefPtr<QueryTreeNode> JoinNode::deepCopy() const {
   return new JoinNode(*this);
 }

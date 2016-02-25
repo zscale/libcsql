@@ -22,7 +22,7 @@
 #include <csql/runtime/rowsink.h>
 #include <csql/runtime/resultlist.h>
 #include <csql/runtime/queryplannode.h>
-#include <csql/runtime/TableExpression.h>
+#include <csql/tasks/Task.h>
 #include <csql/runtime/charts/seriesadapter.h>
 
 namespace csql {
@@ -38,7 +38,7 @@ public:
       draw_stmt_(draw_stmt) {}
 
   void executeStatement(
-      TableExpression* stmt,
+      Task* stmt,
       ExecutionContext* context) {
     name_ind_ = stmt->getColumnIndex("series");
 
@@ -149,7 +149,7 @@ protected:
 
   template <typename TX>
   AnySeriesAdapter* mkSeriesAdapter1D(SValue* row) {
-    if (!row[x_ind_].isConvertibleTo<TX>()) {
+    if (!row[x_ind_].testType<TX>()) {
       return nullptr;
     }
 
@@ -166,7 +166,7 @@ protected:
 
   template <typename TX, typename TY>
   AnySeriesAdapter* mkSeriesAdapter2D(SValue* row) {
-    if (!row[y_ind_].isConvertibleTo<TY>()) {
+    if (!row[y_ind_].testType<TY>()) {
       return nullptr;
     }
 
@@ -186,7 +186,7 @@ protected:
 
   template <typename TX, typename TY, typename TZ>
   AnySeriesAdapter* mkSeriesAdapter3D(SValue* row) {
-    if (!row[z_ind_].isConvertibleTo<TZ>()) {
+    if (!row[z_ind_].testType<TZ>()) {
       return nullptr;
     }
 

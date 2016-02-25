@@ -9,14 +9,14 @@
  */
 #pragma once
 #include <stx/stdtypes.h>
-#include <csql/runtime/TableExpression.h>
+#include <csql/tasks/Task.h>
 
 namespace csql {
 
-class LimitClause : public TableExpression {
+class LimitClause : public Task {
 public:
 
-  LimitClause(int limit, int offset, ScopedPtr<TableExpression> child);
+  LimitClause(int limit, int offset, ScopedPtr<Task> child);
 
   void prepare(ExecutionContext* context) override;
 
@@ -31,7 +31,7 @@ public:
 protected:
   size_t limit_;
   size_t offset_;
-  ScopedPtr<TableExpression> child_;
+  ScopedPtr<Task> child_;
 };
 
 }

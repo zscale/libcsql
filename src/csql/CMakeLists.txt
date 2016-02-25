@@ -58,11 +58,6 @@ add_library(chartsql STATIC
     qtree/DrawStatementNode.cc
     qtree/ChartStatementNode.cc
     qtree/RemoteAggregateNode.cc
-    runtime/ASCIITableFormat.cc
-    runtime/JSONSSEStreamFormat.cc
-    runtime/BinaryResultFormat.cc
-    runtime/BinaryResultParser.cc
-    runtime/JSONResultFormat.cc
     runtime/ResultFormat.cc
     runtime/ValueExpression.cc
     runtime/ScratchMemory.cc
@@ -78,9 +73,7 @@ add_library(chartsql STATIC
     runtime/queryplanbuilder.cc
     runtime/queryplan.cc
     runtime/tablescan.cc
-    runtime/orderby.cc
     runtime/limitclause.cc
-    runtime/GroupBy.cc
     runtime/GroupByMerge.cc
     runtime/Union.cc
     runtime/SelectExpression.cc
@@ -93,7 +86,6 @@ add_library(chartsql STATIC
     runtime/compiler.cc
     runtime/ExecutionContext.cc
     runtime/ExecutionStrategy.cc
-    runtime/TableExpression.cc
     runtime/QueryBuilder.cc
     runtime/LikePattern.cc
     runtime/charts/areachartbuilder.cc
@@ -104,6 +96,12 @@ add_library(chartsql STATIC
     runtime/charts/linechartbuilder.cc
     runtime/charts/pointchartbuilder.cc
     runtime/charts/seriesadapter.cc
+    runtime/schedulers/LocalScheduler.cc
+    tasks/Task.cc
+    tasks/TaskFactory.cc
+    tasks/TaskDAG.cc
+    tasks/orderby.cc
+    tasks/groupby.cc
     ${PROTO_SRCS}
     defaults.cc)
 
@@ -119,5 +117,3 @@ target_link_libraries(test-chartsql-qtree ${CSQL_LIBS})
 add_executable(test-chartsql-parser parser/Parser_test.cc)
 target_link_libraries(test-chartsql-parser ${CSQL_LIBS})
 
-add_executable(csql_bench csql_bench.cc)
-target_link_libraries(csql_bench ${CSQL_LIBS})

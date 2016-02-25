@@ -116,6 +116,10 @@ Option<RefPtr<ValueExpressionNode>> SubqueryNode::whereExpression() const {
   return where_expr_;
 }
 
+Vector<TaskID> SubqueryNode::build(Transaction* txn, TaskDAG* tree) const {
+  RAISE(kNotYetImplementedError, "not yet implemented");
+}
+
 RefPtr<QueryTreeNode> SubqueryNode::deepCopy() const {
   return new SubqueryNode(*this);
 }

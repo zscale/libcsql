@@ -74,6 +74,10 @@ size_t UnionNode::getColumnIndex(
   return idx;
 }
 
+Vector<TaskID> UnionNode::build(Transaction* txn, TaskDAG* tree) const {
+  RAISE(kNotYetImplementedError, "not yet implemented");
+}
+
 RefPtr<QueryTreeNode> UnionNode::deepCopy() const {
   return new UnionNode(*this);
 }

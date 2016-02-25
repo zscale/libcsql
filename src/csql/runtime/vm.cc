@@ -117,6 +117,15 @@ void VM::accumulate(
   }
 }
 
+void VM::evaluate(
+    Transaction* ctx,
+    const Program* program,
+    int argc,
+    const SValue* argv,
+    SValue* out) {
+  return evaluate(ctx, program, nullptr, program->entry_, argc, argv, out);
+}
+
 void VM::merge(
     Transaction* ctx,
     const Program* program,
@@ -281,7 +290,7 @@ void VM::evaluate(
       evaluate(ctx, program, instance, cond_expr, argc, argv, &cond);
 
       auto branch = cond_expr->next;
-      if (!cond.getBool()) {
+      if (!cond.toBool()) {
         branch = branch->next;
       }
 
@@ -316,8 +325,6 @@ void VM::evaluate(
         for (int i = 0; i < stackn; ++i) {
           (stackv + i)->~SValue();
         }
-      } else {
-        expr->vtable.t_pure.call(Transaction::get(ctx), 0, nullptr, out);
       }
 
       return;
@@ -356,7 +363,7 @@ void VM::evaluate(
       auto subj_expr = expr->child;
       evaluate(ctx, program, instance, subj_expr, argc, argv, &subj);
 
-      auto match = ((RegExp*) expr->arg0)->match(subj.getString());
+      auto match = ((RegExp*) expr->arg0)->match(subj.toString());
       *out = SValue(SValue::BoolType(match));
 
       return;
@@ -367,7 +374,7 @@ void VM::evaluate(
       auto subj_expr = expr->child;
       evaluate(ctx, program, instance, subj_expr, argc, argv, &subj);
 
-      auto match = ((LikePattern*) expr->arg0)->match(subj.getString());
+      auto match = ((LikePattern*) expr->arg0)->match(subj.toString());
       *out = SValue(SValue::BoolType(match));
 
       return;

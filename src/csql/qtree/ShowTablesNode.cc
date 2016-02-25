@@ -41,6 +41,10 @@ Vector<QualifiedColumn> ShowTablesNode::allColumns() const {
   return cols;
 }
 
+Vector<TaskID> ShowTablesNode::build(Transaction* txn, TaskDAG* tree) const {
+  RAISE(kNotYetImplementedError, "not yet implemented");
+}
+
 size_t ShowTablesNode::getColumnIndex(
     const String& column_name,
     bool allow_add /* = false */) {

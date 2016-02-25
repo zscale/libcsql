@@ -17,7 +17,7 @@ SubqueryExpression::SubqueryExpression(
     const Vector<String>& column_names,
     Vector<ValueExpression> select_expressions,
     Option<ValueExpression> where_expr,
-    ScopedPtr<TableExpression> subquery) :
+    ScopedPtr<Task> subquery) :
     txn_(txn),
     column_names_(column_names),
     select_exprs_(std::move(select_expressions)),
@@ -38,7 +38,7 @@ void SubqueryExpression::execute(
     if (!where_expr_.isEmpty()) {
       SValue pred;
       VM::evaluate(txn_, where_expr_.get().program(), inc, inv, &pred);
-      if (!pred.getBool()) {
+      if (!pred.toBool()) {
         return true;
       }
     }

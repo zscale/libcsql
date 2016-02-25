@@ -14,8 +14,8 @@ namespace csql {
 NestedLoopJoin::NestedLoopJoin(
     Transaction* txn,
     JoinType join_type,
-    ScopedPtr<TableExpression> base_tbl,
-    ScopedPtr<TableExpression> joined_tbl,
+    ScopedPtr<Task> base_tbl,
+    ScopedPtr<Task> joined_tbl,
     const Vector<JoinNode::InputColumnRef>& input_map,
     const Vector<String>& column_names,
     Vector<ValueExpression> select_expressions,
@@ -138,7 +138,7 @@ void NestedLoopJoin::executeCartesianJoin(
             inbuf.data(),
             &pred);
 
-        if (!pred.getBool()) {
+        if (!pred.toBool()) {
           continue;
         }
       }
@@ -194,7 +194,7 @@ void NestedLoopJoin::executeInnerJoin(
             inbuf.data(),
             &pred);
 
-        if (!pred.getBool()) {
+        if (!pred.toBool()) {
           continue;
         }
       }
@@ -208,7 +208,7 @@ void NestedLoopJoin::executeInnerJoin(
             inbuf.data(),
             &pred);
 
-        if (!pred.getBool()) {
+        if (!pred.toBool()) {
           continue;
         }
       }
@@ -256,6 +256,11 @@ void NestedLoopJoin::executeOuterJoin(
         }
       }
 
+      Vector<String> inrow_str;
+      for (const auto& c : inbuf) {
+        inrow_str.push_back(c.toString());
+      }
+
       {
         SValue pred;
         VM::evaluate(
@@ -265,7 +270,7 @@ void NestedLoopJoin::executeOuterJoin(
             inbuf.data(),
             &pred);
 
-        if (!pred.getBool()) {
+        if (!pred.toBool()) {
           continue;
         }
       }
@@ -279,7 +284,7 @@ void NestedLoopJoin::executeOuterJoin(
             inbuf.data(),
             &pred);
 
-        if (!pred.getBool()) {
+        if (!pred.toBool()) {
           continue;
         }
       }
@@ -318,7 +323,7 @@ void NestedLoopJoin::executeOuterJoin(
             inbuf.data(),
             &pred);
 
-        if (!pred.getBool()) {
+        if (!pred.toBool()) {
           continue;
         }
       }

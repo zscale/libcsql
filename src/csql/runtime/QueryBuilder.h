@@ -30,7 +30,7 @@ public:
       Transaction* ctx,
       RefPtr<ValueExpressionNode> expression);
 
-  ScopedPtr<TableExpression> buildTableExpression(
+  ScopedPtr<Task> buildTableExpression(
       Transaction* ctx,
       RefPtr<TableExpressionNode> expression,
       RefPtr<TableProvider> tables,

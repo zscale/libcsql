@@ -56,6 +56,10 @@ size_t SelectExpressionNode::getColumnIndex(
   return -1;
 }
 
+Vector<TaskID> SelectExpressionNode::build(Transaction* txn, TaskDAG* tree) const {
+  RAISE(kNotYetImplementedError, "not yet implemented");
+}
+
 RefPtr<QueryTreeNode> SelectExpressionNode::deepCopy() const {
   Vector<RefPtr<SelectListNode>> args;
   for (const auto& arg : select_list_) {

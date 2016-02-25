@@ -1,3 +1,5 @@
+- split qtree node in tablexpressionnode + valueexpressionnode
+- delete {table/valueexpressionbuilder}
 - rename SequentialScan -> TableScan
 - test multi-way joins
 - push down all JOIN conjunctions from higher-level join condtitions and WHERE clause

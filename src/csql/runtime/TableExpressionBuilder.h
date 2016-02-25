@@ -24,7 +24,7 @@
 #include <csql/qtree/DescribeTableNode.h>
 #include <csql/qtree/RemoteAggregateNode.h>
 #include <csql/qtree/SubqueryNode.h>
-#include <csql/runtime/TableExpression.h>
+#include <csql/tasks/Task.h>
 #include <csql/runtime/tablerepository.h>
 #include <csql/svalue.h>
 
@@ -36,7 +36,7 @@ class QueryBuilder;
 class TableExpressionBuilder : public RefCounted {
 public:
 
-  ScopedPtr<TableExpression> build(
+  ScopedPtr<Task> build(
       Transaction* ctx,
       RefPtr<QueryTreeNode> node,
       QueryBuilder* runtime,
@@ -44,67 +44,61 @@ public:
 
 protected:
 
-  ScopedPtr<TableExpression> buildGroupBy(
+  ScopedPtr<Task> buildGroupBy(
       Transaction* ctx,
       RefPtr<GroupByNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
-  ScopedPtr<TableExpression> buildGroupMerge(
+  ScopedPtr<Task> buildGroupMerge(
       Transaction* ctx,
       RefPtr<GroupByMergeNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
-  ScopedPtr<TableExpression> buildJoin(
+  ScopedPtr<Task> buildJoin(
       Transaction* ctx,
       RefPtr<JoinNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
-  ScopedPtr<TableExpression> buildUnion(
+  ScopedPtr<Task> buildUnion(
       Transaction* ctx,
       RefPtr<UnionNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
-  ScopedPtr<TableExpression> buildLimit(
+  ScopedPtr<Task> buildLimit(
       Transaction* ctx,
       RefPtr<LimitNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
-  ScopedPtr<TableExpression> buildOrderBy(
-      Transaction* ctx,
-      RefPtr<OrderByNode> node,
-      QueryBuilder* runtime,
-      TableProvider* tables);
-
-  ScopedPtr<TableExpression> buildSequentialScan(
+  ScopedPtr<Task> buildSequentialScan(
       Transaction* ctx,
       RefPtr<SequentialScanNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
-  ScopedPtr<TableExpression> buildSubquery(
+  ScopedPtr<Task> buildSubquery(
       Transaction* ctx,
       RefPtr<SubqueryNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
-  ScopedPtr<TableExpression> buildSelectExpression(
+  ScopedPtr<Task> buildSelectExpression(
       Transaction* ctx,
       RefPtr<SelectExpressionNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
-  ScopedPtr<TableExpression> buildDescribeTableStatment(
+  ScopedPtr<Task> buildDescribeTableStatment(
       Transaction* ctx,
       RefPtr<DescribeTableNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
-  ScopedPtr<TableExpression> buildRemoteAggregate(
+  ScopedPtr<Task> buildRemoteAggregate(
       Transaction* ctx,
       RefPtr<RemoteAggregateNode> node,
       QueryBuilder* runtime);

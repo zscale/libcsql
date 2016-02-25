@@ -67,18 +67,19 @@ void TableRepository::import(
   import(import_stmt.tables(), import_stmt.source_uri(), backends);
 }
 
-Option<ScopedPtr<TableExpression>> TableRepository::buildSequentialScan(
-    Transaction* ctx,
+TaskIDList TableRepository::buildSequentialScan(
+    Transaction* txn,
     RefPtr<SequentialScanNode> seqscan,
-    QueryBuilder* runtime) const {
+    TaskDAG* tasks) const {
   for (const auto& p : providers_) {
-    auto tbl = p->buildSequentialScan(ctx, seqscan, runtime);
-    if (!tbl.isEmpty()) {
-      return std::move(tbl.get());
+    if (p->describe(seqscan->tableName()).isEmpty()) {
+      continue;
     }
+
+    return p->buildSequentialScan(txn, seqscan, tasks);
   }
 
-  return None<ScopedPtr<TableExpression>>();
+  RAISEF(kNotFoundError, "table not found: '$0'", seqscan->tableName());
 }
 
 void TableRepository::addProvider(RefPtr<TableProvider> provider) {

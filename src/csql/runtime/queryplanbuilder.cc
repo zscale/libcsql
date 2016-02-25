@@ -1350,6 +1350,7 @@ QueryTreeNode* QueryPlanBuilder::buildSeqscanTableReference(
   /* aggregation type */
   auto seqscan = new SequentialScanNode(
       table.get(),
+      tables,
       select_list_expressions,
       where_expr);
 
@@ -1491,7 +1492,8 @@ ValueExpressionNode* QueryPlanBuilder::buildLiteral(
       break;
 
     case Token::T_NUMERIC:
-      literal = SValue(token->getString()).toNumeric();
+      literal = SValue(token->getString());
+      literal.tryNumericConversion();
       break;
 
     case Token::T_STRING:

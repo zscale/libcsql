@@ -10,12 +10,12 @@
 #pragma once
 #include <stx/stdtypes.h>
 #include <csql/qtree/ShowTablesNode.h>
-#include <csql/runtime/TableExpression.h>
+#include <csql/tasks/Task.h>
 #include <csql/runtime/tablerepository.h>
 
 namespace csql {
 
-class ShowTablesStatement : public TableExpression {
+class ShowTablesStatement : public Task {
 public:
 
   ShowTablesStatement(RefPtr<TableProvider> tables);

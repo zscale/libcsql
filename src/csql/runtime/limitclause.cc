@@ -14,7 +14,7 @@ namespace csql {
 LimitClause::LimitClause(
     int limit,
     int offset,
-    ScopedPtr<TableExpression> child) :
+    ScopedPtr<Task> child) :
     limit_(limit),
     offset_(offset),
     child_(std::move(child)) {}

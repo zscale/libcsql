@@ -84,7 +84,7 @@ void eqExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
 
   if (lhs->getType() == SQL_STRING ||
       rhs->getType() == SQL_STRING) {
-    *out = SValue(lhs->getString() == rhs->getString());
+    *out = SValue(lhs->toString() == rhs->toString());
     return;
   }
 
@@ -108,7 +108,7 @@ void andExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
 
   SValue* lhs = argv;
   SValue* rhs = argv + 1;
-  *out = SValue(lhs->getBool() && rhs->getBool());
+  *out = SValue(lhs->toBool() && rhs->toBool());
 }
 
 void orExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
@@ -120,7 +120,7 @@ void orExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
 
   SValue* lhs = argv;
   SValue* rhs = argv + 1;
-  *out = SValue(lhs->getBool() || rhs->getBool());
+  *out = SValue(lhs->toBool() || rhs->toBool());
 }
 
 void negExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
@@ -214,7 +214,7 @@ void ltExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
 
   if (lhs->getType() == SQL_STRING ||
       rhs->getType() == SQL_STRING) {
-    *out = SValue(lhs->getString() < rhs->getString());
+    *out = SValue(lhs->toString() < rhs->toString());
     return;
   }
 
@@ -284,7 +284,7 @@ void lteExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
 
   if (lhs->getType() == SQL_STRING ||
       rhs->getType() == SQL_STRING) {
-    *out = SValue(lhs->getString() <= rhs->getString());
+    *out = SValue(lhs->toString() <= rhs->toString());
     return;
   }
 
@@ -354,7 +354,7 @@ void gtExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
 
   if (lhs->getType() == SQL_STRING ||
       rhs->getType() == SQL_STRING) {
-    *out = SValue(lhs->getString() > rhs->getString());
+    *out = SValue(lhs->toString() > rhs->toString());
     return;
   }
 
@@ -424,7 +424,7 @@ void gteExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
 
   if (lhs->getType() == SQL_STRING ||
       rhs->getType() == SQL_STRING) {
-    *out = SValue(lhs->getString() >= rhs->getString());
+    *out = SValue(lhs->toString() >= rhs->toString());
     return;
   }
 

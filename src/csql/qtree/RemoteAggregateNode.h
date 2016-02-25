@@ -52,6 +52,8 @@ public:
 
   String toString() const override;
 
+  Vector<TaskID> build(Transaction* txn, TaskDAG* tree) const override;
+
 protected:
   RefPtr<GroupByNode> stmt_;
   RemoteExecuteFn execute_fn_;

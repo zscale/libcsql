@@ -26,7 +26,7 @@ ValueExpression QueryBuilder::buildValueExpression(
   return scalar_exp_builder_->compile(ctx, node);
 }
 
-ScopedPtr<TableExpression> QueryBuilder::buildTableExpression(
+ScopedPtr<Task> QueryBuilder::buildTableExpression(
     Transaction* ctx,
     RefPtr<TableExpressionNode> node,
     RefPtr<TableProvider> tables,
@@ -42,7 +42,7 @@ ScopedPtr<ChartStatement> QueryBuilder::buildChartStatement(
   Vector<ScopedPtr<DrawStatement>> draw_statements;
 
   for (size_t i = 0; i < node->numChildren(); ++i) {
-    Vector<ScopedPtr<TableExpression>> union_tables;
+    Vector<ScopedPtr<Task>> union_tables;
 
     auto draw_stmt_node = node->child(i).asInstanceOf<DrawStatementNode>();
     for (const auto& table : draw_stmt_node->inputTables()) {

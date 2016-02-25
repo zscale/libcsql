@@ -9,15 +9,15 @@
  */
 #pragma once
 #include <stx/stdtypes.h>
-#include <csql/runtime/TableExpression.h>
+#include <csql/tasks/Task.h>
 #include <csql/runtime/defaultruntime.h>
 
 namespace csql {
 
-class Union : public TableExpression {
+class Union : public Task {
 public:
 
-  Union(Vector<ScopedPtr<TableExpression>> sources);
+  Union(Vector<ScopedPtr<Task>> sources);
 
   void prepare(ExecutionContext* context) override;
 
@@ -30,7 +30,7 @@ public:
   size_t numColumns() const override;
 
 protected:
-  Vector<ScopedPtr<TableExpression>> sources_;
+  Vector<ScopedPtr<Task>> sources_;
 };
 
 }

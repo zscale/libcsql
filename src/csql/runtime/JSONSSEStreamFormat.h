@@ -20,7 +20,7 @@ public:
   JSONSSEStreamFormat(RefPtr<http::HTTPSSEStream> output);
 
   void formatResults(
-      RefPtr<QueryPlan> query,
+      ScopedPtr<QueryPlan> query,
       ExecutionContext* context) override;
 
 protected:

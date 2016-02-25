@@ -75,6 +75,10 @@ size_t RemoteAggregateNode::getColumnIndex(
   return stmt_->getColumnIndex(column_name, allow_add);
 }
 
+Vector<TaskID> RemoteAggregateNode::build(Transaction* txn, TaskDAG* tree) const {
+  RAISE(kNotYetImplementedError, "not yet implemented");
+}
+
 RefPtr<QueryTreeNode> RemoteAggregateNode::deepCopy() const {
   return new RemoteAggregateNode(stmt_, execute_fn_);
 }

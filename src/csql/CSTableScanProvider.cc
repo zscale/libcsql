@@ -21,19 +21,26 @@ CSTableScanProvider::CSTableScanProvider(
     table_name_(table_name),
     cstable_file_(cstable_file) {}
 
-Option<ScopedPtr<TableExpression>>
-    CSTableScanProvider::buildSequentialScan(
-        Transaction* ctx,
-        RefPtr<SequentialScanNode> node,
-        QueryBuilder* runtime) const {
-  return Option<ScopedPtr<TableExpression>>(
-      mkScoped(
-          new CSTableScan(
-              ctx,
-              node,
-              cstable_file_,
-              runtime)));
+TaskIDList CSTableScanProvider::buildSequentialScan(
+    Transaction* txn,
+    RefPtr<SequentialScanNode> seqscan,
+    TaskDAG* tasks) const {
+  RAISE(kNotYetImplementedError);
 }
+
+//Option<ScopedPtr<Task>>
+//    CSTableScanProvider::buildSequentialScan(
+//        Transaction* ctx,
+//        RefPtr<SequentialScanNode> node,
+//        QueryBuilder* runtime) const {
+//  return Option<ScopedPtr<Task>>(
+//      mkScoped(
+//          new CSTableScan(
+//              ctx,
+//              node,
+//              cstable_file_,
+//              runtime)));
+//}
 
 void CSTableScanProvider::listTables(
     Function<void (const csql::TableInfo& table)> fn) const {

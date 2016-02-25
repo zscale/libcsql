@@ -9,12 +9,12 @@
  */
 #pragma once
 #include <stx/stdtypes.h>
-#include <csql/runtime/TableExpression.h>
+#include <csql/tasks/Task.h>
 #include <csql/runtime/defaultruntime.h>
 
 namespace csql {
 
-class SubqueryExpression : public TableExpression {
+class SubqueryExpression : public Task {
 public:
 
   SubqueryExpression(
@@ -22,7 +22,7 @@ public:
       const Vector<String>& column_names,
       Vector<ValueExpression> select_expressions,
       Option<ValueExpression> where_expr,
-      ScopedPtr<TableExpression> subquery);
+      ScopedPtr<Task> subquery);
 
   void prepare(ExecutionContext* context) override;
 
@@ -39,7 +39,7 @@ protected:
   Vector<String> column_names_;
   Vector<ValueExpression> select_exprs_;
   Option<ValueExpression> where_expr_;
-  ScopedPtr<TableExpression> subquery_;
+  ScopedPtr<Task> subquery_;
 };
 
 }

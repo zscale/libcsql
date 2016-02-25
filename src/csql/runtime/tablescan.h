@@ -29,14 +29,14 @@ public:
   virtual size_t numColumns() const = 0;
 };
 
-class TableScan : public TableExpression {
+class TableScan : public Task {
 public:
 
   TableScan(
       Transaction* txn,
-      QueryBuilder* qbuilder,
       RefPtr<SequentialScanNode> stmt,
-      ScopedPtr<TableIterator> iter);
+      ScopedPtr<TableIterator> iter,
+      RowSinkFn output);
 
   Vector<String> columnNames() const override;
 
@@ -48,6 +48,8 @@ public:
       ExecutionContext* context,
       Function<bool (int argc, const SValue* argv)> fn) override;
 
+  void onInputsReady() override;
+
 protected:
 
   Transaction* txn_;
@@ -55,6 +57,7 @@ protected:
   Vector<String> output_columns_;
   Vector<ValueExpression> select_exprs_;
   Option<ValueExpression> where_expr_;
+  RowSinkFn output_;
 };
 
 } // namespace csql

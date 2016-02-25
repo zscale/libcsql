@@ -16,7 +16,7 @@ ASCIITableFormat::ASCIITableFormat(
     output_(std::move(output)) {}
 
 void ASCIITableFormat::formatResults(
-    RefPtr<QueryPlan> query,
+    ScopedPtr<QueryPlan> query,
     ExecutionContext* context) {
 
   for (int i = 0; i < query->numStatements(); ++i) {
@@ -35,7 +35,7 @@ void ASCIITableFormat::formatResults(
         [this] (int argc, const csql::SValue* argv) -> bool {
       Vector<String> row;
       for (int n = 0; n < argc; ++n) {
-        row.emplace_back(argv[n].getString());
+        row.emplace_back(argv[n].toString());
       }
 
       output_->write(stx::inspect(row));

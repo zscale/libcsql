@@ -10,35 +10,45 @@
 #pragma once
 #include <stx/stdtypes.h>
 #include <stx/autoref.h>
-#include <csql/runtime/tablerepository.h>
-#include <csql/runtime/charts/drawstatement.h>
+#include <csql/qtree/QueryTreeNode.h>
+#include <csql/tasks/TaskDAG.h>
+#include <csql/runtime/Scheduler.h>
 
 namespace csql {
 class Runtime;
+class ResultList;
 
-class QueryPlan : public RefCounted  {
+class QueryPlan {
 public:
 
   QueryPlan(
-      Vector<RefPtr<QueryTreeNode>> qtrees,
-      Vector<ScopedPtr<Statement>> statements);
+      Transaction* txn,
+      Vector<RefPtr<QueryTreeNode>> qtrees);
+
+  void execute();
+
+  void setScheduler(SchedulerFactory scheduler);
+
+  void onOutputRow(size_t stmt_idx, RowSinkFn fn);
+
+  void storeResults(size_t stmt_idx, ResultList* result_list);
+
+  const Vector<String>& getStatementOutputColumns(size_t stmt_idx);
 
   size_t numStatements() const;
 
   Statement* getStatement(size_t stmt_idx) const;
   RefPtr<QueryTreeNode> getStatementQTree(size_t stmt_idx) const;
 
+
 protected:
+  Transaction* txn_;
   Vector<RefPtr<QueryTreeNode>> qtrees_;
-  Vector<ScopedPtr<Statement>> statements_;
-};
-
-class ExecutionPlan : public RefCounted {
-public:
-
-  virtual ~ExecutionPlan() {}
-  virtual void execute(Function<bool (int argc, const SValue* argv)> fn) = 0;
-
+  Vector<TaskIDList> statement_tasks_;
+  Vector<Vector<String>> statement_columns_;
+  TaskDAG tasks_;
+  SchedulerFactory scheduler_;
+  SchedulerCallbacks callbacks_;
 };
 
 }

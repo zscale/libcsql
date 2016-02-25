@@ -74,6 +74,10 @@ size_t GroupByMergeNode::getColumnIndex(
   return idx;
 }
 
+Vector<TaskID> GroupByMergeNode::build(Transaction* txn, TaskDAG* tree) const {
+  RAISE(kNotYetImplementedError, "not yet implemented");
+}
+
 RefPtr<QueryTreeNode> GroupByMergeNode::deepCopy() const {
   return new GroupByMergeNode(*this);
 }

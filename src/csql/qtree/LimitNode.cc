@@ -43,6 +43,10 @@ size_t LimitNode::getColumnIndex(
       allow_add);
 }
 
+Vector<TaskID> LimitNode::build(Transaction* txn, TaskDAG* tree) const {
+  RAISE(kNotYetImplementedError, "not yet implemented");
+}
+
 RefPtr<QueryTreeNode> LimitNode::deepCopy() const {
   return new LimitNode(
       limit_,

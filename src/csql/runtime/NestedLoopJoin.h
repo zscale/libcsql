@@ -9,20 +9,20 @@
  */
 #pragma once
 #include <stx/stdtypes.h>
-#include <csql/runtime/TableExpression.h>
+#include <csql/tasks/Task.h>
 #include <csql/runtime/defaultruntime.h>
 #include <csql/qtree/JoinNode.h>
 
 namespace csql {
 
-class NestedLoopJoin : public TableExpression {
+class NestedLoopJoin : public Task {
 public:
 
   NestedLoopJoin(
       Transaction* txn,
       JoinType join_type,
-      ScopedPtr<TableExpression> base_tbl,
-      ScopedPtr<TableExpression> joined_tbl,
+      ScopedPtr<Task> base_tbl,
+      ScopedPtr<Task> joined_tbl,
       const Vector<JoinNode::InputColumnRef>& input_map,
       const Vector<String>& column_names,
       Vector<ValueExpression> select_expressions,
@@ -61,8 +61,8 @@ protected:
 
   Transaction* txn_;
   JoinType join_type_;
-  ScopedPtr<TableExpression> base_table_;
-  ScopedPtr<TableExpression> joined_table_;
+  ScopedPtr<Task> base_table_;
+  ScopedPtr<Task> joined_table_;
   Vector<JoinNode::InputColumnRef> input_map_;
   Vector<String> column_names_;
   Vector<ValueExpression> select_exprs_;

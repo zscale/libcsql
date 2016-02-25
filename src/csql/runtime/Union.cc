@@ -13,7 +13,7 @@
 namespace csql {
 
 Union::Union(
-    Vector<ScopedPtr<TableExpression>> sources) :
+    Vector<ScopedPtr<Task>> sources) :
     sources_(std::move(sources)) {
   if (sources_.size() == 0) {
     RAISE(kRuntimeError, "UNION must have at least one source table");

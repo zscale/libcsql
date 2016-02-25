@@ -208,7 +208,7 @@ size_t BinaryResultParser::parseRow(const void* data, size_t size) {
       case SQL_TIMESTAMP: {
         uint64_t val;
         if (reader.maybeReadUInt64(&val)) {
-          row.emplace_back(SValue(SValue::TimeType(val)));
+          row.emplace_back(SValue(SValue::TimeType(val * kMicrosPerSecond)));
           break;
         } else {
           return 0;

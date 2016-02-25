@@ -9,12 +9,12 @@
  */
 #pragma once
 #include <stx/stdtypes.h>
-#include <csql/runtime/TableExpression.h>
+#include <csql/tasks/Task.h>
 #include <csql/runtime/defaultruntime.h>
 
 namespace csql {
 
-class SelectExpression : public TableExpression {
+class SelectExpression : public Task {
 public:
 
   SelectExpression(

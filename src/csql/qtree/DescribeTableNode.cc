@@ -57,6 +57,10 @@ size_t DescribeTableNode::getColumnIndex(
   return -1;
 }
 
+Vector<TaskID> DescribeTableNode::build(Transaction* txn, TaskDAG* tree) const {
+  RAISE(kNotYetImplementedError, "not yet implemented");
+}
+
 String DescribeTableNode::toString() const {
   return StringUtil::format("(describe-table $0)", table_name_);;
 }

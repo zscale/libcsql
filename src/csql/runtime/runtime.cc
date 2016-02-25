@@ -8,8 +8,9 @@
  * <http://www.gnu.org/licenses/>.
  */
 #include <csql/runtime/runtime.h>
-#include <csql/runtime/groupby.h>
+#include <csql/tasks/groupby.h>
 #include <csql/qtree/QueryTreeUtil.h>
+#include <csql/runtime/schedulers/LocalScheduler.h>
 #include <csql/defaults.h>
 
 namespace csql {
@@ -43,7 +44,7 @@ Runtime::Runtime(
     query_builder_(query_builder),
     query_plan_builder_(query_plan_builder) {}
 
-RefPtr<QueryPlan> Runtime::buildQueryPlan(
+ScopedPtr<QueryPlan> Runtime::buildQueryPlan(
     Transaction* txn,
     const String& query,
     RefPtr<ExecutionStrategy> execution_strategy) {
@@ -63,7 +64,7 @@ RefPtr<QueryPlan> Runtime::buildQueryPlan(
       execution_strategy);
 }
 
-RefPtr<QueryPlan> Runtime::buildQueryPlan(
+ScopedPtr<QueryPlan> Runtime::buildQueryPlan(
     Transaction* txn,
     Vector<RefPtr<QueryTreeNode>> statements,
     RefPtr<ExecutionStrategy> execution_strategy) {
@@ -71,122 +72,9 @@ RefPtr<QueryPlan> Runtime::buildQueryPlan(
     stmt = execution_strategy->rewriteQueryTree(stmt);
   }
 
-  Vector<ScopedPtr<Statement>> stmt_exprs;
-  for (const auto& stmt : statements) {
-    if (dynamic_cast<TableExpressionNode*>(stmt.get())) {
-      stmt_exprs.emplace_back(query_builder_->buildTableExpression(
-          txn,
-          stmt.asInstanceOf<TableExpressionNode>(),
-          execution_strategy->tableProvider(),
-          this));
-
-      continue;
-    }
-
-    if (dynamic_cast<ChartStatementNode*>(stmt.get())) {
-      stmt_exprs.emplace_back(query_builder_->buildChartStatement(
-          txn,
-          stmt.asInstanceOf<ChartStatementNode>(),
-          execution_strategy->tableProvider(),
-          this));
-
-      continue;
-    }
-
-    RAISE(
-        kRuntimeError,
-        "cannot figure out how to execute this query plan");
-
-  }
-
-  return mkRef(new QueryPlan(statements, std::move(stmt_exprs)));
-}
-
-void Runtime::executeQuery(
-    Transaction* txn,
-    const String& query,
-    RefPtr<ExecutionStrategy> execution_strategy,
-    RefPtr<ResultFormat> result_format) {
-  executeQuery(
-      txn,
-      buildQueryPlan(txn, query, execution_strategy),
-      result_format);
-}
-
-void Runtime::executeQuery(
-    Transaction* txn,
-    RefPtr<QueryPlan> query_plan,
-    RefPtr<ResultFormat> result_format) {
-  /* execute query and format results */
-  csql::ExecutionContext context(&tpool_);
-  if (!cachedir_.isEmpty()) {
-    context.setCacheDir(cachedir_.get());
-  }
-
-  for (int i = 0; i < query_plan->numStatements(); ++i) {
-    query_plan->getStatement(i)->prepare(&context);
-  }
-
-  result_format->formatResults(query_plan, &context);
-}
-
-void Runtime::executeStatement(
-    Transaction* txn,
-    RefPtr<TableExpressionNode> qtree,
-    ResultList* result) {
-
-  auto expr = query_builder_->buildTableExpression(
-      txn,
-      qtree.get(),
-      txn->getTableProvider(),
-      this);
-
-  result->addHeader(qtree->outputColumns());
-
-  csql::ExecutionContext context(&tpool_);
-  if (!cachedir_.isEmpty()) {
-    context.setCacheDir(cachedir_.get());
-  }
-
-  expr->prepare(&context);
-  expr->execute(
-      &context,
-      [result] (int argc, const csql::SValue* argv) -> bool {
-    result->addRow(argv, argc);
-    return true;
-  });
-}
-
-void Runtime::executeStatement(
-    Transaction* txn,
-    Statement* statement,
-    ResultList* result) {
-  auto table_expr = dynamic_cast<TableExpression*>(statement);
-  if (!table_expr) {
-    RAISE(kRuntimeError, "statement must be a table expression");
-  }
-
-  result->addHeader(table_expr->columnNames());
-  executeStatement(
-      txn,
-      table_expr,
-      [result] (int argc, const csql::SValue* argv) -> bool {
-    result->addRow(argv, argc);
-    return true;
-  });
-}
-
-void Runtime::executeStatement(
-    Transaction* txn,
-    TableExpression* statement,
-    Function<bool (int argc, const SValue* argv)> fn) {
-  csql::ExecutionContext context(&tpool_);
-  if (!cachedir_.isEmpty()) {
-    context.setCacheDir(cachedir_.get());
-  }
-
-  statement->prepare(&context);
-  statement->execute(&context, fn);
+  auto qplan = mkScoped(new QueryPlan(txn, statements));
+  qplan->setScheduler(LocalScheduler::getFactory());
+  return std::move(qplan);
 }
 
 void Runtime::executeAggregate(
@@ -241,6 +129,7 @@ void Runtime::executeAggregate(
   auto seqscan =
         new SequentialScanNode(
               table_info.get(),
+              execution_strategy->tableProvider(),
               inner_select_list,
               where_expr,
               (AggregationStrategy) query.aggregation_strategy());
