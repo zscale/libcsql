@@ -1455,6 +1455,36 @@ TEST_CASE(RuntimeTest, TestEscaping, [] () {
   }
 });
 
+TEST_CASE(RuntimeTest, TestSimpleSelect, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newTransaction();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new backends::csv::CSVTableProvider(
+          "customers",
+          "src/csql/testdata/testtbl2.csv",
+          '\t'));
+
+  {
+    ResultList result;
+    auto query = R"(
+      SELECT customername
+      FROM customers
+      ORDER BY customername;
+    )";
+
+    auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
+    qplan->storeResults(0, &result);
+    qplan->execute();
+    EXPECT_EQ(result.getNumColumns(), 1);
+    EXPECT_EQ(result.getNumRows(), 91);
+    EXPECT_EQ(result.getRow(0)[0], "Alfreds Futterkiste");
+    EXPECT_EQ(result.getRow(90)[0], "Wolski");
+  }
+});
+
+
 TEST_CASE(RuntimeTest, TestSimpleSubSelect, [] () {
   auto runtime = Runtime::getDefaultRuntime();
   auto ctx = runtime->newTransaction();
