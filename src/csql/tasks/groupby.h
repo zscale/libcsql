@@ -26,33 +26,19 @@ public:
       RowSinkFn output,
       SHA1Hash qtree_fingerprint);
 
-  //void executeRemote(
-  //    ExecutionContext* context,
-  //    OutputStream* os);
+  bool onInputRow(
+      const TaskID& input_id,
+      const SValue* row,
+      int row_len) override;
 
-  //void getResult(
-  //    const HashMap<String, Vector<VM::Instance >>* groups,
-  //    Function<bool (int argc, const SValue* argv)> fn);
-
-  //void freeResult(
-  //    HashMap<String, Vector<VM::Instance >>* groups);
-
-  //void mergeResult(
-  //    const HashMap<String, Vector<VM::Instance >>* src,
-  //    HashMap<String, Vector<VM::Instance >>* dst,
-  //    ScratchMemory* scratch);
-
+  void onInputsReady() override;
   Vector<String> columnNames() const override;
 
   size_t numColumns() const override;
 
 protected:
 
-  bool nextRow(
-      HashMap<String, Vector<VM::Instance >>* groups,
-      ScratchMemory* scratch,
-      int argc,
-      const SValue* argv);
+  void freeResult();
 
   Transaction* txn_;
   Vector<String> column_names_;
@@ -60,6 +46,8 @@ protected:
   Vector<ValueExpression> group_exprs_;
   RowSinkFn output_;
   SHA1Hash qtree_fingerprint_;
+  HashMap<String, Vector<VM::Instance>> groups_;
+  ScratchMemory scratch_;
 };
 
 //class RemoteGroupBy : public GroupByExpression {

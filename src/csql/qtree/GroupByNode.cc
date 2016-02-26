@@ -88,7 +88,6 @@ size_t GroupByNode::getColumnIndex(
 
 Vector<TaskID> GroupByNode::build(Transaction* txn, TaskDAG* tree) const {
   auto input = table_.asInstanceOf<TableExpressionNode>()->build(txn, tree);
-  auto ncols = table_.asInstanceOf<TableExpressionNode>()->outputColumns().size(); // FIXME!!!
 
   auto self = mkRef(const_cast<GroupByNode*>(this));
   auto task_factory = [self] (Transaction* txn, RowSinkFn output) -> RefPtr<Task> {
@@ -120,12 +119,12 @@ Vector<TaskID> GroupByNode::build(Transaction* txn, TaskDAG* tree) const {
   TaskIDList output;
   auto out_task = mkRef(new TaskDAGNode(
       new SimpleTableExpressionFactory(task_factory)));
-  output.emplace_back(tree->addTask(out_task));
   for (const auto& in_task_id : input) {
     TaskDAGNode::Dependency dep;
     dep.task_id = in_task_id;
     out_task->addDependency(dep);
   }
+  output.emplace_back(tree->addTask(out_task));
 
   return output;
 }
