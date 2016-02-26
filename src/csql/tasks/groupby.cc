@@ -17,13 +17,11 @@ GroupBy::GroupBy(
     Transaction* txn,
     Vector<ValueExpression> select_expressions,
     Vector<ValueExpression> group_expressions,
-    RowSinkFn output,
-    SHA1Hash qtree_fingerprint) :
+    RowSinkFn output) :
     txn_(txn),
     select_exprs_(std::move(select_expressions)),
     group_exprs_(std::move(group_expressions)),
-    output_(output),
-    qtree_fingerprint_(qtree_fingerprint) {}
+    output_(output) {}
 
 bool GroupBy::onInputRow(
       const TaskID& input_id,
@@ -93,4 +91,35 @@ void GroupBy::freeResult() {
 //              qtree_fingerprint_.toString())));
 //}
 
+GroupByFactory::GroupByFactory(
+    Vector<RefPtr<SelectListNode>> select_exprs,
+    Vector<RefPtr<ValueExpressionNode>> group_exprs) :
+    select_exprs_(select_exprs),
+    group_exprs_(group_exprs) {}
+
+RefPtr<Task> GroupByFactory::build(
+    Transaction* txn,
+    RowSinkFn output) const {
+  Vector<ValueExpression> select_expressions;
+  Vector<ValueExpression> group_expressions;
+
+  for (const auto& slnode : select_exprs_) {
+    select_expressions.emplace_back(
+        txn->getRuntime()->queryBuilder()->buildValueExpression(
+            txn,
+            slnode->expression()));
+  }
+
+  for (const auto& e : group_exprs_) {
+    group_expressions.emplace_back(
+        txn->getRuntime()->queryBuilder()->buildValueExpression(txn, e));
+  }
+
+  return new GroupBy(
+      txn,
+      std::move(select_expressions),
+      std::move(group_expressions),
+      output);
 }
+
+} // namespace csql

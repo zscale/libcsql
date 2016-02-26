@@ -22,8 +22,7 @@ public:
       Transaction* txn,
       Vector<ValueExpression> select_expressions,
       Vector<ValueExpression> group_expressions,
-      RowSinkFn output,
-      SHA1Hash qtree_fingerprint);
+      RowSinkFn output);
 
   bool onInputRow(
       const TaskID& input_id,
@@ -40,45 +39,24 @@ protected:
   Vector<ValueExpression> select_exprs_;
   Vector<ValueExpression> group_exprs_;
   RowSinkFn output_;
-  SHA1Hash qtree_fingerprint_;
   HashMap<String, Vector<VM::Instance>> groups_;
   ScratchMemory scratch_;
 };
 
-//class RemoteGroupBy : public GroupByExpression {
-//public:
-//  typedef
-//      Function<ScopedPtr<InputStream> (const RemoteAggregateParams& params)>
-//      RemoteExecuteFn;
-//
-//  RemoteGroupBy(
-//      Transaction* txn,
-//      const Vector<String>& column_names,
-//      Vector<ValueExpression> select_expressions,
-//      const RemoteAggregateParams& params,
-//      RemoteExecuteFn execute_fn);
-//
-//  void accumulate(
-//      HashMap<String, Vector<VM::Instance >>* groups,
-//      ScratchMemory* scratch,
-//      ExecutionContext* context) override;
-//
-//protected:
-//  RemoteAggregateParams params_;
-//  RemoteExecuteFn execute_fn_;
-//};
-//
-//class GroupByMerge : public Task {
-//public:
-//
-//  GroupByMerge(Vector<ScopedPtr<GroupByExpression>> sources);
-//
-//  Vector<String> columnNames() const override;
-//
-//  size_t numColumns() const override;
-//
-//protected:
-//  Vector<ScopedPtr<GroupByExpression>> sources_;
-//};
+class GroupByFactory : public TaskFactory {
+public:
+
+  GroupByFactory(
+      Vector<RefPtr<SelectListNode>> select_exprs,
+      Vector<RefPtr<ValueExpressionNode>> group_exprs);
+
+  RefPtr<Task> build(
+      Transaction* txn,
+      RowSinkFn output) const override;
+
+protected:
+  Vector<RefPtr<SelectListNode>> select_exprs_;
+  Vector<RefPtr<ValueExpressionNode>> group_exprs_;
+};
 
 }
