@@ -1101,70 +1101,70 @@ TEST_CASE(RuntimeTest, TestDateTimeDateTruncExpression, [] () {
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_trunc('milliseconds', 1444229262.983758)"));
-    EXPECT_EQ(double(v.getTimestamp()), 1444229262000000.000000);
+        String("date_trunc('milliseconds', FROM_TIMESTAMP(1444229262.983758))"));
+    EXPECT_EQ(v.getTimestamp().unixMicros(), 1444229262983000);
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_trunc('seconds', 1444229262.983758)"));
-    EXPECT_EQ(double(v.getTimestamp()), 1444229262000000.000000);
+        String("date_trunc('seconds', FROM_TIMESTAMP(1444229262.983758))"));
+    EXPECT_EQ(v.getTimestamp().unixMicros(), 1444229262000000);
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_trunc('minutes', 1444229262)"));
+        String("date_trunc('minutes', FROM_TIMESTAMP(1444229262))"));
     EXPECT_EQ(v.getString(), "2015-10-07 14:47:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_trunc('30minutes', 1444229262)"));
+        String("date_trunc('30minutes', FROM_TIMESTAMP(1444229262))"));
     EXPECT_EQ(v.getString(), "2015-10-07 14:30:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_trunc('hours', 1444229262)"));
+        String("date_trunc('hours', FROM_TIMESTAMP(1444229262))"));
     EXPECT_EQ(v.getString(), "2015-10-07 14:00:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_trunc('5hours', 1444229262.598)"));
+        String("date_trunc('5hours', FROM_TIMESTAMP(1444229262.598))"));
     EXPECT_EQ(v.getString(), "2015-10-07 10:00:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_trunc('days', 1444229262)"));
+        String("date_trunc('days', FROM_TIMESTAMP(1444229262))"));
     EXPECT_EQ(v.getString(), "2015-10-07 00:00:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_trunc('7days', 1444229262)"));
+        String("date_trunc('7days', FROM_TIMESTAMP(1444229262))"));
     EXPECT_EQ(v.getString(), "2015-10-01 00:00:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_trunc('week', 1444229262)"));
+        String("date_trunc('week', FROM_TIMESTAMP(1444229262))"));
     EXPECT_EQ(v.getString(), "2015-10-01 00:00:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_trunc('month', 1444229262)"));
+        String("date_trunc('month', FROM_TIMESTAMP(1444229262))"));
     EXPECT_EQ(v.getString(), "2015-10-01 00:00:00");
   }
 
@@ -1172,14 +1172,14 @@ TEST_CASE(RuntimeTest, TestDateTimeDateTruncExpression, [] () {
     //date_trunc returns last day of previous month for months with 30 days
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_trunc('month', 1441836754)"));
+        String("date_trunc('month', FROM_TIMESTAMP(1441836754))"));
     EXPECT_EQ(v.getString(), "2015-08-31 00:00:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_trunc('year', 1444229262)"));
+        String("date_trunc('year', FROM_TIMESTAMP(1444229262))"));
     //returns first of year - number of leap years until now
     EXPECT_EQ(v.getString(), "2014-12-21 00:00:00");
   }
@@ -1187,49 +1187,10 @@ TEST_CASE(RuntimeTest, TestDateTimeDateTruncExpression, [] () {
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_trunc('2years', 1444229262)"));
+        String("date_trunc('2years', FROM_TIMESTAMP(1444229262))"));
     //returns first of year - number of leap years until now
     EXPECT_EQ(v.getString(), "2013-12-21 00:00:00");
   }
-
-  {
-    auto v = runtime->evaluateConstExpression(
-        ctx.get(),
-        String("'blah' REGEXP '^b'"));
-    EXPECT_EQ(v.getString(), "true");
-  }
-
-  {
-    auto v = runtime->evaluateConstExpression(
-        ctx.get(),
-        String("'fubar' REGEX '^b'"));
-    EXPECT_EQ(v.getString(), "false");
-  }
-
-  //{
-  //  auto v = runtime->evaluateConstExpression(String("'abc' LIKE 'abc'"));
-  //  EXPECT_EQ(v.getString(), "true");
-  //}
-
-  //{
-  //  auto v = runtime->evaluateConstExpression(String("'abc' LIKE 'a%'"));
-  //  EXPECT_EQ(v.getString(), "true");
-  //}
-
-  //{
-  //  auto v = runtime->evaluateConstExpression(String("'abc' LIKE '_b_'"));
-  //  EXPECT_EQ(v.getString(), "true");
-  //}
-
-  //{
-  //  auto v = runtime->evaluateConstExpression(String("'abc' LIKE '%bc'"));
-  //  EXPECT_EQ(v.getString(), "true");
-  //}
-
-  //{
-  //  auto v = runtime->evaluateConstExpression(String("'abc' LIKE 'c'"));
-  //  EXPECT_EQ(v.getString(), "false");
-  //}
 });
 
 TEST_CASE(RuntimeTest, TestDateTimeDateAddExpression, [] () {
@@ -1239,105 +1200,105 @@ TEST_CASE(RuntimeTest, TestDateTimeDateAddExpression, [] () {
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_add('1447671624', '1.0', 'SECOND')"));
+        String("date_add(FROM_TIMESTAMP('1447671624'), '1.0', 'SECOND')"));
     EXPECT_EQ(v.getString(), "2015-11-16 11:00:25");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_add('1447671624', '-1', 'SECOND')"));
+        String("date_add(FROM_TIMESTAMP('1447671624'), '-1', 'SECOND')"));
     EXPECT_EQ(v.getString(), "2015-11-16 11:00:23");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_add('2015-11-16 11:00:24', '1', 'SECOND')"));
+        String("date_add(time_at('2015-11-16 11:00:24'), '1', 'SECOND')"));
     EXPECT_EQ(v.getString(), "2015-11-16 11:00:25");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_add('1447671624', '2', 'MINUTE')"));
+        String("date_add(FROM_TIMESTAMP('1447671624'), '2', 'MINUTE')"));
     EXPECT_EQ(v.getString(), "2015-11-16 11:02:24");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_add('1447671624', '4', 'HOUR')"));
+        String("date_add(FROM_TIMESTAMP('1447671624'), '4', 'HOUR')"));
     EXPECT_EQ(v.getString(), "2015-11-16 15:00:24");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_add('1447671624', '30', 'DAY')"));
+        String("date_add(FROM_TIMESTAMP('1447671624'), '30', 'DAY')"));
     EXPECT_EQ(v.getString(), "2015-12-16 11:00:24");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_add('1447671624', '1', 'MONTH')"));
+        String("date_add(FROM_TIMESTAMP('1447671624'), '1', 'MONTH')"));
     EXPECT_EQ(v.getString(), "2015-12-17 11:00:24");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_add('1447671624', '2', 'YEAR')"));
+        String("date_add(FROM_TIMESTAMP('1447671624'), '2', 'YEAR')"));
     EXPECT_EQ(v.getString(), "2017-11-15 11:00:24");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_add('1447671624', '2:15', 'MINUTE_SECOND')"));
+        String("date_add(FROM_TIMESTAMP('1447671624'), '2:15', 'MINUTE_SECOND')"));
     EXPECT_EQ(v.getString(), "2015-11-16 11:02:39");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_add('1447671624', '2:15:00', 'HOUR_SECOND')"));
+        String("date_add(FROM_TIMESTAMP('1447671624'), '2:15:00', 'HOUR_SECOND')"));
     EXPECT_EQ(v.getString(), "2015-11-16 13:15:24");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_add('1447671624', '2:60', 'HOUR_MINUTE')"));
+        String("date_add(FROM_TIMESTAMP('1447671624'), '2:60', 'HOUR_MINUTE')"));
     EXPECT_EQ(v.getString(), "2015-11-16 14:00:24");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_add('2015-01-01 00:00:00', '1 1:30:30', 'DAY_SECOND')"));
+        String("date_add(time_at('2015-01-01 00:00:00'), '1 1:30:30', 'DAY_SECOND')"));
     EXPECT_EQ(v.getString(), "2015-01-02 01:30:30");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_add('2015-12-31 00:00:00', '1 1:30', 'DAY_MINUTE')"));
+        String("date_add(time_at('2015-12-31 00:00:00'), '1 1:30', 'DAY_MINUTE')"));
     EXPECT_EQ(v.getString(), "2016-01-01 01:30:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_add('2015-12-31 23:00:00', '2 2', 'DAY_HOUR')"));
+        String("date_add(time_at('2015-12-31 23:00:00'), '2 2', 'DAY_HOUR')"));
     EXPECT_EQ(v.getString(), "2016-01-03 01:00:00");
   }
 
   {
     auto v = runtime->evaluateConstExpression(
         ctx.get(),
-        String("date_add('2015-12-31 23:00:00', '2-2', 'YEAR_MONTH')"));
+        String("date_add(time_at('2015-12-31 23:00:00'), '2-2', 'YEAR_MONTH')"));
     EXPECT_EQ(v.getString(), "2018-03-02 23:00:00");
   }
 });
@@ -1389,6 +1350,57 @@ TEST_CASE(RuntimeTest, TestDateTimeTimeAtExpression, [] () {
         SValue(SValue::TimeType(now - 2 * kMicrosPerDay)).getString());
   }
 });
+
+TEST_CASE(RuntimeTest, TestRegexExpression, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newTransaction();
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("'blah' REGEXP '^b'"));
+    EXPECT_EQ(v.getString(), "true");
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("'fubar' REGEX '^b'"));
+    EXPECT_EQ(v.getString(), "false");
+  }
+});
+
+TEST_CASE(RuntimeTest, TestLikeExpression, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newTransaction();
+
+  //{
+  //  auto v = runtime->evaluateConstExpression(String("'abc' LIKE 'abc'"));
+  //  EXPECT_EQ(v.getString(), "true");
+  //}
+
+  //{
+  //  auto v = runtime->evaluateConstExpression(String("'abc' LIKE 'a%'"));
+  //  EXPECT_EQ(v.getString(), "true");
+  //}
+
+  //{
+  //  auto v = runtime->evaluateConstExpression(String("'abc' LIKE '_b_'"));
+  //  EXPECT_EQ(v.getString(), "true");
+  //}
+
+  //{
+  //  auto v = runtime->evaluateConstExpression(String("'abc' LIKE '%bc'"));
+  //  EXPECT_EQ(v.getString(), "true");
+  //}
+
+  //{
+  //  auto v = runtime->evaluateConstExpression(String("'abc' LIKE 'c'"));
+  //  EXPECT_EQ(v.getString(), "false");
+  //}
+});
+
+
 
 TEST_CASE(RuntimeTest, TestEscaping, [] () {
   auto runtime = Runtime::getDefaultRuntime();
@@ -2160,4 +2172,25 @@ TEST_CASE(RuntimeTest, TestShowAndDescribeTables, [] () {
   }
 });
 
+TEST_CASE(RuntimeTest, TestNowExpr, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto txn = runtime->newTransaction();
 
+  {
+    ResultList result;
+    auto query = R"(select now();)";
+    auto qplan = runtime->buildQueryPlan(
+        txn.get(),
+        query,
+        new DefaultExecutionStrategy());
+
+    runtime->executeStatement(
+        txn.get(),
+        qplan->getStatementQTree(0).asInstanceOf<TableExpressionNode>(),
+        &result);
+
+    EXPECT_EQ(result.getNumColumns(), 1);
+    EXPECT_EQ(result.getNumRows(), 1);
+    //EXPECT_EQ(result.getRow(0)[0], "...");
+  }
+});
