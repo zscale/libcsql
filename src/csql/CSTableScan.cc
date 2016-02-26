@@ -91,6 +91,8 @@ void CSTableScan::open() {
         type = SQL_FLOAT;
         break;
       case cstable::ColumnType::BOOLEAN:
+        type = SQL_BOOL;
+        break;
       case cstable::ColumnType::DATETIME:
         type = SQL_TIMESTAMP;
         break;
