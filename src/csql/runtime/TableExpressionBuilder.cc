@@ -8,13 +8,13 @@
  * <http://www.gnu.org/licenses/>.
  */
 #include <csql/runtime/TableExpressionBuilder.h>
-#include <csql/runtime/Union.h>
-#include <csql/runtime/SelectExpression.h>
-#include <csql/runtime/limitclause.h>
-#include <csql/runtime/ShowTablesStatement.h>
-#include <csql/runtime/DescribeTableStatement.h>
-#include <csql/runtime/SubqueryExpression.h>
-#include <csql/runtime/NestedLoopJoin.h>
+//#include <csql/runtime/Union.h>
+//#include <csql/runtime/SelectExpression.h>
+//#include <csql/runtime/limitclause.h>
+//#include <csql/runtime/ShowTablesStatement.h>
+//#include <csql/runtime/DescribeTableStatement.h>
+//#include <csql/runtime/SubqueryExpression.h>
+//#include <csql/runtime/NestedLoopJoin.h>
 
 using namespace stx;
 

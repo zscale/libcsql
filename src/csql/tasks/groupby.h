@@ -20,7 +20,6 @@ public:
 
   GroupBy(
       Transaction* txn,
-      const Vector<String>& column_names,
       Vector<ValueExpression> select_expressions,
       Vector<ValueExpression> group_expressions,
       RowSinkFn output,
@@ -32,16 +31,12 @@ public:
       int row_len) override;
 
   void onInputsReady() override;
-  Vector<String> columnNames() const override;
-
-  size_t numColumns() const override;
 
 protected:
 
   void freeResult();
 
   Transaction* txn_;
-  Vector<String> column_names_;
   Vector<ValueExpression> select_exprs_;
   Vector<ValueExpression> group_exprs_;
   RowSinkFn output_;

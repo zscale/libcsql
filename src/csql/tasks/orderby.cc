@@ -90,10 +90,6 @@ void OrderBy::onInputsReady() {
   rows_.clear();
 }
 
-size_t OrderBy::numColumns() const {
-  return num_columns_;
-}
-
 OrderByFactory::OrderByFactory(
     Vector<SortExpr> sort_specs,
     size_t num_columns) :

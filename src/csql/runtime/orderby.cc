@@ -94,12 +94,4 @@ void OrderBy::execute(
   }
 }
 
-Vector<String> OrderBy::columnNames() const {
-  return child_->columnNames();
-}
-
-size_t OrderBy::numColumns() const {
-  return child_->numColumns();
-}
-
 } // namespace csql

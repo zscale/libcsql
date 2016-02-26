@@ -30,11 +30,11 @@ DrawStatement::DrawStatement(
     RAISE(kRuntimeError, "DRAW statement without any tables");
   }
 
-  for (auto& table : sources_) {
-    if (table->numColumns() != sources_[0]->numColumns()) {
-      RAISE(kRuntimeError, "DRAW tables return different number of columns");
-    }
-  }
+  //for (auto& table : sources_) {
+  //  if (table->numColumns() != sources_[0]->numColumns()) {
+  //    RAISE(kRuntimeError, "DRAW tables return different number of columns");
+  //  }
+  //}
 }
 
 //void DrawStatement::execute(

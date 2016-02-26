@@ -29,10 +29,6 @@ public:
       Option<ValueExpression> join_cond_expr,
       Option<ValueExpression> where_expr);
 
-  Vector<String> columnNames() const override;
-
-  size_t numColumns() const override;
-
 protected:
 
   void executeCartesianJoin(

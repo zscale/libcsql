@@ -38,8 +38,8 @@ public:
       QueryBuilder* runtime,
       RowSinkFn output);
 
-  virtual Vector<String> columnNames() const override;
-  virtual size_t numColumns() const override;
+  virtual Vector<String> columnNames() const;
+  virtual size_t numColumns() const;
 
   void onInputsReady() override;
 

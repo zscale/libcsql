@@ -91,7 +91,6 @@ Vector<TaskID> GroupByNode::build(Transaction* txn, TaskDAG* tree) const {
 
   auto self = mkRef(const_cast<GroupByNode*>(this));
   auto task_factory = [self] (Transaction* txn, RowSinkFn output) -> RefPtr<Task> {
-    Vector<String> column_names;
     Vector<ValueExpression> select_expressions;
     Vector<ValueExpression> group_expressions;
 
@@ -109,7 +108,6 @@ Vector<TaskID> GroupByNode::build(Transaction* txn, TaskDAG* tree) const {
 
     return new GroupBy(
         txn,
-        self->outputColumns(),
         std::move(select_expressions),
         std::move(group_expressions),
         output,

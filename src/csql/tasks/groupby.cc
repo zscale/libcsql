@@ -15,13 +15,11 @@ namespace csql {
 
 GroupBy::GroupBy(
     Transaction* txn,
-    const Vector<String>& column_names,
     Vector<ValueExpression> select_expressions,
     Vector<ValueExpression> group_expressions,
     RowSinkFn output,
     SHA1Hash qtree_fingerprint) :
     txn_(txn),
-    column_names_(column_names),
     select_exprs_(std::move(select_expressions)),
     group_exprs_(std::move(group_expressions)),
     output_(output),
@@ -79,14 +77,6 @@ void GroupBy::freeResult() {
   }
 
   groups_.clear();
-}
-
-Vector<String> GroupBy::columnNames() const {
-  return column_names_;
-}
-
-size_t GroupBy::numColumns() const {
-  return column_names_.size();
 }
 
 //Option<SHA1Hash> GroupBy::cacheKey() const {

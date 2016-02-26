@@ -23,8 +23,6 @@ TableScan::TableScan(
     txn_(txn),
     iter_(std::move(iter)),
     output_(output) {
-  output_columns_ = stmt->outputColumns();
-
   auto qbuilder = txn->getRuntime()->queryBuilder();
 
   for (const auto& slnode : stmt->selectList()) {
@@ -50,14 +48,6 @@ TableScan::TableScan(
     where_expr_ = std::move(Option<ValueExpression>(
         qbuilder->buildValueExpression(txn, stmt->whereExpression().get())));
   }
-}
-
-Vector<String> TableScan::columnNames() const {
-  return output_columns_;
-}
-
-size_t TableScan::numColumns() const {
-  return output_columns_.size();
 }
 
 void TableScan::onInputsReady() {

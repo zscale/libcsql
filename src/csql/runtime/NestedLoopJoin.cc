@@ -333,12 +333,4 @@ void NestedLoopJoin::executeOuterJoin(
   }
 }
 
-Vector<String> NestedLoopJoin::columnNames() const {
-  return column_names_;
-}
-
-size_t NestedLoopJoin::numColumns() const {
-  return column_names_.size();
-}
-
 }

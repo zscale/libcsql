@@ -61,7 +61,6 @@ add_library(chartsql STATIC
     runtime/ResultFormat.cc
     runtime/ValueExpression.cc
     runtime/ScratchMemory.cc
-    runtime/NestedLoopJoin.cc
     runtime/runtime.cc
     runtime/symboltable.cc
     runtime/queryplannode.cc
@@ -73,15 +72,6 @@ add_library(chartsql STATIC
     runtime/queryplanbuilder.cc
     runtime/queryplan.cc
     runtime/tablescan.cc
-    runtime/limitclause.cc
-    runtime/GroupByMerge.cc
-    runtime/Union.cc
-    runtime/SelectExpression.cc
-    runtime/SubqueryExpression.cc
-    runtime/EmptyTable.cc
-    runtime/groupovertimewindow.cc
-    runtime/ShowTablesStatement.cc
-    runtime/DescribeTableStatement.cc
     runtime/vm.cc
     runtime/compiler.cc
     runtime/ExecutionContext.cc

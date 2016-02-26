@@ -13,15 +13,15 @@ using namespace stx;
 
 namespace csql {
 
-size_t Task::getColumnIndex(const String& column_name) const {
-  auto cols = columnNames();
-  for (int i = 0; i < cols.size(); ++i) {
-    if (cols[i] == column_name) {
-      return i;
-    }
-  }
-
-  return -1;
-}
+//size_t Task::getColumnIndex(const String& column_name) const {
+//  auto cols = columnNames();
+//  for (int i = 0; i < cols.size(); ++i) {
+//    if (cols[i] == column_name) {
+//      return i;
+//    }
+//  }
+//
+//  return -1;
+//}
 
 }

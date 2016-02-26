@@ -38,17 +38,12 @@ public:
       ScopedPtr<TableIterator> iter,
       RowSinkFn output);
 
-  Vector<String> columnNames() const override;
-
-  size_t numColumns() const override;
-
   void onInputsReady() override;
 
 protected:
 
   Transaction* txn_;
   ScopedPtr<TableIterator> iter_;
-  Vector<String> output_columns_;
   Vector<ValueExpression> select_exprs_;
   Option<ValueExpression> where_expr_;
   RowSinkFn output_;

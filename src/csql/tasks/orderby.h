@@ -37,8 +37,6 @@ public:
 
   void onInputsReady() override;
 
-  size_t numColumns() const override;
-
 protected:
   Transaction* ctx_;
   Vector<SortExpr> sort_specs_;
