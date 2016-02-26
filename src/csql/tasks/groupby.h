@@ -15,72 +15,36 @@
 
 namespace csql {
 
-class GroupByExpression : public Task {
+class GroupBy : public Task {
 public:
 
-  GroupByExpression(
-      Transaction* ctx,
+  GroupBy(
+      Transaction* txn,
       const Vector<String>& column_names,
-      Vector<ValueExpression> select_expressions);
+      Vector<ValueExpression> select_expressions,
+      Vector<ValueExpression> group_expressions,
+      RowSinkFn output,
+      SHA1Hash qtree_fingerprint);
 
-  virtual void accumulate(
-      HashMap<String, Vector<VM::Instance >>* groups,
-      ScratchMemory* scratch,
-      ExecutionContext* context) = 0;
+  //void executeRemote(
+  //    ExecutionContext* context,
+  //    OutputStream* os);
 
-  void executeRemote(
-      ExecutionContext* context,
-      OutputStream* os);
+  //void getResult(
+  //    const HashMap<String, Vector<VM::Instance >>* groups,
+  //    Function<bool (int argc, const SValue* argv)> fn);
 
-  void getResult(
-      const HashMap<String, Vector<VM::Instance >>* groups,
-      Function<bool (int argc, const SValue* argv)> fn);
+  //void freeResult(
+  //    HashMap<String, Vector<VM::Instance >>* groups);
 
-  void freeResult(
-      HashMap<String, Vector<VM::Instance >>* groups);
-
-  void mergeResult(
-      const HashMap<String, Vector<VM::Instance >>* src,
-      HashMap<String, Vector<VM::Instance >>* dst,
-      ScratchMemory* scratch);
+  //void mergeResult(
+  //    const HashMap<String, Vector<VM::Instance >>* src,
+  //    HashMap<String, Vector<VM::Instance >>* dst,
+  //    ScratchMemory* scratch);
 
   Vector<String> columnNames() const override;
 
   size_t numColumns() const override;
-
-protected:
-
-  void encode(
-      const HashMap<String, Vector<VM::Instance >>* groups,
-      OutputStream* os) const;
-
-  bool decode(
-      HashMap<String, Vector<VM::Instance >>* groups,
-      ScratchMemory* scratch,
-      InputStream* is) const;
-
-  Transaction* ctx_;
-  Vector<String> column_names_;
-  Vector<ValueExpression> select_exprs_;
-};
-
-class GroupBy : public GroupByExpression {
-public:
-
-  GroupBy(
-      Transaction* ctx,
-      ScopedPtr<Task> source,
-      const Vector<String>& column_names,
-      Vector<ValueExpression> select_expressions,
-      Vector<ValueExpression> group_expressions,
-      SHA1Hash qtree_fingerprint);
-
-  void accumulate(
-      HashMap<String, Vector<VM::Instance >>* groups,
-      ScratchMemory* scratch,
-      ExecutionContext* context) override;
-
-  Option<SHA1Hash> cacheKey() const override;
 
 protected:
 
@@ -90,45 +54,48 @@ protected:
       int argc,
       const SValue* argv);
 
-  ScopedPtr<Task> source_;
+  Transaction* txn_;
+  Vector<String> column_names_;
+  Vector<ValueExpression> select_exprs_;
   Vector<ValueExpression> group_exprs_;
+  RowSinkFn output_;
   SHA1Hash qtree_fingerprint_;
 };
 
-class RemoteGroupBy : public GroupByExpression {
-public:
-  typedef
-      Function<ScopedPtr<InputStream> (const RemoteAggregateParams& params)>
-      RemoteExecuteFn;
-
-  RemoteGroupBy(
-      Transaction* ctx,
-      const Vector<String>& column_names,
-      Vector<ValueExpression> select_expressions,
-      const RemoteAggregateParams& params,
-      RemoteExecuteFn execute_fn);
-
-  void accumulate(
-      HashMap<String, Vector<VM::Instance >>* groups,
-      ScratchMemory* scratch,
-      ExecutionContext* context) override;
-
-protected:
-  RemoteAggregateParams params_;
-  RemoteExecuteFn execute_fn_;
-};
-
-class GroupByMerge : public Task {
-public:
-
-  GroupByMerge(Vector<ScopedPtr<GroupByExpression>> sources);
-
-  Vector<String> columnNames() const override;
-
-  size_t numColumns() const override;
-
-protected:
-  Vector<ScopedPtr<GroupByExpression>> sources_;
-};
+//class RemoteGroupBy : public GroupByExpression {
+//public:
+//  typedef
+//      Function<ScopedPtr<InputStream> (const RemoteAggregateParams& params)>
+//      RemoteExecuteFn;
+//
+//  RemoteGroupBy(
+//      Transaction* txn,
+//      const Vector<String>& column_names,
+//      Vector<ValueExpression> select_expressions,
+//      const RemoteAggregateParams& params,
+//      RemoteExecuteFn execute_fn);
+//
+//  void accumulate(
+//      HashMap<String, Vector<VM::Instance >>* groups,
+//      ScratchMemory* scratch,
+//      ExecutionContext* context) override;
+//
+//protected:
+//  RemoteAggregateParams params_;
+//  RemoteExecuteFn execute_fn_;
+//};
+//
+//class GroupByMerge : public Task {
+//public:
+//
+//  GroupByMerge(Vector<ScopedPtr<GroupByExpression>> sources);
+//
+//  Vector<String> columnNames() const override;
+//
+//  size_t numColumns() const override;
+//
+//protected:
+//  Vector<ScopedPtr<GroupByExpression>> sources_;
+//};
 
 }

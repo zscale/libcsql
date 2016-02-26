@@ -10,6 +10,10 @@
 #include <csql/qtree/GroupByNode.h>
 #include <csql/qtree/ColumnReferenceNode.h>
 
+#include <csql/runtime/runtime.h>
+#include <csql/runtime/ValueExpression.h>
+#include <csql/tasks/GroupBy.h>
+
 using namespace stx;
 
 namespace csql {
@@ -83,7 +87,47 @@ size_t GroupByNode::getColumnIndex(
 }
 
 Vector<TaskID> GroupByNode::build(Transaction* txn, TaskDAG* tree) const {
-  RAISE(kNotYetImplementedError, "not yet implemented");
+  auto input = table_.asInstanceOf<TableExpressionNode>()->build(txn, tree);
+  auto ncols = table_.asInstanceOf<TableExpressionNode>()->outputColumns().size(); // FIXME!!!
+
+  auto self = mkRef(const_cast<GroupByNode*>(this));
+  auto task_factory = [self] (Transaction* txn, RowSinkFn output) -> RefPtr<Task> {
+    Vector<String> column_names;
+    Vector<ValueExpression> select_expressions;
+    Vector<ValueExpression> group_expressions;
+
+    for (const auto& slnode : self->selectList()) {
+      select_expressions.emplace_back(
+          txn->getRuntime()->queryBuilder()->buildValueExpression(
+              txn,
+              slnode->expression()));
+    }
+
+    for (const auto& e : self->groupExpressions()) {
+      group_expressions.emplace_back(
+          txn->getRuntime()->queryBuilder()->buildValueExpression(txn, e));
+    }
+
+    return new GroupBy(
+        txn,
+        self->outputColumns(),
+        std::move(select_expressions),
+        std::move(group_expressions),
+        output,
+        SHA1::compute(self->toString()));
+  };
+
+  TaskIDList output;
+  auto out_task = mkRef(new TaskDAGNode(
+      new SimpleTableExpressionFactory(task_factory)));
+  output.emplace_back(tree->addTask(out_task));
+  for (const auto& in_task_id : input) {
+    TaskDAGNode::Dependency dep;
+    dep.task_id = in_task_id;
+    out_task->addDependency(dep);
+  }
+
+  return output;
 }
 
 Vector<RefPtr<ValueExpressionNode>> GroupByNode::groupExpressions() const {
