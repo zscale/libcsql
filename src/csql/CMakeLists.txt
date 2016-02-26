@@ -92,6 +92,7 @@ add_library(chartsql STATIC
     tasks/TaskDAG.cc
     tasks/orderby.cc
     tasks/groupby.cc
+    tasks/subquery.cc
     ${PROTO_SRCS}
     defaults.cc)
 

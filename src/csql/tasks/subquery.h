@@ -14,26 +14,41 @@
 
 namespace csql {
 
-class SubqueryExpression : public Task {
+class Subquery : public Task {
 public:
 
-  SubqueryExpression(
+  Subquery(
       Transaction* txn,
-      const Vector<String>& column_names,
       Vector<ValueExpression> select_expressions,
       Option<ValueExpression> where_expr,
-      ScopedPtr<Task> subquery);
+      RowSinkFn output);
 
-  Vector<String> columnNames() const override;
-
-  size_t numColumns() const override;
+  bool onInputRow(
+      const TaskID& input_id,
+      const SValue* row,
+      int row_len) override;
 
 protected:
   Transaction* txn_;
-  Vector<String> column_names_;
   Vector<ValueExpression> select_exprs_;
   Option<ValueExpression> where_expr_;
-  ScopedPtr<Task> subquery_;
+  RowSinkFn output_;
+};
+
+class SubqueryFactory : public TaskFactory {
+public:
+
+  SubqueryFactory(
+      Vector<RefPtr<SelectListNode>> select_exprs,
+      Option<RefPtr<ValueExpressionNode>> where_expr);
+
+  RefPtr<Task> build(
+      Transaction* txn,
+      RowSinkFn output) const override;
+
+protected:
+  Vector<RefPtr<SelectListNode>> select_exprs_;
+  Option<RefPtr<ValueExpressionNode>> where_expr_;
 };
 
 }
