@@ -13,7 +13,7 @@
 #include <csql/qtree/SequentialScanNode.h>
 #include <csql/runtime/compiler.h>
 #include <csql/runtime/defaultruntime.h>
-#include <csql/tasks/Task.h>
+#include <csql/runtime/TableExpression.h>
 #include <csql/runtime/ValueExpression.h>
 #include <cstable/CSTableReader.h>
 
@@ -21,7 +21,7 @@ using namespace stx;
 
 namespace csql {
 
-class CSTableScan : public Task {
+class CSTableScan : public TableExpression {
 public:
 
   CSTableScan(
@@ -30,20 +30,23 @@ public:
       const String& cstable_filename,
       QueryBuilder* runtime);
 
+  CSTableScan(
+      Transaction* ctx,
+      RefPtr<SequentialScanNode> stmt,
+      RefPtr<cstable::CSTableReader> cstable,
+      QueryBuilder* runtime);
+
   virtual Vector<String> columnNames() const override;
 
   virtual size_t numColumns() const override;
 
   void prepare(ExecutionContext* context) override;
 
+  void open();
+
   void execute(
       ExecutionContext* context,
       Function<bool (int argc, const SValue* argv)> fn) override;
-
-  void execute(
-      cstable::CSTableReader* reader,
-      ExecutionContext* context,
-      Function<bool (int argc, const SValue* argv)> fn);
 
   Option<SHA1Hash> cacheKey() const override;
   void setCacheKey(const SHA1Hash& key);
@@ -51,13 +54,15 @@ public:
   size_t rowsScanned() const;
 
   void setFilter(Function<bool ()> filter_fn);
+  void setColumnType(String column, sql_type type);
 
 protected:
 
   struct ColumnRef {
-    ColumnRef(RefPtr<cstable::ColumnReader> r, size_t i);
+    ColumnRef(RefPtr<cstable::ColumnReader> r, size_t i, sql_type t);
     RefPtr<cstable::ColumnReader> reader;
     size_t index;
+    sql_type type;
   };
 
   struct ExpressionRef {
@@ -76,13 +81,8 @@ protected:
     VM::Instance instance;
   };
 
-  void scan(
-      cstable::CSTableReader* cstable,
-      Function<bool (int argc, const SValue* argv)> fn);
-
-  void scanWithoutColumns(
-      cstable::CSTableReader* cstable,
-      Function<bool (int argc, const SValue* argv)> fn);
+  void scan(Function<bool (int argc, const SValue* argv)> fn);
+  void scanWithoutColumns(Function<bool (int argc, const SValue* argv)> fn);
 
   void findColumns(
       RefPtr<ValueExpressionNode> expr,
@@ -99,6 +99,7 @@ protected:
   ScratchMemory scratch_;
   RefPtr<SequentialScanNode> stmt_;
   String cstable_filename_;
+  RefPtr<cstable::CSTableReader> cstable_;
   QueryBuilder* runtime_;
   HashMap<String, ColumnRef> columns_;
   Vector<ExpressionRef> select_list_;
@@ -108,6 +109,7 @@ protected:
   Option<SHA1Hash> cache_key_;
   size_t rows_scanned_;
   Function<bool ()> filter_fn_;
+  bool opened_;
 };
 
 
