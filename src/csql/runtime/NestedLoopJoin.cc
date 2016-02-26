@@ -138,7 +138,7 @@ void NestedLoopJoin::executeCartesianJoin(
             inbuf.data(),
             &pred);
 
-        if (!pred.toBool()) {
+        if (!pred.getBool()) {
           continue;
         }
       }
@@ -194,7 +194,7 @@ void NestedLoopJoin::executeInnerJoin(
             inbuf.data(),
             &pred);
 
-        if (!pred.toBool()) {
+        if (!pred.getBool()) {
           continue;
         }
       }
@@ -208,7 +208,7 @@ void NestedLoopJoin::executeInnerJoin(
             inbuf.data(),
             &pred);
 
-        if (!pred.toBool()) {
+        if (!pred.getBool()) {
           continue;
         }
       }
@@ -256,11 +256,6 @@ void NestedLoopJoin::executeOuterJoin(
         }
       }
 
-      Vector<String> inrow_str;
-      for (const auto& c : inbuf) {
-        inrow_str.push_back(c.toString());
-      }
-
       {
         SValue pred;
         VM::evaluate(
@@ -270,7 +265,7 @@ void NestedLoopJoin::executeOuterJoin(
             inbuf.data(),
             &pred);
 
-        if (!pred.toBool()) {
+        if (!pred.getBool()) {
           continue;
         }
       }
@@ -284,7 +279,7 @@ void NestedLoopJoin::executeOuterJoin(
             inbuf.data(),
             &pred);
 
-        if (!pred.toBool()) {
+        if (!pred.getBool()) {
           continue;
         }
       }
@@ -323,7 +318,7 @@ void NestedLoopJoin::executeOuterJoin(
             inbuf.data(),
             &pred);
 
-        if (!pred.toBool()) {
+        if (!pred.getBool()) {
           continue;
         }
       }

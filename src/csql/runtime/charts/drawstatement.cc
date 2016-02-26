@@ -115,7 +115,7 @@ void DrawStatement::applyAxisDefinitions(stx::chart::Drawable* chart) const {
         auto axis_title = runtime_->evaluateConstExpression(
             ctx_,
             prop->getChildren()[0]);
-        axis->setTitle(axis_title.toString());
+        axis->setTitle(axis_title.getString());
         continue;
       }
 
@@ -255,7 +255,7 @@ void DrawStatement::applyTitle(stx::chart::Drawable* chart) const {
     auto title_eval = runtime_->evaluateConstExpression(
         ctx_,
         child->getChildren()[0]);
-    auto title_str = title_eval.toString();
+    auto title_str = title_eval.getString();
 
     switch (child->getToken()->getType()) {
       case Token::T_TITLE:
@@ -364,7 +364,7 @@ void DrawStatement::applyLegend(stx::chart::Drawable* chart) const {
               ctx_,
               prop->getChildren()[0]);
 
-          title = sval.toString();
+          title = sval.getString();
           break;
         }
         default:

@@ -100,7 +100,7 @@ void JSONResultFormat::renderTable(
         json_->addComma();
       }
 
-      json_->addString(argv[n].toString());
+      json_->addString(argv[n].getString());
     }
 
     for (; n < m; ++n) {

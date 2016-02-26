@@ -83,7 +83,7 @@ void TableScan::onInputsReady() {
           inbuf.data(),
           &pred);
 
-      if (!pred.toBool()) {
+      if (!pred.getBool()) {
         continue;
       }
     }

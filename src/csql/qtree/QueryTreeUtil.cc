@@ -178,7 +178,7 @@ Option<ScanConstraint> QueryTreeUtil::findConstraint(
     }
   }
 
-  if (literal.get() == nullptr && column.get() == nullptr) {
+  if (literal.get() == nullptr || column.get() == nullptr) {
     return None<ScanConstraint>();
   }
 

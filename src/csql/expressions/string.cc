@@ -27,27 +27,27 @@ static void checkArgs(const char* symbol, int argc, int argc_expected) {
 void startsWithExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("STARTSWITH", argc, 2);
 
-  auto val = StringUtil::beginsWith(argv[0].toString(), argv[1].toString());
+  auto val = StringUtil::beginsWith(argv[0].getString(), argv[1].getString());
   *out = SValue(SValue::BoolType(val));
 }
 
 void endsWithExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("ENDSWITH", argc, 2);
 
-  auto val = StringUtil::endsWith(argv[0].toString(), argv[1].toString());
+  auto val = StringUtil::endsWith(argv[0].getString(), argv[1].getString());
   *out = SValue(SValue::BoolType(val));
 }
 
 void upperCaseExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("UPPERCASE", argc, 1);
-  auto val = argv[0].toString();
+  auto val = argv[0].getString();
   StringUtil::toUpper(&val);
   *out = SValue(val);
 }
 
 void lowerCaseExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out) {
   checkArgs("LOWERCASE", argc, 1);
-  auto val = argv[0].toString();
+  auto val = argv[0].getString();
   StringUtil::toLower(&val);
   *out = SValue(val);
 }

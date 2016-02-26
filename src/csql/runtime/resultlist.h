@@ -71,7 +71,7 @@ public:
 
     Vector<String> str_row;
     for (int i = 0; i < row_len; ++i) {
-      str_row.emplace_back(row[i].toString());
+      str_row.emplace_back(row[i].getString());
     }
 
     rows_.emplace_back(str_row);

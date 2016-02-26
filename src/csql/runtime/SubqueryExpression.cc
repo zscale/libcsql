@@ -38,7 +38,7 @@ void SubqueryExpression::execute(
     if (!where_expr_.isEmpty()) {
       SValue pred;
       VM::evaluate(txn_, where_expr_.get().program(), inc, inv, &pred);
-      if (!pred.toBool()) {
+      if (!pred.getBool()) {
         return true;
       }
     }

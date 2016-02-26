@@ -22,7 +22,7 @@ std::string formatTimeWithRange(SValue::TimeType time, int range);
 template <typename T>
 std::string toHuman(T value) {
   SValue sval(value);
-  return sval.toString();
+  return sval.getString();
 }
 
 }

@@ -16,13 +16,12 @@
 namespace csql {
 namespace expressions {
 
+void nowExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out);
 void fromTimestamp(sql_txn* ctx, int argc, SValue* argv, SValue* out);
 void dateTruncExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out);
 void dateAddExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out);
 void dateSubExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out);
 void timeAtExpr(sql_txn* ctx, int argc, SValue* argv, SValue* out);
-
-Option<uint64_t> timeFromNow(String time_interval);
 
 }
 }
