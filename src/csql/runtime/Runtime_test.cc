@@ -2175,19 +2175,14 @@ TEST_CASE(RuntimeTest, TestShowAndDescribeTables, [] () {
 TEST_CASE(RuntimeTest, TestNowExpr, [] () {
   auto runtime = Runtime::getDefaultRuntime();
   auto txn = runtime->newTransaction();
+  auto estrat = mkRef(new DefaultExecutionStrategy());
 
   {
     ResultList result;
     auto query = R"(select now();)";
-    auto qplan = runtime->buildQueryPlan(
-        txn.get(),
-        query,
-        new DefaultExecutionStrategy());
-
-    runtime->executeStatement(
-        txn.get(),
-        qplan->getStatementQTree(0).asInstanceOf<TableExpressionNode>(),
-        &result);
+    auto qplan = runtime->buildQueryPlan(txn.get(), query, estrat.get());
+    qplan->storeResults(0, &result);
+    qplan->execute();
 
     EXPECT_EQ(result.getNumColumns(), 1);
     EXPECT_EQ(result.getNumRows(), 1);
