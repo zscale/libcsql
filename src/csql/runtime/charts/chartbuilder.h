@@ -98,35 +98,35 @@ public:
     }
 
     bool first = true;
-    stmt->execute(
-        context,
-        [this, &first] (int row_len, const SValue* row_const) -> bool {
-      auto row = const_cast<SValue*>(row_const);
+    //stmt->execute(
+    //    context,
+    //    [this, &first] (int row_len, const SValue* row_const) -> bool {
+    //  auto row = const_cast<SValue*>(row_const);
 
-      if (first) {
-        first = false;
+    //  if (first) {
+    //    first = false;
 
-        if (x_ind_ < 0) {
-          RAISE(
-              kRuntimeError,
-              "can't draw SELECT because it has no 'x' column");
-        }
+    //    if (x_ind_ < 0) {
+    //      RAISE(
+    //          kRuntimeError,
+    //          "can't draw SELECT because it has no 'x' column");
+    //    }
 
-        if (adapter_.get() == nullptr) {
-          adapter_.reset(mkSeriesAdapter(row));
-        } else {
-          adapter_->name_ind_ = name_ind_;
-          adapter_->x_ind_ = x_ind_;
-          adapter_->y_ind_ = y_ind_;
-          adapter_->z_ind_ = z_ind_;
-        }
+    //    if (adapter_.get() == nullptr) {
+    //      adapter_.reset(mkSeriesAdapter(row));
+    //    } else {
+    //      adapter_->name_ind_ = name_ind_;
+    //      adapter_->x_ind_ = x_ind_;
+    //      adapter_->y_ind_ = y_ind_;
+    //      adapter_->z_ind_ = z_ind_;
+    //    }
 
-        adapter_->prop_indexes_ = prop_indexes_;
-      }
+    //    adapter_->prop_indexes_ = prop_indexes_;
+    //  }
 
-      adapter_->nextRow(row, row_len);
-      return true;
-    });
+    //  adapter_->nextRow(row, row_len);
+    //  return true;
+    //});
   }
 
   virtual stx::chart::Drawable* getChart() const = 0;

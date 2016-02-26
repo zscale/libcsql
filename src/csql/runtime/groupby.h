@@ -79,8 +79,6 @@ public:
       Vector<ValueExpression> group_expressions,
       SHA1Hash qtree_fingerprint);
 
-  void prepare(ExecutionContext* context) override;
-
   void accumulate(
       HashMap<String, Vector<VM::Instance >>* groups,
       ScratchMemory* scratch,
@@ -113,8 +111,6 @@ public:
       Vector<ValueExpression> select_expressions,
       const RemoteAggregateParams& params,
       RemoteExecuteFn execute_fn);
-
-  void prepare(ExecutionContext* context) override;
 
   void accumulate(
       HashMap<String, Vector<VM::Instance >>* groups,

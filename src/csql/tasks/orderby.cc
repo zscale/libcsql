@@ -29,17 +29,6 @@ OrderBy::OrderBy(
   }
 }
 
-void OrderBy::prepare(ExecutionContext* context) {
-  //context->incrNumSubtasksTotal(1);
-  //child_->prepare(context);
-}
-
-void OrderBy::execute(
-    ExecutionContext* context,
-    Function<bool (int argc, const SValue* argv)> fn) {
-  RAISE(kNotYetImplementedError);
-}
-
 // FIXPAUL this should mergesort while inserting...
 bool OrderBy::onInputRow(
     const TaskID& input_id,

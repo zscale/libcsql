@@ -15,24 +15,22 @@ ShowTablesStatement::ShowTablesStatement(
     RefPtr<TableProvider> tables) :
     tables_(tables) {}
 
-void ShowTablesStatement::prepare(ExecutionContext* context) {}
-
-void ShowTablesStatement::execute(
-    ExecutionContext* context,
-    Function<bool (int argc, const SValue* argv)> fn) {
-  tables_->listTables([fn] (const TableInfo& table) {
-    Vector<SValue> row;
-    row.emplace_back(table.table_name);
-
-    if (table.description.isEmpty()) {
-      row.emplace_back();
-    } else {
-      row.emplace_back(table.description.get());
-    }
-
-    fn(row.size(), row.data());
-  });
-}
+//void ShowTablesStatement::execute(
+//    ExecutionContext* context,
+//    Function<bool (int argc, const SValue* argv)> fn) {
+//  tables_->listTables([fn] (const TableInfo& table) {
+//    Vector<SValue> row;
+//    row.emplace_back(table.table_name);
+//
+//    if (table.description.isEmpty()) {
+//      row.emplace_back();
+//    } else {
+//      row.emplace_back(table.description.get());
+//    }
+//
+//    fn(row.size(), row.data());
+//  });
+//}
 
 Vector<String> ShowTablesStatement::columnNames() const {
   return Vector<String> {

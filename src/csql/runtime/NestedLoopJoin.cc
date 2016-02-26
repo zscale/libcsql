@@ -31,77 +31,71 @@ NestedLoopJoin::NestedLoopJoin(
     join_cond_expr_(std::move(join_cond_expr)),
     where_expr_(std::move(where_expr)) {}
 
-void NestedLoopJoin::prepare(ExecutionContext* context) {
-  context->incrNumSubtasksTotal(3);
-  base_table_->prepare(context);
-  joined_table_->prepare(context);
-}
-
 static const size_t kMaxInMemoryRows = 1000000;
 
-void NestedLoopJoin::execute(
-    ExecutionContext* context,
-    Function<bool (int argc, const SValue* argv)> fn) {
-  List<Vector<SValue>> base_tbl_data;
-  base_table_->execute(
-      context,
-      [&base_tbl_data] (int argc, const SValue* argv) -> bool {
-    base_tbl_data.emplace_back(argv, argv + argc);
-    if (base_tbl_data.size() >= kMaxInMemoryRows) {
-      RAISE(
-          kRuntimeError,
-          "Nested Loop JOIN intermediate result set is too large, try using an"
-          " equi-join instead.");
-    }
-    return true;
-  });
-  context->incrNumSubtasksCompleted(1);
-
-  List<Vector<SValue>> joined_tbl_data;
-  joined_table_->execute(
-      context,
-      [&joined_tbl_data] (int argc, const SValue* argv) -> bool {
-    joined_tbl_data.emplace_back(argv, argv + argc);
-    if (joined_tbl_data.size() >= kMaxInMemoryRows) {
-      RAISE(
-          kRuntimeError,
-          "Nested Loop JOIN intermediate result set is too large, try using an"
-          " equi-join instead.");
-    }
-    return true;
-  });
-  context->incrNumSubtasksCompleted(1);
-
-  switch (join_type_) {
-    case JoinType::OUTER:
-      executeOuterJoin(
-          context,
-          fn,
-          base_tbl_data,
-          joined_tbl_data);
-      break;
-    case JoinType::INNER:
-      if (join_cond_expr_.isEmpty()) {
-        /* fallthrough */
-      } else {
-        executeInnerJoin(
-            context,
-            fn,
-            base_tbl_data,
-            joined_tbl_data);
-        break;
-      }
-    case JoinType::CARTESIAN:
-      executeCartesianJoin(
-          context,
-          fn,
-          base_tbl_data,
-          joined_tbl_data);
-      break;
-  }
-
-  context->incrNumSubtasksCompleted(1);
-}
+//void NestedLoopJoin::execute(
+//    ExecutionContext* context,
+//    Function<bool (int argc, const SValue* argv)> fn) {
+//  List<Vector<SValue>> base_tbl_data;
+//  base_table_->execute(
+//      context,
+//      [&base_tbl_data] (int argc, const SValue* argv) -> bool {
+//    base_tbl_data.emplace_back(argv, argv + argc);
+//    if (base_tbl_data.size() >= kMaxInMemoryRows) {
+//      RAISE(
+//          kRuntimeError,
+//          "Nested Loop JOIN intermediate result set is too large, try using an"
+//          " equi-join instead.");
+//    }
+//    return true;
+//  });
+//  context->incrNumSubtasksCompleted(1);
+//
+//  List<Vector<SValue>> joined_tbl_data;
+//  joined_table_->execute(
+//      context,
+//      [&joined_tbl_data] (int argc, const SValue* argv) -> bool {
+//    joined_tbl_data.emplace_back(argv, argv + argc);
+//    if (joined_tbl_data.size() >= kMaxInMemoryRows) {
+//      RAISE(
+//          kRuntimeError,
+//          "Nested Loop JOIN intermediate result set is too large, try using an"
+//          " equi-join instead.");
+//    }
+//    return true;
+//  });
+//  context->incrNumSubtasksCompleted(1);
+//
+//  switch (join_type_) {
+//    case JoinType::OUTER:
+//      executeOuterJoin(
+//          context,
+//          fn,
+//          base_tbl_data,
+//          joined_tbl_data);
+//      break;
+//    case JoinType::INNER:
+//      if (join_cond_expr_.isEmpty()) {
+//        /* fallthrough */
+//      } else {
+//        executeInnerJoin(
+//            context,
+//            fn,
+//            base_tbl_data,
+//            joined_tbl_data);
+//        break;
+//      }
+//    case JoinType::CARTESIAN:
+//      executeCartesianJoin(
+//          context,
+//          fn,
+//          base_tbl_data,
+//          joined_tbl_data);
+//      break;
+//  }
+//
+//  context->incrNumSubtasksCompleted(1);
+//}
 
 void NestedLoopJoin::executeCartesianJoin(
     ExecutionContext* context,

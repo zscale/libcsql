@@ -15,25 +15,23 @@ DescribeTableStatement::DescribeTableStatement(
     TableInfo table_info) :
     table_info_(table_info) {}
 
-void DescribeTableStatement::prepare(ExecutionContext* context) {}
-
-void DescribeTableStatement::execute(
-    ExecutionContext* context,
-    Function<bool (int argc, const SValue* argv)> fn) {
-  for (const auto& col : table_info_.columns) {
-    Vector<SValue> row;
-    row.emplace_back(col.column_name);
-    row.emplace_back(col.type);
-    //if (col.type_size == 0) {
-    //  row.emplace_back();
-    //} else {
-    //  row.emplace_back(SValue::IntegerType(col.type_size));
-    //}
-    row.emplace_back(col.is_nullable ? "YES" : "NO");
-    row.emplace_back();
-    fn(row.size(), row.data());
-  }
-}
+//void DescribeTableStatement::execute(
+//    ExecutionContext* context,
+//    Function<bool (int argc, const SValue* argv)> fn) {
+//  for (const auto& col : table_info_.columns) {
+//    Vector<SValue> row;
+//    row.emplace_back(col.column_name);
+//    row.emplace_back(col.type);
+//    //if (col.type_size == 0) {
+//    //  row.emplace_back();
+//    //} else {
+//    //  row.emplace_back(SValue::IntegerType(col.type_size));
+//    //}
+//    row.emplace_back(col.is_nullable ? "YES" : "NO");
+//    row.emplace_back();
+//    fn(row.size(), row.data());
+//  }
+//}
 
 Vector<String> DescribeTableStatement::columnNames() const {
   return Vector<String> {

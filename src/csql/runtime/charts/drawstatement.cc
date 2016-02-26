@@ -37,38 +37,32 @@ DrawStatement::DrawStatement(
   }
 }
 
-void DrawStatement::prepare(ExecutionContext* context) {
-  for (auto& source : sources_) {
-    source->prepare(context);
-  }
-}
-
-void DrawStatement::execute(
-    ExecutionContext* context,
-    stx::chart::Canvas* canvas) {
-  stx::chart::Drawable* chart = nullptr;
-
-  switch (node_->chartType()) {
-    case DrawStatementNode::ChartType::AREACHART:
-      chart = executeWithChart<AreaChartBuilder>(context, canvas);
-      break;
-    case DrawStatementNode::ChartType::BARCHART:
-      chart = executeWithChart<BarChartBuilder>(context, canvas);
-      break;
-    case DrawStatementNode::ChartType::LINECHART:
-      chart = executeWithChart<LineChartBuilder>(context, canvas);
-      break;
-    case DrawStatementNode::ChartType::POINTCHART:
-      chart = executeWithChart<PointChartBuilder>(context, canvas);
-      break;
-  }
-
-  applyDomainDefinitions(chart);
-  applyTitle(chart);
-  applyAxisDefinitions(chart);
-  applyGrid(chart);
-  applyLegend(chart);
-}
+//void DrawStatement::execute(
+//    ExecutionContext* context,
+//    stx::chart::Canvas* canvas) {
+//  stx::chart::Drawable* chart = nullptr;
+//
+//  switch (node_->chartType()) {
+//    case DrawStatementNode::ChartType::AREACHART:
+//      chart = executeWithChart<AreaChartBuilder>(context, canvas);
+//      break;
+//    case DrawStatementNode::ChartType::BARCHART:
+//      chart = executeWithChart<BarChartBuilder>(context, canvas);
+//      break;
+//    case DrawStatementNode::ChartType::LINECHART:
+//      chart = executeWithChart<LineChartBuilder>(context, canvas);
+//      break;
+//    case DrawStatementNode::ChartType::POINTCHART:
+//      chart = executeWithChart<PointChartBuilder>(context, canvas);
+//      break;
+//  }
+//
+//  applyDomainDefinitions(chart);
+//  applyTitle(chart);
+//  applyAxisDefinitions(chart);
+//  applyGrid(chart);
+//  applyLegend(chart);
+//}
 
 void DrawStatement::applyAxisDefinitions(stx::chart::Drawable* chart) const {
   for (const auto& child : node_->ast()->getChildren()) {

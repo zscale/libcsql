@@ -39,23 +39,23 @@ void GroupByExpression::executeRemote(
   freeResult(&groups);
 }
 
-void GroupByExpression::execute(
-    ExecutionContext* context,
-    Function<bool (int argc, const SValue* argv)> fn) {
-  HashMap<String, Vector<VM::Instance >> groups;
-  ScratchMemory scratch;
-
-  try {
-    accumulate(&groups, &scratch, context);
-    getResult(&groups, fn);
-  } catch (...) {
-    freeResult(&groups);
-    throw;
-  }
-
-  freeResult(&groups);
-  context->incrNumSubtasksCompleted(1);
-}
+//void GroupByExpression::execute(
+//    ExecutionContext* context,
+//    Function<bool (int argc, const SValue* argv)> fn) {
+//  HashMap<String, Vector<VM::Instance >> groups;
+//  ScratchMemory scratch;
+//
+//  try {
+//    accumulate(&groups, &scratch, context);
+//    getResult(&groups, fn);
+//  } catch (...) {
+//    freeResult(&groups);
+//    throw;
+//  }
+//
+//  freeResult(&groups);
+//  context->incrNumSubtasksCompleted(1);
+//}
 
 GroupBy::GroupBy(
     Transaction* ctx,
@@ -89,15 +89,15 @@ void GroupBy::accumulate(
   }
 
   if (!from_cache) {
-    source_->execute(
-        context,
-        std::bind(
-            &GroupBy::nextRow,
-            this,
-            groups,
-            scratch,
-            std::placeholders::_1,
-            std::placeholders::_2));
+    //source_->execute(
+    //    context,
+    //    std::bind(
+    //        &GroupBy::nextRow,
+    //        this,
+    //        groups,
+    //        scratch,
+    //        std::placeholders::_1,
+    //        std::placeholders::_2));
   }
 
   if (!from_cache && !cache_key.isEmpty() && !cachedir.isEmpty()) {
@@ -180,11 +180,6 @@ bool GroupBy::nextRow(
   }
 
   return true;
-}
-
-void GroupBy::prepare(ExecutionContext* context) {
-  context->incrNumSubtasksTotal(1);
-  source_->prepare(context);
 }
 
 Vector<String> GroupByExpression::columnNames() const {
@@ -270,10 +265,6 @@ void RemoteGroupBy::accumulate(
   }
 }
 
-void RemoteGroupBy::prepare(ExecutionContext* context) {
-  context->incrNumSubtasksTotal(1);
-}
-
 GroupByMerge::GroupByMerge(
     Vector<ScopedPtr<GroupByExpression>> sources) :
     sources_(std::move(sources)) {
@@ -299,82 +290,76 @@ GroupByMerge::GroupByMerge(
   }
 }
 
-void GroupByMerge::prepare(ExecutionContext* context) {
-  for (auto& source : sources_) {
-    source->prepare(context);
-  }
-}
-
-void GroupByMerge::execute(
-    ExecutionContext* context,
-    Function<bool (int argc, const SValue* argv)> fn) {
-  HashMap<String, Vector<VM::Instance >> groups;
-  ScratchMemory scratch;
-  std::mutex mutex;
-  std::condition_variable cv;
-  auto sem = sources_.size();
-  Vector<String> errors;
-
-  for (auto& s : sources_) {
-    auto source = s.get();
-
-    context->runAsync([
-        context,
-        &scratch,
-        &groups,
-        source,
-        &mutex,
-        &cv,
-        &sem,
-        &errors] {
-      HashMap<String, Vector<VM::Instance >> tgroups;
-      ScratchMemory tscratch;
-
-      String terror;
-      try {
-        source->accumulate(&tgroups, &tscratch, context);
-      } catch (const StandardException& e) {
-        terror = e.what();
-      }
-
-      std::unique_lock<std::mutex> lk(mutex);
-      if (terror.empty()) {
-        try {
-          source->mergeResult(&tgroups, &groups, &scratch);
-        } catch (const StandardException& e) {
-          errors.emplace_back(e.what());
-        }
-      } else {
-        errors.emplace_back(terror);
-      }
-
-      --sem;
-      lk.unlock();
-      cv.notify_all();
-    });
-  }
-
-  std::unique_lock<std::mutex> lk(mutex);
-  while (sem > 0) {
-    cv.wait(lk);
-  }
-
-  if (!errors.empty()) {
-    sources_[0]->freeResult(&groups);
-    RAISE(
-        kRuntimeError,
-        StringUtil::join(errors, "; "));
-  }
-
-  try {
-    sources_[0]->getResult(&groups, fn);
-  } catch (...) {
-    sources_[0]->freeResult(&groups);
-    throw;
-  }
-
-  sources_[0]->freeResult(&groups);
-}
+//void GroupByMerge::execute(
+//    ExecutionContext* context,
+//    Function<bool (int argc, const SValue* argv)> fn) {
+//  HashMap<String, Vector<VM::Instance >> groups;
+//  ScratchMemory scratch;
+//  std::mutex mutex;
+//  std::condition_variable cv;
+//  auto sem = sources_.size();
+//  Vector<String> errors;
+//
+//  for (auto& s : sources_) {
+//    auto source = s.get();
+//
+//    context->runAsync([
+//        context,
+//        &scratch,
+//        &groups,
+//        source,
+//        &mutex,
+//        &cv,
+//        &sem,
+//        &errors] {
+//      HashMap<String, Vector<VM::Instance >> tgroups;
+//      ScratchMemory tscratch;
+//
+//      String terror;
+//      try {
+//        source->accumulate(&tgroups, &tscratch, context);
+//      } catch (const StandardException& e) {
+//        terror = e.what();
+//      }
+//
+//      std::unique_lock<std::mutex> lk(mutex);
+//      if (terror.empty()) {
+//        try {
+//          source->mergeResult(&tgroups, &groups, &scratch);
+//        } catch (const StandardException& e) {
+//          errors.emplace_back(e.what());
+//        }
+//      } else {
+//        errors.emplace_back(terror);
+//      }
+//
+//      --sem;
+//      lk.unlock();
+//      cv.notify_all();
+//    });
+//  }
+//
+//  std::unique_lock<std::mutex> lk(mutex);
+//  while (sem > 0) {
+//    cv.wait(lk);
+//  }
+//
+//  if (!errors.empty()) {
+//    sources_[0]->freeResult(&groups);
+//    RAISE(
+//        kRuntimeError,
+//        StringUtil::join(errors, "; "));
+//  }
+//
+//  try {
+//    sources_[0]->getResult(&groups, fn);
+//  } catch (...) {
+//    sources_[0]->freeResult(&groups);
+//    throw;
+//  }
+//
+//  sources_[0]->freeResult(&groups);
+//}
 
 Vector<String> GroupByMerge::columnNames() const {
   return sources_[0]->columnNames();

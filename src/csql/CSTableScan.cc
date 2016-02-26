@@ -660,14 +660,5 @@ CSTableScan::ExpressionRef::~ExpressionRef() {
   }
 }
 
-void CSTableScan::prepare(ExecutionContext* context) {
-  context->incrNumSubtasksTotal(1);
-}
-
-void CSTableScan::execute(
-    ExecutionContext* context,
-    Function<bool (int argc, const SValue* argv)> fn) {
-  RAISE(kNotImplementedError);
-}
 
 } // namespace csql

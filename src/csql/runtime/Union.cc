@@ -35,24 +35,18 @@ Union::Union(
   }
 }
 
-void Union::prepare(ExecutionContext* context) {
-  for (auto& source : sources_) {
-    source->prepare(context);
-  }
-}
-
-void Union::execute(
-    ExecutionContext* context,
-    Function<bool (int argc, const SValue* argv)> fn) {
-
-  for (auto& source : sources_) {
-    source->execute(
-        context,
-        [fn] (int sargc, const SValue* sargv) -> bool {
-      return fn(sargc, sargv);
-    });
-  }
-}
+//void Union::execute(
+//    ExecutionContext* context,
+//    Function<bool (int argc, const SValue* argv)> fn) {
+//
+//  for (auto& source : sources_) {
+//    source->execute(
+//        context,
+//        [fn] (int sargc, const SValue* sargv) -> bool {
+//      return fn(sargc, sargv);
+//    });
+//  }
+//}
 
 Vector<String> Union::columnNames() const {
   return sources_[0]->columnNames();

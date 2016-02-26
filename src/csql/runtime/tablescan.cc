@@ -60,16 +60,6 @@ size_t TableScan::numColumns() const {
   return output_columns_.size();
 }
 
-void TableScan::prepare(ExecutionContext* context) {
-  context->incrNumSubtasksTotal(1);
-}
-
-void TableScan::execute(
-    ExecutionContext* context,
-    Function<bool (int argc, const SValue* argv)> fn) {
-  RAISE(kNotImplementedError);
-}
-
 void TableScan::onInputsReady() {
   Vector<SValue> inbuf(iter_->numColumns());
   Vector<SValue> outbuf(select_exprs_.size());

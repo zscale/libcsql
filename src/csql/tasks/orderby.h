@@ -30,12 +30,6 @@ public:
       size_t num_columns,
       RowSinkFn output);
 
-  void prepare(ExecutionContext* context) override;
-
-  void execute(
-      ExecutionContext* context,
-      Function<bool (int argc, const SValue* argv)> fn) override;
-
   bool onInputRow(
       const TaskID& input_id,
       const SValue* row,

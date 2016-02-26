@@ -30,12 +30,6 @@ public:
       Vector<ScopedPtr<Task>> sources,
       Runtime* runtime);
 
-  void prepare(ExecutionContext* context) override;
-
-  void execute(
-      ExecutionContext* context,
-      stx::chart::Canvas* canvas);
-
 protected:
 
   template <typename ChartBuilderType>

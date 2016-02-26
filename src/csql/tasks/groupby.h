@@ -28,10 +28,6 @@ public:
       ScratchMemory* scratch,
       ExecutionContext* context) = 0;
 
-  void execute(
-      ExecutionContext* context,
-      Function<bool (int argc, const SValue* argv)> fn);
-
   void executeRemote(
       ExecutionContext* context,
       OutputStream* os);
@@ -79,8 +75,6 @@ public:
       Vector<ValueExpression> group_expressions,
       SHA1Hash qtree_fingerprint);
 
-  void prepare(ExecutionContext* context) override;
-
   void accumulate(
       HashMap<String, Vector<VM::Instance >>* groups,
       ScratchMemory* scratch,
@@ -114,8 +108,6 @@ public:
       const RemoteAggregateParams& params,
       RemoteExecuteFn execute_fn);
 
-  void prepare(ExecutionContext* context) override;
-
   void accumulate(
       HashMap<String, Vector<VM::Instance >>* groups,
       ScratchMemory* scratch,
@@ -130,12 +122,6 @@ class GroupByMerge : public Task {
 public:
 
   GroupByMerge(Vector<ScopedPtr<GroupByExpression>> sources);
-
-  void prepare(ExecutionContext* context) override;
-
-  void execute(
-      ExecutionContext* context,
-      Function<bool (int argc, const SValue* argv)> fn) override;
 
   Vector<String> columnNames() const override;
 

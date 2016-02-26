@@ -15,12 +15,6 @@ EmptyTable::EmptyTable(
     const Vector<String>& column_names) :
     column_names_(column_names) {}
 
-void EmptyTable::prepare(ExecutionContext* context) {}
-
-void EmptyTable::execute(
-    ExecutionContext* context,
-    Function<bool (int argc, const SValue* argv)> fn) {}
-
 Vector<String> EmptyTable::columnNames() const {
   return column_names_;
 }

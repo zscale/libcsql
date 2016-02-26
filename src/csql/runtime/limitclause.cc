@@ -19,29 +19,25 @@ LimitClause::LimitClause(
     offset_(offset),
     child_(std::move(child)) {}
 
-void LimitClause::prepare(ExecutionContext* context) {
-  child_->prepare(context);
-}
-
-void LimitClause::execute(
-    ExecutionContext* context,
-    Function<bool (int argc, const SValue* argv)> fn) {
-  size_t counter = 0;
-
-  child_->execute(
-      context,
-      [this, &counter, &fn] (int argc, const SValue* argv) -> bool {
-    if (counter++ < offset_) {
-      return true;
-    }
-
-    if (counter > (offset_ + limit_)) {
-      return false;
-    }
-
-    return fn(argc, argv);
-  });
-}
+//void LimitClause::execute(
+//    ExecutionContext* context,
+//    Function<bool (int argc, const SValue* argv)> fn) {
+//  size_t counter = 0;
+//
+//  child_->execute(
+//      context,
+//      [this, &counter, &fn] (int argc, const SValue* argv) -> bool {
+//    if (counter++ < offset_) {
+//      return true;
+//    }
+//
+//    if (counter > (offset_ + limit_)) {
+//      return false;
+//    }
+//
+//    return fn(argc, argv);
+//  });
+//}
 
 Vector<String> LimitClause::columnNames() const {
   return child_->columnNames();

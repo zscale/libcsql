@@ -24,34 +24,29 @@ SubqueryExpression::SubqueryExpression(
     where_expr_(std::move(where_expr)),
     subquery_(std::move(subquery)) {}
 
-void SubqueryExpression::prepare(ExecutionContext* context) {
-  context->incrNumSubtasksTotal(1);
-  subquery_->prepare(context);
-}
-
-void SubqueryExpression::execute(
-    ExecutionContext* ctx,
-    Function<bool (int argc, const SValue* argv)> fn) {
-  Vector<SValue> buf(select_exprs_.size(), SValue{});
-
-  subquery_->execute(ctx, [this, &fn, &buf] (int inc, const SValue* inv) {
-    if (!where_expr_.isEmpty()) {
-      SValue pred;
-      VM::evaluate(txn_, where_expr_.get().program(), inc, inv, &pred);
-      if (!pred.getBool()) {
-        return true;
-      }
-    }
-
-    for (int i = 0; i < select_exprs_.size(); ++i) {
-      VM::evaluate(txn_, select_exprs_[i].program(), inc, inv, &buf[i]);
-    }
-
-    return fn(buf.size(), buf.data());
-  });
-
-  ctx->incrNumSubtasksCompleted(1);
-}
+//void SubqueryExpression::execute(
+//    ExecutionContext* ctx,
+//    Function<bool (int argc, const SValue* argv)> fn) {
+//  Vector<SValue> buf(select_exprs_.size(), SValue{});
+//
+//  subquery_->execute(ctx, [this, &fn, &buf] (int inc, const SValue* inv) {
+//    if (!where_expr_.isEmpty()) {
+//      SValue pred;
+//      VM::evaluate(txn_, where_expr_.get().program(), inc, inv, &pred);
+//      if (!pred.getBool()) {
+//        return true;
+//      }
+//    }
+//
+//    for (int i = 0; i < select_exprs_.size(); ++i) {
+//      VM::evaluate(txn_, select_exprs_[i].program(), inc, inv, &buf[i]);
+//    }
+//
+//    return fn(buf.size(), buf.data());
+//  });
+//
+//  ctx->incrNumSubtasksCompleted(1);
+//}
 
 Vector<String> SubqueryExpression::columnNames() const {
   return column_names_;
