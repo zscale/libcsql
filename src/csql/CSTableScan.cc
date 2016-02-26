@@ -19,14 +19,16 @@ using namespace stx;
 namespace csql {
 
 CSTableScan::CSTableScan(
-    Transaction* ctx,
+    Transaction* txn,
     RefPtr<SequentialScanNode> stmt,
     const String& cstable_filename,
-    QueryBuilder* runtime) :
-    ctx_(ctx),
+    QueryBuilder* runtime,
+    RowSinkFn output) :
+    txn_(txn),
     stmt_(stmt->deepCopyAs<SequentialScanNode>()),
     cstable_filename_(cstable_filename),
     runtime_(runtime),
+    output_(output),
     colindex_(0),
     aggr_strategy_(stmt_->aggregationStrategy()),
     rows_scanned_(0),
@@ -35,23 +37,21 @@ CSTableScan::CSTableScan(
 }
 
 CSTableScan::CSTableScan(
-    Transaction* ctx,
+    Transaction* txn,
     RefPtr<SequentialScanNode> stmt,
     RefPtr<cstable::CSTableReader> cstable,
-    QueryBuilder* runtime) :
-    ctx_(ctx),
+    QueryBuilder* runtime,
+    RowSinkFn output) :
+    txn_(txn),
     stmt_(stmt->deepCopyAs<SequentialScanNode>()),
     cstable_(cstable),
     runtime_(runtime),
+    output_(output),
     colindex_(0),
     aggr_strategy_(stmt_->aggregationStrategy()),
     rows_scanned_(0),
     opened_(false) {
   column_names_ = stmt_->outputColumns();
-}
-
-void CSTableScan::prepare(ExecutionContext* context) {
-  context->incrNumSubtasksTotal(1);
 }
 
 void CSTableScan::open() {
@@ -105,21 +105,19 @@ void CSTableScan::open() {
     resolveColumns(slnode->expression());
 
     select_list_.emplace_back(
-        ctx_,
+        txn_,
         findMaxRepetitionLevel(slnode->expression()),
-        runtime_->buildValueExpression(ctx_, slnode->expression()),
+        runtime_->buildValueExpression(txn_, slnode->expression()),
         &scratch_);
   }
 
   if (!where_expr.isEmpty()) {
     resolveColumns(where_expr.get());
-    where_expr_ = runtime_->buildValueExpression(ctx_, where_expr.get());
+    where_expr_ = runtime_->buildValueExpression(txn_, where_expr.get());
   }
 }
 
-void CSTableScan::execute(
-    ExecutionContext* context,
-    Function<bool (int argc, const SValue* argv)> fn) {
+void CSTableScan::onInputsReady() {
   logTrace("sql", "Scanning cstable: $0", cstable_filename_);
 
   if (!opened_) {
@@ -127,16 +125,15 @@ void CSTableScan::execute(
   }
 
   if (columns_.empty()) {
-    scanWithoutColumns(fn);
+    scanWithoutColumns();
   } else {
-    scan(fn);
+    scan();
   }
 
-  context->incrNumSubtasksCompleted(1);
+  //txn_->incrNumSubtasksCompleted(1);
 }
 
-void CSTableScan::scan(
-    Function<bool (int argc, const SValue* argv)> fn) {
+void CSTableScan::scan() {
   uint64_t select_level = 0;
   uint64_t fetch_level = 0;
   bool filter_pred = true;
@@ -378,7 +375,7 @@ void CSTableScan::scan(
     if (where_pred && where_expr_.program() != nullptr) {
       SValue where_tmp;
       VM::evaluate(
-          ctx_,
+          txn_,
           where_expr_.program(),
           in_row.size(),
           in_row.data(),
@@ -391,7 +388,7 @@ void CSTableScan::scan(
       for (int i = 0; i < select_list_.size(); ++i) {
         if (select_list_[i].rep_level >= select_level) {
           VM::accumulate(
-              ctx_,
+              txn_,
               select_list_[i].compiled.program(),
               &select_list_[i].instance,
               in_row.size(),
@@ -412,18 +409,18 @@ void CSTableScan::scan(
         case AggregationStrategy::AGGREGATE_WITHIN_RECORD_DEEP:
           for (int i = 0; i < select_list_.size(); ++i) {
             VM::result(
-                ctx_,
+                txn_,
                 select_list_[i].compiled.program(),
                 &select_list_[i].instance,
                 &out_row[i]);
 
             VM::reset(
-                ctx_,
+                txn_,
                 select_list_[i].compiled.program(),
                 &select_list_[i].instance);
           }
 
-          if (!fn(out_row.size(), out_row.data())) {
+          if (!output_(out_row.data(), out_row.size())) {
             return;
           }
 
@@ -432,14 +429,14 @@ void CSTableScan::scan(
         case AggregationStrategy::NO_AGGREGATION:
           for (int i = 0; i < select_list_.size(); ++i) {
             VM::evaluate(
-                ctx_,
+                txn_,
                 select_list_[i].compiled.program(),
                 in_row.size(),
                 in_row.data(),
                 &out_row[i]);
           }
 
-          if (!fn(out_row.size(), out_row.data())) {
+          if (!output_(out_row.data(), out_row.size())) {
             return;
           }
 
@@ -463,13 +460,13 @@ void CSTableScan::scan(
     case AggregationStrategy::AGGREGATE_ALL:
       for (int i = 0; i < select_list_.size(); ++i) {
         VM::result(
-            ctx_,
+            txn_,
             select_list_[i].compiled.program(),
             &select_list_[i].instance,
             &out_row[i]);
       }
 
-      fn(out_row.size(), out_row.data());
+      output_(out_row.data(), out_row.size());
       break;
 
     default:
@@ -478,8 +475,7 @@ void CSTableScan::scan(
   }
 }
 
-void CSTableScan::scanWithoutColumns(
-    Function<bool (int argc, const SValue* argv)> fn) {
+void CSTableScan::scanWithoutColumns() {
   Vector<SValue> out_row(select_list_.size(), SValue{});
 
   size_t total_records = cstable_->numRecords();
@@ -487,7 +483,7 @@ void CSTableScan::scanWithoutColumns(
     bool where_pred = true;
     if (where_expr_.program() != nullptr) {
       SValue where_tmp;
-      VM::evaluate(ctx_, where_expr_.program(), 0, nullptr, &where_tmp);
+      VM::evaluate(txn_, where_expr_.program(), 0, nullptr, &where_tmp);
       where_pred = where_tmp.getBool();
     }
 
@@ -497,7 +493,7 @@ void CSTableScan::scanWithoutColumns(
         case AggregationStrategy::AGGREGATE_ALL:
           for (int i = 0; i < select_list_.size(); ++i) {
             VM::accumulate(
-                ctx_,
+                txn_,
                 select_list_[i].compiled.program(),
                 &select_list_[i].instance,
                 0,
@@ -510,14 +506,14 @@ void CSTableScan::scanWithoutColumns(
         case AggregationStrategy::NO_AGGREGATION:
           for (int i = 0; i < select_list_.size(); ++i) {
             VM::evaluate(
-                ctx_,
+                txn_,
                 select_list_[i].compiled.program(),
                 0,
                 nullptr,
                 &out_row[i]);
           }
 
-          if (!fn(out_row.size(), out_row.data())) {
+          if (!output_(out_row.data(), out_row.size())) {
             return;
           }
           break;
@@ -529,13 +525,13 @@ void CSTableScan::scanWithoutColumns(
     case AggregationStrategy::AGGREGATE_ALL:
       for (int i = 0; i < select_list_.size(); ++i) {
         VM::result(
-            ctx_,
+            txn_,
             select_list_[i].compiled.program(),
             &select_list_[i].instance,
             &out_row[i]);
       }
 
-      fn(out_row.size(), out_row.data());
+      output_(out_row.data(), out_row.size());
       break;
 
     default:
@@ -641,14 +637,14 @@ CSTableScan::ColumnRef::ColumnRef(
     type(t) {}
 
 CSTableScan::ExpressionRef::ExpressionRef(
-    Transaction* _ctx,
+    Transaction* _txn,
     size_t _rep_level,
     ValueExpression _compiled,
     ScratchMemory* smem) :
-    ctx(_ctx),
+    txn(_txn),
     rep_level(_rep_level),
     compiled(std::move(_compiled)),
-    instance(VM::allocInstance(ctx, compiled.program(), smem)) {}
+    instance(VM::allocInstance(txn, compiled.program(), smem)) {}
 
 CSTableScan::ExpressionRef::ExpressionRef(
     ExpressionRef&& other) :
@@ -660,8 +656,18 @@ CSTableScan::ExpressionRef::ExpressionRef(
 
 CSTableScan::ExpressionRef::~ExpressionRef() {
   if (instance.scratch) {
-    VM::freeInstance(ctx, compiled.program(), &instance);
+    VM::freeInstance(txn, compiled.program(), &instance);
   }
+}
+
+void CSTableScan::prepare(ExecutionContext* context) {
+  context->incrNumSubtasksTotal(1);
+}
+
+void CSTableScan::execute(
+    ExecutionContext* context,
+    Function<bool (int argc, const SValue* argv)> fn) {
+  RAISE(kNotImplementedError);
 }
 
 } // namespace csql

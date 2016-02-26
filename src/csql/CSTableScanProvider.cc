@@ -23,9 +23,28 @@ CSTableScanProvider::CSTableScanProvider(
 
 TaskIDList CSTableScanProvider::buildSequentialScan(
     Transaction* txn,
-    RefPtr<SequentialScanNode> seqscan,
+    RefPtr<SequentialScanNode> node,
     TaskDAG* tasks) const {
-  RAISE(kNotYetImplementedError);
+  if (node->tableName() != table_name_) {
+    RAISEF(kNotFoundError, "table not found: '$0'", node->tableName());
+  }
+
+  auto self = mkRef(const_cast<CSTableScanProvider*>(this));
+  auto task_factory = [self, node] (
+      Transaction* txn,
+      RowSinkFn output) -> RefPtr<Task> {
+    return new CSTableScan(
+        txn,
+        node,
+        self->cstable_file_,
+        txn->getRuntime()->queryBuilder().get(),
+        output);
+  };
+
+  auto task = new TaskDAGNode(new SimpleTableExpressionFactory(task_factory));
+  TaskIDList output;
+  output.emplace_back(tasks->addTask(task));
+  return output;
 }
 
 //Option<ScopedPtr<Task>>
@@ -35,11 +54,6 @@ TaskIDList CSTableScanProvider::buildSequentialScan(
 //        QueryBuilder* runtime) const {
 //  return Option<ScopedPtr<Task>>(
 //      mkScoped(
-//          new CSTableScan(
-//              ctx,
-//              node,
-//              cstable_file_,
-//              runtime)));
 //}
 
 void CSTableScanProvider::listTables(

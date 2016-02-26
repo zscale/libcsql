@@ -71,13 +71,6 @@ TaskIDList CSVTableProvider::buildSequentialScan(
   return output;
 }
 
-//Option<ScopedPtr<Task>> CSVTableProvider::buildSequentialScan(
-//    Transaction* ctx,
-//    RefPtr<SequentialScanNode> node,
-//    QueryBuilder* runtime) const {
-//
-//}
-
 void CSVTableProvider::listTables(
     Function<void (const TableInfo& table)> fn) const {
   fn(tableInfo());
