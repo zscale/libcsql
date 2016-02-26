@@ -616,6 +616,25 @@ TEST_CASE(RuntimeTest, TestFromTimestampExpr, [] () {
   }
 });
 
+TEST_CASE(RuntimeTest, TestTimestampArithmetic, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto ctx = runtime->newTransaction();
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("FROM_TIMESTAMP(1441408424) + 1"));
+    EXPECT_EQ(v.getString(), "1441408424000001");
+  }
+
+  {
+    auto v = runtime->evaluateConstExpression(
+        ctx.get(),
+        String("FROM_TIMESTAMP(1441408424) / 1000000"));
+    EXPECT_EQ(v.getString(), "1441408424.000000");
+  }
+});
+
 TEST_CASE(RuntimeTest, TestTruncateExpr, [] () {
   auto runtime = Runtime::getDefaultRuntime();
   auto ctx = runtime->newTransaction();
