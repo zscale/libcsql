@@ -26,7 +26,6 @@ bool Subquery::onInputRow(
     const TaskID& input_id,
     const SValue* row,
     int row_len) {
-  Vector<SValue> buf(select_exprs_.size(), SValue{});
   if (!where_expr_.isEmpty()) {
     SValue pred;
     VM::evaluate(txn_, where_expr_.get().program(), row_len, row, &pred);
@@ -35,11 +34,12 @@ bool Subquery::onInputRow(
     }
   }
 
+  Vector<SValue> out_row(select_exprs_.size(), SValue{});
   for (int i = 0; i < select_exprs_.size(); ++i) {
-    VM::evaluate(txn_, select_exprs_[i].program(), row_len, row, &buf[i]);
+    VM::evaluate(txn_, select_exprs_[i].program(), row_len, row, &out_row[i]);
   }
 
-  return output_(buf.data(), buf.size());
+  return output_(out_row.data(), out_row.size());
 }
 
 SubqueryFactory::SubqueryFactory(

@@ -369,7 +369,8 @@ TEST_CASE(RuntimeTest, TestMultiLevelNestedCSTableAggrgateWithGroup, [] () {
                 event.search_query.result_items.position as p,
                 event.search_query.result_items.clicked as c
             from testtable) as s
-        where s.p = 6;)";
+            where s.p = 6;
+        )";
     auto qplan = runtime->buildQueryPlan(ctx.get(), query, estrat.get());
     qplan->storeResults(0, &result);
     qplan->execute();
