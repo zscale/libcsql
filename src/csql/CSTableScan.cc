@@ -559,7 +559,7 @@ void CSTableScan::resolveColumns(RefPtr<ValueExpressionNode> expr) const {
     auto colname = fieldref->fieldName();
     auto col = columns_.find(colname);
     if (col == columns_.end()) {
-      RAISEF(kNotFoundError, "column not found: $0", colname);
+      RAISEF(kNotFoundError, "column(s) not found: $0", colname);
     } else {
       fieldref->setColumnIndex(col->second.index);
     }
