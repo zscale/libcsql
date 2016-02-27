@@ -1,3 +1,11 @@
+- port join
+- port unionnode, showtables node
+- partial group by / group by merge
+- task bundle packing / pipeline scheduling
+- factory serialization
+- lazy dependencies
+- limit optimzation/bool return in onInputRow?
+
 - split qtree node in tablexpressionnode + valueexpressionnode
 - delete {table/valueexpressionbuilder}
 - rename SequentialScan -> TableScan
