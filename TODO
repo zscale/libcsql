@@ -1,5 +1,3 @@
-- port join
-- port unionnode, showtables node
 - partial group by / group by merge
 - task bundle packing / pipeline scheduling
 - factory serialization
