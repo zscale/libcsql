@@ -10,22 +10,42 @@
 #pragma once
 #include <stx/stdtypes.h>
 #include <csql/tasks/Task.h>
+#include <csql/runtime/defaultruntime.h>
 
 namespace csql {
 
-class LimitClause : public Task {
+class Limit : public Task {
 public:
 
-  LimitClause(int limit, int offset, ScopedPtr<Task> child);
+  Limit(
+      size_t limit,
+      size_t offset,
+      RowSinkFn output);
 
-  Vector<String> columnNames() const override;
-
-  size_t numColumns() const override;
+  bool onInputRow(
+      const TaskID& input_id,
+      const SValue* row,
+      int row_len) override;
 
 protected:
   size_t limit_;
   size_t offset_;
-  ScopedPtr<Task> child_;
+  RowSinkFn output_;
+  size_t counter_;
+};
+
+class LimitFactory : public TaskFactory {
+public:
+
+  LimitFactory(size_t limit, size_t offset);
+
+  RefPtr<Task> build(
+      Transaction* txn,
+      RowSinkFn output) const override;
+
+protected:
+  size_t limit_;
+  size_t offset_;
 };
 
 }

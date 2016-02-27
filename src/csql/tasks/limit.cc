@@ -7,44 +7,44 @@
  * copy of the GNU General Public License along with this program. If not, see
  * <http://www.gnu.org/licenses/>.
  */
-#include <csql/runtime/limitclause.h>
+#include <csql/tasks/limit.h>
 
 namespace csql {
 
-LimitClause::LimitClause(
-    int limit,
-    int offset,
-    ScopedPtr<Task> child) :
+Limit::Limit(
+    size_t limit,
+    size_t offset,
+    RowSinkFn output) :
     limit_(limit),
     offset_(offset),
-    child_(std::move(child)) {}
+    output_(output),
+    counter_(0) {}
 
-//void LimitClause::execute(
-//    ExecutionContext* context,
-//    Function<bool (int argc, const SValue* argv)> fn) {
-//  size_t counter = 0;
-//
-//  child_->execute(
-//      context,
-//      [this, &counter, &fn] (int argc, const SValue* argv) -> bool {
-//    if (counter++ < offset_) {
-//      return true;
-//    }
-//
-//    if (counter > (offset_ + limit_)) {
-//      return false;
-//    }
-//
-//    return fn(argc, argv);
-//  });
-//}
+bool Limit::onInputRow(
+    const TaskID& input_id,
+    const SValue* row,
+    int row_len) {
+  if (counter_++ < offset_) {
+    return true;
+  }
 
-Vector<String> LimitClause::columnNames() const {
-  return child_->columnNames();
+  if (counter_ > (offset_ + limit_)) {
+    return false;
+  }
+
+  return output_(row, row_len);
 }
 
-size_t LimitClause::numColumns() const {
-  return child_->numColumns();
+LimitFactory::LimitFactory(
+    size_t limit,
+    size_t offset) :
+    limit_(limit),
+    offset_(offset) {}
+
+RefPtr<Task> LimitFactory::build(
+    Transaction* txn,
+    RowSinkFn output) const {
+  return new Limit(limit_, offset_, output);
 }
 
 }
