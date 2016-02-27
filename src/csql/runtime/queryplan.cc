@@ -39,6 +39,16 @@ void QueryPlan::setScheduler(SchedulerFactory scheduler) {
   scheduler_ = scheduler;
 }
 
+void QueryPlan::onOutputComplete(size_t stmt_idx, Function<void ()> fn) {
+  if (stmt_idx >= qtrees_.size()) {
+    RAISE(kIndexError, "invalid statement index");
+  }
+
+  for (const auto& task_id : statement_tasks_[stmt_idx]) {
+    callbacks_.on_complete[task_id].emplace_back(fn);
+  }
+}
+
 void QueryPlan::onOutputRow(size_t stmt_idx, RowSinkFn fn) {
   if (stmt_idx >= qtrees_.size()) {
     RAISE(kIndexError, "invalid statement index");

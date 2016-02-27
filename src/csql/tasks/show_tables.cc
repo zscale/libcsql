@@ -19,7 +19,9 @@ ShowTables::ShowTables(
     output_(output) {}
 
 void ShowTables::onInputsReady() {
-  txn_->getTableProvider()->listTables([this] (const TableInfo& table) {
+  auto table_provider = txn_->getTableProvider();
+
+  table_provider->listTables([this] (const TableInfo& table) {
     Vector<SValue> row;
     row.emplace_back(table.table_name);
 
