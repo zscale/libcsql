@@ -25,21 +25,17 @@ public:
       Transaction* txn,
       Vector<RefPtr<QueryTreeNode>> qtrees);
 
-  void execute();
-
   void setScheduler(SchedulerFactory scheduler);
 
-  void onOutputRow(size_t stmt_idx, RowSinkFn fn);
-
-  void storeResults(size_t stmt_idx, ResultList* result_list);
-
-  const Vector<String>& getStatementOutputColumns(size_t stmt_idx);
+  void execute();
 
   size_t numStatements() const;
-
   Statement* getStatement(size_t stmt_idx) const;
   RefPtr<QueryTreeNode> getStatementQTree(size_t stmt_idx) const;
+  const Vector<String>& getStatementOutputColumns(size_t stmt_idx);
 
+  void onOutputRow(size_t stmt_idx, RowSinkFn fn);
+  void storeResults(size_t stmt_idx, ResultList* result_list);
 
 protected:
   Transaction* txn_;
