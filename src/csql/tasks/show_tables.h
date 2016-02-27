@@ -15,17 +15,25 @@
 
 namespace csql {
 
-class ShowTablesStatement : public Task {
+class ShowTables : public Task {
 public:
 
-  ShowTablesStatement(RefPtr<TableProvider> tables);
+  ShowTables(Transaction* txn, RowSinkFn output);
 
-  Vector<String> columnNames() const override;
-
-  size_t numColumns() const override;
+  void onInputsReady() override;
 
 protected:
-  RefPtr<TableProvider> tables_;
+  Transaction* txn_;
+  RowSinkFn output_;
+};
+
+class ShowTablesFactory : public TaskFactory {
+public:
+
+  RefPtr<Task> build(
+      Transaction* txn,
+      RowSinkFn output) const override;
+
 };
 
 }

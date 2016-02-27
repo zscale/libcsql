@@ -2158,6 +2158,11 @@ TEST_CASE(RuntimeTest, TestShowTables, [] () {
           "departments",
           "src/csql/testdata/testtbl5.csv",
           '\t'));
+  estrat->addTableProvider(
+      new backends::csv::CSVTableProvider(
+          "users",
+          "src/csql/testdata/testtbl6.csv",
+          '\t'));
 
   txn->setTableProvider(estrat->tableProvider());
 
