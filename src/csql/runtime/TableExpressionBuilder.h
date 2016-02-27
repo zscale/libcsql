@@ -13,7 +13,6 @@
 #include <stx/option.h>
 #include <csql/qtree/QueryTreeNode.h>
 #include <csql/qtree/GroupByNode.h>
-#include <csql/qtree/GroupByMergeNode.h>
 #include <csql/qtree/UnionNode.h>
 #include <csql/qtree/LimitNode.h>
 #include <csql/qtree/JoinNode.h>
@@ -22,7 +21,6 @@
 #include <csql/qtree/DrawStatementNode.h>
 #include <csql/qtree/SelectExpressionNode.h>
 #include <csql/qtree/DescribeTableNode.h>
-#include <csql/qtree/RemoteAggregateNode.h>
 #include <csql/qtree/SubqueryNode.h>
 #include <csql/tasks/Task.h>
 #include <csql/runtime/tablerepository.h>
@@ -47,12 +45,6 @@ protected:
   ScopedPtr<Task> buildGroupBy(
       Transaction* ctx,
       RefPtr<GroupByNode> node,
-      QueryBuilder* runtime,
-      TableProvider* tables);
-
-  ScopedPtr<Task> buildGroupMerge(
-      Transaction* ctx,
-      RefPtr<GroupByMergeNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
 
@@ -97,11 +89,6 @@ protected:
       RefPtr<DescribeTableNode> node,
       QueryBuilder* runtime,
       TableProvider* tables);
-
-  ScopedPtr<Task> buildRemoteAggregate(
-      Transaction* ctx,
-      RefPtr<RemoteAggregateNode> node,
-      QueryBuilder* runtime);
 
 };
 

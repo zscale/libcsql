@@ -5,9 +5,6 @@
 # the terms of the GNU General Public License v3.0. You should have received a
 # copy of the GNU General Public License along with this program. If not, see
 # <http://www.gnu.org/licenses/>.
-file(GLOB PROTO_FILES **/*.proto)
-STX_PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
-
 add_library(chartsql STATIC
     svalue.cc
     SFunction.cc
@@ -47,7 +44,6 @@ add_library(chartsql STATIC
     qtree/TableExpressionNode.cc
     qtree/SelectListNode.cc
     qtree/GroupByNode.cc
-    qtree/GroupByMergeNode.cc
     qtree/UnionNode.cc
     qtree/LimitNode.cc
     qtree/OrderByNode.cc
@@ -57,7 +53,6 @@ add_library(chartsql STATIC
     qtree/DescribeTableNode.cc
     qtree/DrawStatementNode.cc
     qtree/ChartStatementNode.cc
-    qtree/RemoteAggregateNode.cc
     runtime/ResultFormat.cc
     runtime/ValueExpression.cc
     runtime/ScratchMemory.cc
@@ -97,7 +92,6 @@ add_library(chartsql STATIC
     tasks/nested_loop_join.cc
     tasks/show_tables.cc
     tasks/describe_table.cc
-    ${PROTO_SRCS}
     defaults.cc)
 
 add_dependencies(chartsql stx-protobuf)
