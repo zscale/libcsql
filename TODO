@@ -1,3 +1,4 @@
+
 - partial group by / group by merge
 - task bundle packing / pipeline scheduling
 - factory serialization
@@ -5,6 +6,7 @@
 - limit optimzation/bool return in onInputRow?
 - bring back charting stuff
 
+- delete valueexpressionbuilder, querybuilder
 - sql_alloc / sql_free
 
 - split qtree node in tablexpressionnode + valueexpressionnode

@@ -27,8 +27,7 @@ RefPtr<Runtime> Runtime::getDefaultRuntime() {
       stx::thread::ThreadPoolOptions{},
       symbols,
       new QueryBuilder(
-          new ValueExpressionBuilder(symbols.get()),
-          new TableExpressionBuilder()),
+          new ValueExpressionBuilder(symbols.get())),
       new QueryPlanBuilder(
           QueryPlanBuilderOptions{},
           symbols.get()));
