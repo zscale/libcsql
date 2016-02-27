@@ -14,22 +14,34 @@
 
 namespace csql {
 
-class SelectExpression : public Task {
+class Select : public Task {
 public:
 
-  SelectExpression(
-      Transaction* ctx,
-      const Vector<String>& column_names,
-      Vector<ValueExpression> select_expressions);
+  Select(
+      Transaction* txn,
+      Vector<ValueExpression> select_expressions,
+      RowSinkFn output);
 
-  Vector<String> columnNames() const override;
-
-  size_t numColumns() const override;
+  void onInputsReady() override;
 
 protected:
-  Transaction* ctx_;
-  Vector<String> column_names_;
+  Transaction* txn_;
   Vector<ValueExpression> select_exprs_;
+  RowSinkFn output_;
+};
+
+class SelectFactory : public TaskFactory {
+public:
+
+  SelectFactory(
+      Vector<RefPtr<SelectListNode>> select_exprs);
+
+  RefPtr<Task> build(
+      Transaction* txn,
+      RowSinkFn output) const override;
+
+protected:
+  Vector<RefPtr<SelectListNode>> select_exprs_;
 };
 
 }
