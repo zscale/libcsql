@@ -2148,7 +2148,7 @@ TEST_CASE(RuntimeTest, TestNaturalJoin, [] () {
   }
 });
 
-TEST_CASE(RuntimeTest, TestShowAndDescribeTables, [] () {
+TEST_CASE(RuntimeTest, TestShowTables, [] () {
   auto runtime = Runtime::getDefaultRuntime();
   auto txn = runtime->newTransaction();
 
@@ -2157,11 +2157,6 @@ TEST_CASE(RuntimeTest, TestShowAndDescribeTables, [] () {
       new backends::csv::CSVTableProvider(
           "departments",
           "src/csql/testdata/testtbl5.csv",
-          '\t'));
-  estrat->addTableProvider(
-      new backends::csv::CSVTableProvider(
-          "users",
-          "src/csql/testdata/testtbl6.csv",
           '\t'));
 
   txn->setTableProvider(estrat->tableProvider());
@@ -2180,6 +2175,20 @@ TEST_CASE(RuntimeTest, TestShowAndDescribeTables, [] () {
     EXPECT_EQ(result.getRow(0)[0], "departments");
     EXPECT_EQ(result.getRow(1)[0], "users");
   }
+});
+
+TEST_CASE(RuntimeTest, TestDescribeTable, [] () {
+  auto runtime = Runtime::getDefaultRuntime();
+  auto txn = runtime->newTransaction();
+
+  auto estrat = mkRef(new DefaultExecutionStrategy());
+  estrat->addTableProvider(
+      new backends::csv::CSVTableProvider(
+          "departments",
+          "src/csql/testdata/testtbl5.csv",
+          '\t'));
+
+  txn->setTableProvider(estrat->tableProvider());
 
   {
     ResultList result;
