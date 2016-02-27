@@ -6,6 +6,7 @@
 - limit optimzation/bool return in onInputRow?
 - bring back charting stuff
 
+- runtime iface: remove querybuilder etc stuff (move into txn), rename evaluateScalarExpr -> evaluateExpr
 - delete valueexpressionbuilder, querybuilder
 - sql_alloc / sql_free
 
