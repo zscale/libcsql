@@ -96,6 +96,7 @@ add_library(chartsql STATIC
     tasks/limit.cc
     tasks/nested_loop_join.cc
     tasks/show_tables.cc
+    tasks/describe_table.cc
     ${PROTO_SRCS}
     defaults.cc)
 

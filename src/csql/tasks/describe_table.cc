@@ -7,44 +7,43 @@
  * copy of the GNU General Public License along with this program. If not, see
  * <http://www.gnu.org/licenses/>.
  */
-#include <csql/runtime/DescribeTableStatement.h>
+#include <csql/tasks/describe_table.h>
+#include <csql/Transaction.h>
 
 namespace csql {
 
-DescribeTableStatement::DescribeTableStatement(
-    TableInfo table_info) :
-    table_info_(table_info) {}
+DescribeTable::DescribeTable(
+    Transaction* txn,
+    const String& table_name,
+    RowSinkFn output) :
+    txn_(txn),
+    table_name_(table_name),
+    output_(output) {}
 
-//void DescribeTableStatement::execute(
-//    ExecutionContext* context,
-//    Function<bool (int argc, const SValue* argv)> fn) {
-//  for (const auto& col : table_info_.columns) {
-//    Vector<SValue> row;
-//    row.emplace_back(col.column_name);
-//    row.emplace_back(col.type);
-//    //if (col.type_size == 0) {
-//    //  row.emplace_back();
-//    //} else {
-//    //  row.emplace_back(SValue::IntegerType(col.type_size));
-//    //}
-//    row.emplace_back(col.is_nullable ? "YES" : "NO");
-//    row.emplace_back();
-//    fn(row.size(), row.data());
-//  }
-//}
+void DescribeTable::onInputsReady() {
+  const auto& table_info = txn_->getTableProvider()->describe(table_name_);
+  if (table_info.isEmpty()) {
+    RAISEF(kRuntimeError, "table not found: '$0'", table_name_);
+  }
 
-Vector<String> DescribeTableStatement::columnNames() const {
-  return Vector<String> {
-    "Field",
-    "Type",
-    //"Type Size",
-    "Null",
-    "Description"
-  };
+  for (const auto& col : table_info.get().columns) {
+    Vector<SValue> row;
+    row.emplace_back(col.column_name);
+    row.emplace_back(col.type);
+    row.emplace_back(col.is_nullable ? "YES" : "NO");
+    row.emplace_back();
+    output_(row.data(), row.size());
+  }
 }
 
-size_t DescribeTableStatement::numColumns() const {
-  return columnNames().size();
+DescribeTableFactory::DescribeTableFactory(
+    const String& table_name) :
+    table_name_(table_name) {}
+
+RefPtr<Task> DescribeTableFactory::build(
+    Transaction* txn,
+    RowSinkFn output) const {
+  return new DescribeTable(txn, table_name_, output);
 }
 
 }

@@ -15,17 +15,33 @@
 
 namespace csql {
 
-class DescribeTableStatement : public Task {
+class DescribeTable : public Task {
 public:
 
-  DescribeTableStatement(TableInfo table_info);
+  DescribeTable(
+      Transaction* txn,
+      const String& table_name,
+      RowSinkFn output);
 
-  Vector<String> columnNames() const override;
-
-  size_t numColumns() const override;
+  void onInputsReady() override;
 
 protected:
-  TableInfo table_info_;
+  Transaction* txn_;
+  String table_name_;
+  RowSinkFn output_;
+};
+
+class DescribeTableFactory : public TaskFactory {
+public:
+
+  DescribeTableFactory(const String& table_name);
+
+  RefPtr<Task> build(
+      Transaction* txn,
+      RowSinkFn output) const override;
+
+protected:
+  String table_name_;
 };
 
 }
