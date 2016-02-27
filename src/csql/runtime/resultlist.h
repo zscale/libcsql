@@ -14,11 +14,12 @@
 #include <vector>
 #include <memory>
 #include <csql/runtime/rowsink.h>
+#include <csql/runtime/queryplan.h>
 #include <csql/svalue.h>
 
 namespace csql {
 
-class ResultList {
+class ResultList : public RowSink {
 public:
 
   ResultList() {}
@@ -63,7 +64,7 @@ public:
     columns_ = columns;
   }
 
-  void addRow(const csql::SValue* row, int row_len) {
+  bool addRow(const csql::SValue* row, int row_len) {
     if (row_len > columns_.size()) {
       row_len = columns_.size();
     }
@@ -74,6 +75,7 @@ public:
     }
 
     rows_.emplace_back(str_row);
+    return true;
   }
 
   void debugPrint() const {

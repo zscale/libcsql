@@ -17,7 +17,7 @@ JSONResultFormat::JSONResultFormat(
     json_(output) {}
 
 void JSONResultFormat::formatResults(
-    RefPtr<QueryPlan> query,
+    ScopedPtr<QueryPlan> query,
     ExecutionContext* context) {
   json_->beginObject();
 

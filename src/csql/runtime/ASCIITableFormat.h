@@ -19,7 +19,7 @@ public:
   ASCIITableFormat(ScopedPtr<OutputStream> output);
 
   void formatResults(
-      RefPtr<QueryPlan> query,
+      ScopedPtr<QueryPlan> query,
       ExecutionContext* context);
 
 protected:

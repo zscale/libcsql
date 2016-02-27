@@ -50,7 +50,7 @@ void BinaryResultFormat::sendFooter() {
 }
 
 void BinaryResultFormat::formatResults(
-    RefPtr<QueryPlan> query,
+    ScopedPtr<QueryPlan> query,
     ExecutionContext* context) {
   context->onStatusChange([this] (const csql::ExecutionStatus& status) {
     sendProgress(status.progress());

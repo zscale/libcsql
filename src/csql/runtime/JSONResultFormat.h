@@ -22,7 +22,7 @@ public:
   JSONResultFormat(json::JSONOutputStream* json);
 
   void formatResults(
-      RefPtr<QueryPlan> query,
+      ScopedPtr<QueryPlan> query,
       ExecutionContext* context);
 
 protected:

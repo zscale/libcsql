@@ -16,7 +16,7 @@ ASCIITableFormat::ASCIITableFormat(
     output_(std::move(output)) {}
 
 void ASCIITableFormat::formatResults(
-    RefPtr<QueryPlan> query,
+    ScopedPtr<QueryPlan> query,
     ExecutionContext* context) {
 
   for (int i = 0; i < query->numStatements(); ++i) {

@@ -60,7 +60,7 @@ public:
   ~BinaryResultFormat();
 
   void formatResults(
-      RefPtr<QueryPlan> query,
+      ScopedPtr<QueryPlan> query,
       ExecutionContext* context) override;
 
   void sendError(const String& error_msg);
