@@ -64,7 +64,6 @@ add_library(chartsql STATIC
     runtime/tablerepository.cc
     runtime/queryplanbuilder.cc
     runtime/queryplan.cc
-    runtime/tablescan.cc
     runtime/vm.cc
     runtime/compiler.cc
     runtime/ExecutionContext.cc
@@ -91,6 +90,7 @@ add_library(chartsql STATIC
     tasks/nested_loop_join.cc
     tasks/show_tables.cc
     tasks/describe_table.cc
+    tasks/tablescan.cc
     defaults.cc)
 
 add_dependencies(chartsql stx-protobuf)

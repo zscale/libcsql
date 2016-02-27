@@ -8,7 +8,7 @@
  * <http://www.gnu.org/licenses/>.
  */
 #include <csql/backends/csv/CSVTableProvider.h>
-#include <csql/runtime/tablescan.h>
+#include <csql/tasks/tablescan.h>
 
 using namespace stx;
 

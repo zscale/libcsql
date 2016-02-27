@@ -11,7 +11,7 @@
 #include <csql/qtree/QueryTreeUtil.h>
 #include <csql/runtime/QueryBuilder.h>
 #include <csql/runtime/runtime.h>
-#include <csql/runtime/tablescan.h>
+#include <csql/tasks/tablescan.h>
 
 namespace csql {
 
