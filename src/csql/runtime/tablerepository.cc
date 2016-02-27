@@ -8,7 +8,6 @@
  * <http://www.gnu.org/licenses/>.
  */
 #include <csql/runtime/tablerepository.h>
-#include <csql/runtime/importstatement.h>
 #include <stx/exception.h>
 #include <stx/uri.h>
 
@@ -59,12 +58,6 @@ void TableRepository::import(
       kRuntimeError,
       "no backend found for '%s'\n",
       source_uri.toString().c_str());
-}
-
-void TableRepository::import(
-    const ImportStatement& import_stmt,
-    const std::vector<std::unique_ptr<Backend>>& backends) {
-  import(import_stmt.tables(), import_stmt.source_uri(), backends);
 }
 
 TaskIDList TableRepository::buildSequentialScan(

@@ -67,7 +67,6 @@ add_library(chartsql STATIC
     runtime/ValueExpressionBuilder.cc
     runtime/TableExpressionBuilder.cc
     runtime/defaultruntime.cc
-    runtime/importstatement.cc
     runtime/tablerepository.cc
     runtime/queryplanbuilder.cc
     runtime/queryplan.cc
