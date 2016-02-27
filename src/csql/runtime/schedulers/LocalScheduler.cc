@@ -63,7 +63,7 @@ RefPtr<Task> LocalScheduler::buildInstance(const TaskID& task_id) {
         std::bind(
             &Task::onInputRow,
             dep_instance.get(),
-            dep_id,
+            task_id,
             std::placeholders::_1,
             std::placeholders::_2));
   }

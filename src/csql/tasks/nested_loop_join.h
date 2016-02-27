@@ -21,43 +21,65 @@ public:
   NestedLoopJoin(
       Transaction* txn,
       JoinType join_type,
-      ScopedPtr<Task> base_tbl,
-      ScopedPtr<Task> joined_tbl,
+      const Set<TaskID>& base_tbl_ids,
+      const Set<TaskID>& joined_tbl_ids,
       const Vector<JoinNode::InputColumnRef>& input_map,
-      const Vector<String>& column_names,
       Vector<ValueExpression> select_expressions,
       Option<ValueExpression> join_cond_expr,
-      Option<ValueExpression> where_expr);
+      Option<ValueExpression> where_expr,
+      RowSinkFn output);
+
+  bool onInputRow(
+      const TaskID& input_id,
+      const SValue* row,
+      int row_len) override;
+
+  void onInputsReady() override;
 
 protected:
 
-  void executeCartesianJoin(
-      ExecutionContext* context,
-      Function<bool (int argc, const SValue* argv)> fn,
-      const List<Vector<SValue>>& t1,
-      const List<Vector<SValue>>& t2);
-
-  void executeInnerJoin(
-      ExecutionContext* context,
-      Function<bool (int argc, const SValue* argv)> fn,
-      const List<Vector<SValue>>& t1,
-      const List<Vector<SValue>>& t2);
-
-  void executeOuterJoin(
-      ExecutionContext* context,
-      Function<bool (int argc, const SValue* argv)> fn,
-      const List<Vector<SValue>>& t1,
-      const List<Vector<SValue>>& t2);
+  void executeCartesianJoin();
+  void executeInnerJoin();
+  void executeOuterJoin();
 
   Transaction* txn_;
   JoinType join_type_;
-  ScopedPtr<Task> base_table_;
-  ScopedPtr<Task> joined_table_;
+  Set<TaskID> base_tbl_ids_;
+  Set<TaskID> joined_tbl_ids_;
   Vector<JoinNode::InputColumnRef> input_map_;
   Vector<String> column_names_;
   Vector<ValueExpression> select_exprs_;
   Option<ValueExpression> join_cond_expr_;
   Option<ValueExpression> where_expr_;
+  RowSinkFn output_;
+  List<Vector<SValue>> base_tbl_;
+  List<Vector<SValue>> joined_tbl_;
+};
+
+class NestedLoopJoinFactory  : public TaskFactory {
+public:
+
+  NestedLoopJoinFactory(
+      JoinType join_type,
+      const Set<TaskID>& base_tbl_ids,
+      const Set<TaskID>& joined_tbl_ids,
+      const Vector<JoinNode::InputColumnRef>& input_map,
+      Vector<RefPtr<SelectListNode>> select_exprs,
+      Option<RefPtr<ValueExpressionNode>> join_cond_expr,
+      Option<RefPtr<ValueExpressionNode>> where_expr);
+
+  RefPtr<Task> build(
+      Transaction* txn,
+      RowSinkFn output) const override;
+
+protected:
+  JoinType join_type_;
+  Set<TaskID> base_tbl_ids_;
+  Set<TaskID> joined_tbl_ids_;
+  Vector<JoinNode::InputColumnRef> input_map_;
+  Vector<RefPtr<SelectListNode>> select_exprs_;
+  Option<RefPtr<ValueExpressionNode>> join_cond_expr_;
+  Option<RefPtr<ValueExpressionNode>> where_expr_;
 };
 
 }

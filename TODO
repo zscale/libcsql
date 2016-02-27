@@ -5,6 +5,9 @@
 - factory serialization
 - lazy dependencies
 - limit optimzation/bool return in onInputRow?
+- bring back charting stuff
+
+- sql_alloc / sql_free
 
 - split qtree node in tablexpressionnode + valueexpressionnode
 - delete {table/valueexpressionbuilder}

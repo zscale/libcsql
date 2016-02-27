@@ -108,7 +108,7 @@ void TaskDAG::setTaskStatusCompleted(const TaskID& task_id) {
     auto dep_task = getTask(dep_task_id);
     bool dep_task_runnable = true;
     for (const auto& dep : dep_task->getDependencies()) {
-      if (getTaskStatus(dep.task_id) == TaskStatus::WAITING) {
+      if (getTaskStatus(dep.task_id) != TaskStatus::COMPLETED) {
         dep_task_runnable = false;
         break;
       }
