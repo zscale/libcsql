@@ -10,6 +10,9 @@
 - delete valueexpressionbuilder, querybuilder
 - sql_alloc / sql_free
 
+- remove cstable depdenency
+- inline stx util files
+
 - split qtree node in tablexpressionnode + valueexpressionnode
 - delete {table/valueexpressionbuilder}
 - rename SequentialScan -> TableScan
