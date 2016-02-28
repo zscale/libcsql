@@ -39,16 +39,20 @@ void LocalScheduler::execute() {
   for (;;) {
     auto runnables = tasks_->getRunnableTasks();
     if (runnables.empty()) {
-      return;
+      break;
     }
 
     for (const auto& runnable_id : runnables) {
       instances_[runnable_id]->onInputsReady();
       for (const auto& cb : callbacks_->on_complete[runnable_id]) {
-        cb();
+        cb(runnable_id);
       }
       tasks_->setTaskStatusCompleted(runnable_id);
     }
+  }
+
+  for (const auto& cb : callbacks_->on_query_finished) {
+    cb();
   }
 }
 

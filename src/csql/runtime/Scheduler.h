@@ -18,7 +18,8 @@ namespace csql {
 
 struct SchedulerCallbacks {
   HashMap<TaskID, Vector<RowSinkFn>> on_row;
-  HashMap<TaskID, Vector<Function<void ()>>> on_complete;
+  HashMap<TaskID, Vector<Function<void (TaskID)>>> on_complete;
+  Vector<Function<void ()>> on_query_finished;
 };
 
 class Scheduler {

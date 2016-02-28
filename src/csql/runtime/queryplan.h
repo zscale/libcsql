@@ -36,6 +36,8 @@ public:
 
   void onOutputComplete(size_t stmt_idx, Function<void ()> fn);
   void onOutputRow(size_t stmt_idx, RowSinkFn fn);
+  void onQueryFinished(Function<void ()> fn);
+
   void storeResults(size_t stmt_idx, ResultList* result_list);
 
 protected:
