@@ -30,65 +30,65 @@ OrderBy::OrderBy(
 }
 
 // FIXPAUL this should mergesort while inserting...
-bool OrderBy::onInputRow(
-    const TaskID& input_id,
-    const SValue* argv,
-    int argc) {
-  Vector<SValue> row;
-  for (int i = 0; i < argc; i++) {
-    row.emplace_back(argv[i]);
-  }
-
-  rows_.emplace_back(row);
-  return true;
-}
-
-void OrderBy::onInputsReady() {
-  auto rt = ctx_->getRuntime();
-  std::sort(
-      rows_.begin(),
-      rows_.end(),
-      [this, rt] (const Vector<SValue>& left, const Vector<SValue>& right) -> bool {
-    for (const auto& sort : sort_specs_) {
-      SValue args[2];
-      SValue res(false);
-      args[0] = rt->evaluateScalarExpression(
-          ctx_,
-          sort.expr,
-          left.size(),
-          left.data());
-      args[1] = rt->evaluateScalarExpression(
-          ctx_,
-          sort.expr,
-          right.size(),
-          right.data());
-
-      expressions::eqExpr(Transaction::get(ctx_), 2, args, &res);
-      if (res.getBool()) {
-        continue;
-      }
-
-      if (sort.descending) {
-        expressions::gtExpr(Transaction::get(ctx_), 2, args, &res);
-      } else {
-        expressions::ltExpr(Transaction::get(ctx_), 2, args, &res);
-      }
-
-      return res.getBool();
-    }
-
-    /* all dimensions equal */
-    return false;
-  });
-
-  for (auto& row : rows_) {
-    if (!output_(row.data(), row.size())) {
-      break;
-    }
-  }
-
-  rows_.clear();
-}
+//bool OrderBy::onInputRow(
+//    const TaskID& input_id,
+//    const SValue* argv,
+//    int argc) {
+//  Vector<SValue> row;
+//  for (int i = 0; i < argc; i++) {
+//    row.emplace_back(argv[i]);
+//  }
+//
+//  rows_.emplace_back(row);
+//  return true;
+//}
+//
+//void OrderBy::onInputsReady() {
+//  auto rt = ctx_->getRuntime();
+//  std::sort(
+//      rows_.begin(),
+//      rows_.end(),
+//      [this, rt] (const Vector<SValue>& left, const Vector<SValue>& right) -> bool {
+//    for (const auto& sort : sort_specs_) {
+//      SValue args[2];
+//      SValue res(false);
+//      args[0] = rt->evaluateScalarExpression(
+//          ctx_,
+//          sort.expr,
+//          left.size(),
+//          left.data());
+//      args[1] = rt->evaluateScalarExpression(
+//          ctx_,
+//          sort.expr,
+//          right.size(),
+//          right.data());
+//
+//      expressions::eqExpr(Transaction::get(ctx_), 2, args, &res);
+//      if (res.getBool()) {
+//        continue;
+//      }
+//
+//      if (sort.descending) {
+//        expressions::gtExpr(Transaction::get(ctx_), 2, args, &res);
+//      } else {
+//        expressions::ltExpr(Transaction::get(ctx_), 2, args, &res);
+//      }
+//
+//      return res.getBool();
+//    }
+//
+//    /* all dimensions equal */
+//    return false;
+//  });
+//
+//  for (auto& row : rows_) {
+//    if (!output_(row.data(), row.size())) {
+//      break;
+//    }
+//  }
+//
+//  rows_.clear();
+//}
 
 OrderByFactory::OrderByFactory(
     Vector<SortExpr> sort_specs,

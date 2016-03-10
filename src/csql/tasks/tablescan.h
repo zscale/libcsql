@@ -40,6 +40,8 @@ public:
 
   void onInputsReady() override;
 
+  int nextRow(SValue* out, int out_len) override;
+
 protected:
 
   Transaction* txn_;

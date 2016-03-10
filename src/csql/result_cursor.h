@@ -23,21 +23,29 @@ namespace csql {
 
 typedef Function<bool (const SValue* argv, int argc)> RowSinkFn;
 
-class Task : public Statement {
+class ResultCursor {
 public:
 
-  virtual Option<SHA1Hash> cacheKey() const {
-    return None<SHA1Hash>();
+  virtual void open() = 0;
+  virtual int fetch(SValue* row, int row_len) = 0;
+  virtual void close() = 0;
+
+  /**
+   * Returns true if a call to fetch will not block and false if such a call
+   * would block
+   */
+  virtual bool poll() {
+    return true;
   }
 
-  virtual int nextRow(SValue* out, int out_len) = 0;
-
-  virtual void onInputsReady() {}
-
-  virtual bool onInputRow(
-      const TaskID& input_id,
-      const SValue* row,
-      int row_len) { return true; };
+  /**
+   * Wait for the next row. Calls the provided callback exactly one time once the
+   * new row becomes available. The callback may be executed in the current
+   * or any other thread.
+   */
+  virtual void wait(Function<void ()> callback) {
+    callback();
+  }
 
 };
 

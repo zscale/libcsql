@@ -24,6 +24,8 @@ public:
       Vector<ValueExpression> group_expressions,
       RowSinkFn output);
 
+  int nextRow(SValue* out, int out_len) override;
+
   bool onInputRow(
       const TaskID& input_id,
       const SValue* row,

@@ -20,6 +20,10 @@ DescribeTable::DescribeTable(
     table_name_(table_name),
     output_(output) {}
 
+int DescribeTable::nextRow(SValue* out, int out_len) {
+  return -1;
+}
+
 void DescribeTable::onInputsReady() {
   const auto& table_info = txn_->getTableProvider()->describe(table_name_);
   if (table_info.isEmpty()) {

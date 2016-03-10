@@ -22,6 +22,8 @@ public:
       Vector<ValueExpression> select_expressions,
       RowSinkFn output);
 
+  int nextRow(SValue* out, int out_len) override;
+
   void onInputsReady() override;
 
 protected:
