@@ -21,13 +21,14 @@ public:
       Transaction* txn,
       Vector<ValueExpression> select_expressions);
 
-  int nextRow(SValue* out, int out_len) override;
+  bool nextRow(SValue* out, int out_len) override;
 
   //void onInputsReady() override;
 
 protected:
   Transaction* txn_;
   Vector<ValueExpression> select_exprs_;
+  size_t pos_;
 };
 
 class SelectFactory : public TaskFactory {

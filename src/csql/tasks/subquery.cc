@@ -22,8 +22,8 @@ Subquery::Subquery(
     where_expr_(std::move(where_expr)),
     input_(new ResultCursorList(std::move(input))) {}
 
-int Subquery::nextRow(SValue* out, int out_len) {
-  return -1;
+bool Subquery::nextRow(SValue* out, int out_len) {
+  return false;
 }
 
 //bool Subquery::onInputRow(

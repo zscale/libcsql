@@ -31,7 +31,7 @@ public:
   }
 
   virtual void run() {}
-  virtual int nextRow(SValue* out, int out_len) = 0;
+  virtual bool nextRow(SValue* out, int out_len) = 0;
 
   //virtual void onInputsReady() {}
 

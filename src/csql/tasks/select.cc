@@ -15,7 +15,8 @@ Select::Select(
     Transaction* txn,
     Vector<ValueExpression> select_expressions) :
     txn_(txn),
-    select_exprs_(std::move(select_expressions)) {}
+    select_exprs_(std::move(select_expressions)),
+    pos_(0) {}
 
 //void Select::onInputsReady() {
 //  Vector<SValue> out_row(select_exprs_.size(), SValue{});
@@ -27,8 +28,12 @@ Select::Select(
 //  input_(out_row.data(), out_row.size());
 //}
 
-int Select::nextRow(SValue* out, int out_len) {
-  return -1;
+bool Select::nextRow(SValue* out, int out_len) {
+  if (pos_ == 0) {
+    return -1;
+  } else {
+    return -1;
+  }
 }
 
 SelectFactory::SelectFactory(

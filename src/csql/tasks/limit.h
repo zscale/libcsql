@@ -22,7 +22,7 @@ public:
       size_t offset,
       HashMap<TaskID, ScopedPtr<ResultCursor>> input);
 
-  int nextRow(SValue* out, int out_len) override;
+  bool nextRow(SValue* out, int out_len) override;
 
   //bool onInputRow(
   //    const TaskID& input_id,

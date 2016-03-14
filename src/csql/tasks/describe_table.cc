@@ -18,8 +18,8 @@ DescribeTable::DescribeTable(
     txn_(txn),
     table_name_(table_name) {}
 
-int DescribeTable::nextRow(SValue* out, int out_len) {
-  return -1;
+bool DescribeTable::nextRow(SValue* out, int out_len) {
+  return false;
 }
 
 //void DescribeTable::onInputsReady() {

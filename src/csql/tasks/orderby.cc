@@ -29,8 +29,8 @@ OrderBy::OrderBy(
   }
 }
 
-int OrderBy::nextRow(SValue* out, int out_len) {
-  return -1;
+bool OrderBy::nextRow(SValue* out, int out_len) {
+  return false;
 }
 // FIXPAUL this should mergesort while inserting...
 //bool OrderBy::onInputRow(

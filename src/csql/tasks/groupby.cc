@@ -23,8 +23,8 @@ GroupBy::GroupBy(
     group_exprs_(std::move(group_expressions)),
     input_(new ResultCursorList(std::move(input))) {}
 
-int GroupBy::nextRow(SValue* out, int out_len) {
-  return -1;
+bool GroupBy::nextRow(SValue* out, int out_len) {
+  return false;
 }
 //bool GroupBy::onInputRow(
 //      const TaskID& input_id,

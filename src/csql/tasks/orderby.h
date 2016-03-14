@@ -30,7 +30,7 @@ public:
       size_t num_columns,
       HashMap<TaskID, ScopedPtr<ResultCursor>> input);
 
-  int nextRow(SValue* out, int out_len) override;
+  bool nextRow(SValue* out, int out_len) override;
 
 protected:
   Transaction* ctx_;

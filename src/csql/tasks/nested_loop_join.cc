@@ -32,8 +32,8 @@ NestedLoopJoin::NestedLoopJoin(
 
 static const size_t kMaxInMemoryRows = 1000000;
 
-int NestedLoopJoin::nextRow(SValue* out, int out_len) {
-  return -1;
+bool NestedLoopJoin::nextRow(SValue* out, int out_len) {
+  return false;
 }
 
 //bool NestedLoopJoin::onInputRow(

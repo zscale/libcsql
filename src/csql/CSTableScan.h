@@ -36,7 +36,7 @@ public:
       RefPtr<cstable::CSTableReader> cstable,
       QueryBuilder* runtime);
 
-  int nextRow(SValue* out, int out_len) override;
+  bool nextRow(SValue* out, int out_len) override;
 
   virtual Vector<String> columnNames() const;
   virtual size_t numColumns() const;

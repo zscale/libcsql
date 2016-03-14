@@ -16,8 +16,8 @@ ShowTables::ShowTables(
     Transaction* txn) :
     txn_(txn) {}
 
-int ShowTables::nextRow(SValue* out, int out_len) {
-  return -1;
+bool ShowTables::nextRow(SValue* out, int out_len) {
+  return false;
 }
 
 //void ShowTables::onInputsReady() {

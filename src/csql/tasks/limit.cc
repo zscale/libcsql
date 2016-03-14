@@ -34,8 +34,8 @@ Limit::Limit(
 //
 //  return input_(row, row_len);
 //}
-int Limit::nextRow(SValue* out, int out_len) {
-  return -1;
+bool Limit::nextRow(SValue* out, int out_len) {
+  return false;
 }
 
 LimitFactory::LimitFactory(

@@ -115,8 +115,8 @@ void CSTableScan::open() {
   }
 }
 
-int CSTableScan::nextRow(SValue* out, int out_len) {
-  return -1;
+bool CSTableScan::nextRow(SValue* out, int out_len) {
+  return false;
 }
 
 //void CSTableScan::onInputsReady() {

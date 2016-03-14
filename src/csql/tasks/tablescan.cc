@@ -48,7 +48,7 @@ TableScan::TableScan(
   }
 }
 
-int TableScan::nextRow(SValue* out, int out_len) {
+bool TableScan::nextRow(SValue* out, int out_len) {
   return -1;
 }
 
