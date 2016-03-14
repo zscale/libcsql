@@ -26,12 +26,19 @@ typedef Function<bool (const SValue* argv, int argc)> RowSinkFn;
 class ResultCursor {
 public:
 
-  virtual void open() = 0;
-  virtual int fetch(SValue* row, int row_len) = 0;
-  virtual void close() = 0;
+  /**
+   * Fetch the next row from the cursor. Returns true if a row was returned
+   * into the provided storage and false if the last row of the query has been
+   * read (EOF). If this method returns false the provided storage will not
+   * be changed.
+   *
+   * This method will block until the next row is available. Use the polling/
+   * callback interface below if you need async execution.
+   */
+  virtual bool next(SValue* row, int row_len) = 0;
 
   /**
-   * Returns true if a call to fetch will not block and false if such a call
+   * Returns true if a call to next would not block and false if such a call
    * would block
    */
   virtual bool poll() {

@@ -31,75 +31,81 @@ LocalScheduler::LocalScheduler(
     tasks_(tasks),
     callbacks_(callbacks) {}
 
-void LocalScheduler::execute() {
-  for (const auto& task_id : tasks_->getAllTasks()) {
-    buildInstance(task_id);
+ScopedPtr<ResultCursor> LocalScheduler::execute(Set<TaskID> tasks) {
+  for (const auto& task_id : tasks) {
+    HashMap<TaskID, ScopedPtr<ResultCursor>> input_cursors;
+    iputs("exec: $0", task_id);
   }
 
-  for (;;) {
-    auto runnables = tasks_->getRunnableTasks();
-    if (runnables.empty()) {
-      break;
-    }
-
-    for (const auto& runnable_id : runnables) {
-      ////instances_[runnable_id]->onInputsReady();
-      //for (const auto& cb : callbacks_->on_complete[runnable_id]) {
-      //  cb(runnable_id);
-      //}
-      //tasks_->setTaskStatusCompleted(runnable_id);
-    }
-  }
-
-  for (const auto& cb : callbacks_->on_query_finished) {
-    cb();
-  }
+  RAISE(kRuntimeError, "not yet implemented");
+//  for (const auto& task_id : tasks_->getAllTasks()) {
+//    buildInstance(task_id);
+//  }
+//
+//  for (;;) {
+//    auto runnables = tasks_->getRunnableTasks();
+//    if (runnables.empty()) {
+//      break;
+//    }
+//
+//    for (const auto& runnable_id : runnables) {
+//      ////instances_[runnable_id]->onInputsReady();
+//      //for (const auto& cb : callbacks_->on_complete[runnable_id]) {
+//      //  cb(runnable_id);
+//      //}
+//      //tasks_->setTaskStatusCompleted(runnable_id);
+//    }
+//  }
+//
+//  for (const auto& cb : callbacks_->on_query_finished) {
+//    cb();
+//  }
 }
 
-RefPtr<Task> LocalScheduler::buildInstance(const TaskID& task_id) {
-  if (instances_.count(task_id) > 0) {
-    return instances_[task_id];
-  }
+ScopedPtr<ResultCursor> LocalScheduler::buildInstance(const TaskID& task_id) {
+  //if (instances_.count(task_id) > 0) {
+  //  return instances_[task_id];
+  //}
 
-  auto task = tasks_->getTask(task_id);
-  Vector<RowSinkFn> task_outputs;
+  //auto task = tasks_->getTask(task_id);
+  //Vector<RowSinkFn> task_outputs;
 
-  for (const auto& dep_id : tasks_->getOutputTasksFor(task_id)) {
-    auto dep_instance = buildInstance(dep_id);
-    //task_outputs.emplace_back(
-    //    std::bind(
-    //        &Task::onInputRow,
-    //        dep_instance.get(),
-    //        task_id,
-    //        std::placeholders::_1,
-    //        std::placeholders::_2));
-  }
+  //for (const auto& dep_id : tasks_->getOutputTasksFor(task_id)) {
+  //  auto dep_instance = buildInstance(dep_id);
+  //  //task_outputs.emplace_back(
+  //  //    std::bind(
+  //  //        &Task::onInputRow,
+  //  //        dep_instance.get(),
+  //  //        task_id,
+  //  //        std::placeholders::_1,
+  //  //        std::placeholders::_2));
+  //}
 
-  if (callbacks_->on_row.count(task_id) > 0) {
-    for (const auto& cb : callbacks_->on_row[task_id]) {
-      task_outputs.emplace_back(cb);
-    }
-  }
+  //if (callbacks_->on_row.count(task_id) > 0) {
+  //  for (const auto& cb : callbacks_->on_row[task_id]) {
+  //    task_outputs.emplace_back(cb);
+  //  }
+  //}
 
-  if (instances_.count(task_id) > 0) {
-    return instances_[task_id];
-  }
+  //if (instances_.count(task_id) > 0) {
+  //  return instances_[task_id];
+  //}
 
-  RowSinkFn output_fn;
-  switch (task_outputs.size()) {
-    case 0:
-      output_fn = [] (const SValue* argv, int argc) { return true; };
-      break;
-    case 1:
-      output_fn = task_outputs[0];
-      break;
-    default:
-      RAISE(kNotYetImplementedError);
-  }
+  //RowSinkFn output_fn;
+  //switch (task_outputs.size()) {
+  //  case 0:
+  //    output_fn = [] (const SValue* argv, int argc) { return true; };
+  //    break;
+  //  case 1:
+  //    output_fn = task_outputs[0];
+  //    break;
+  //  default:
+  //    RAISE(kNotYetImplementedError);
+  //}
 
-  auto instance = task->getFactory()->build(txn_, output_fn);
-  instances_.emplace(task_id, instance);
-  return instance;
+  //auto instance = task->getFactory()->build(txn_, output_fn);
+  //instances_.emplace(task_id, instance);
+  //return instance;
 }
 
 } // namespace csql

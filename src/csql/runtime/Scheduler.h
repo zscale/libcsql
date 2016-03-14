@@ -11,6 +11,7 @@
 #include <stx/stdtypes.h>
 #include <stx/autoref.h>
 #include <csql/tasks/TaskDAG.h>
+#include <csql/result_cursor.h>
 
 using namespace stx;
 
@@ -25,7 +26,7 @@ struct SchedulerCallbacks {
 class Scheduler {
 public:
   virtual ~Scheduler() {};
-  virtual void execute() = 0;
+  virtual ScopedPtr<ResultCursor> execute(Set<TaskID> tasks) = 0;
 };
 
 using SchedulerFactory = Function<

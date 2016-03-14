@@ -25,11 +25,12 @@ public:
       TaskDAG* tasks,
       SchedulerCallbacks* callbacks);
 
-  void execute() override;
+  //void execute() override;
+  ScopedPtr<ResultCursor> execute(Set<TaskID> tasks) override;
 
 protected:
 
-  RefPtr<Task> buildInstance(const TaskID& task_id);
+  ScopedPtr<ResultCursor> buildInstance(const TaskID& task_id);
 
   Transaction* txn_;
   TaskDAG* tasks_;
