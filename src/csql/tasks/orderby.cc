@@ -19,11 +19,11 @@ OrderBy::OrderBy(
     Transaction* ctx,
     Vector<SortExpr> sort_specs,
     size_t num_columns,
-    RowSinkFn output) :
+    HashMap<TaskID, ScopedPtr<ResultCursor>> input) :
     ctx_(ctx),
     sort_specs_(std::move(sort_specs)),
     num_columns_(num_columns),
-    output_(output) {
+    input_(new ResultCursorList(std::move(input))) {
   if (sort_specs_.size() == 0) {
     RAISE(kIllegalArgumentError, "can't execute ORDER BY: no sort specs");
   }
@@ -85,7 +85,7 @@ int OrderBy::nextRow(SValue* out, int out_len) {
 //  });
 //
 //  for (auto& row : rows_) {
-//    if (!output_(row.data(), row.size())) {
+//    if (!input_(row.data(), row.size())) {
 //      break;
 //    }
 //  }
@@ -101,7 +101,7 @@ OrderByFactory::OrderByFactory(
 
 RefPtr<Task> OrderByFactory::build(
     Transaction* txn,
-    RowSinkFn output) const {
+    HashMap<TaskID, ScopedPtr<ResultCursor>> input) const {
   auto qbuilder = txn->getRuntime()->queryBuilder();
 
   Vector<OrderBy::SortExpr> sort_exprs;
@@ -112,7 +112,7 @@ RefPtr<Task> OrderByFactory::build(
     sort_exprs.emplace_back(std::move(se));
   }
 
-  return new OrderBy(txn, std::move(sort_exprs), num_columns_, output);
+  return new OrderBy(txn, std::move(sort_exprs), num_columns_, std::move(input));
 }
 
 } // namespace csql

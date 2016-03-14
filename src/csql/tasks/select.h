@@ -19,8 +19,7 @@ public:
 
   Select(
       Transaction* txn,
-      Vector<ValueExpression> select_expressions,
-      RowSinkFn output);
+      Vector<ValueExpression> select_expressions);
 
   int nextRow(SValue* out, int out_len) override;
 
@@ -29,7 +28,6 @@ public:
 protected:
   Transaction* txn_;
   Vector<ValueExpression> select_exprs_;
-  RowSinkFn output_;
 };
 
 class SelectFactory : public TaskFactory {
@@ -40,7 +38,7 @@ public:
 
   RefPtr<Task> build(
       Transaction* txn,
-      RowSinkFn output) const override;
+      HashMap<TaskID, ScopedPtr<ResultCursor>> input) const override;
 
 protected:
   Vector<RefPtr<SelectListNode>> select_exprs_;

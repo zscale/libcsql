@@ -14,10 +14,10 @@ namespace csql {
 Limit::Limit(
     size_t limit,
     size_t offset,
-    RowSinkFn output) :
+    HashMap<TaskID, ScopedPtr<ResultCursor>> input) :
     limit_(limit),
     offset_(offset),
-    output_(output),
+    input_(new ResultCursorList(std::move(input))),
     counter_(0) {}
 
 //bool Limit::onInputRow(
@@ -32,7 +32,7 @@ Limit::Limit(
 //    return false;
 //  }
 //
-//  return output_(row, row_len);
+//  return input_(row, row_len);
 //}
 int Limit::nextRow(SValue* out, int out_len) {
   return -1;
@@ -46,8 +46,8 @@ LimitFactory::LimitFactory(
 
 RefPtr<Task> LimitFactory::build(
     Transaction* txn,
-    RowSinkFn output) const {
-  return new Limit(limit_, offset_, output);
+    HashMap<TaskID, ScopedPtr<ResultCursor>> input) const {
+  return new Limit(limit_, offset_, std::move(input));
 }
 
 }

@@ -13,11 +13,9 @@ namespace csql {
 
 Select::Select(
     Transaction* txn,
-    Vector<ValueExpression> select_expressions,
-    RowSinkFn output) :
+    Vector<ValueExpression> select_expressions) :
     txn_(txn),
-    select_exprs_(std::move(select_expressions)),
-    output_(output) {}
+    select_exprs_(std::move(select_expressions)) {}
 
 //void Select::onInputsReady() {
 //  Vector<SValue> out_row(select_exprs_.size(), SValue{});
@@ -26,7 +24,7 @@ Select::Select(
 //    VM::evaluate(txn_, select_exprs_[i].program(), 0, nullptr,  &out_row[i]);
 //  }
 //
-//  output_(out_row.data(), out_row.size());
+//  input_(out_row.data(), out_row.size());
 //}
 
 int Select::nextRow(SValue* out, int out_len) {
@@ -39,7 +37,7 @@ SelectFactory::SelectFactory(
 
 RefPtr<Task> SelectFactory::build(
     Transaction* txn,
-    RowSinkFn output) const {
+    HashMap<TaskID, ScopedPtr<ResultCursor>> input) const {
   Vector<ValueExpression> select_expressions;
   auto qbuilder = txn->getRuntime()->queryBuilder();
   for (const auto& slnode : select_exprs_) {
@@ -47,10 +45,7 @@ RefPtr<Task> SelectFactory::build(
         qbuilder->buildValueExpression(txn, slnode->expression()));
   }
 
-  return new Select(
-      txn,
-      std::move(select_expressions),
-      output);
+  return new Select(txn, std::move(select_expressions));
 }
 
 }

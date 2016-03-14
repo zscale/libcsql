@@ -20,8 +20,7 @@ public:
 
   DescribeTable(
       Transaction* txn,
-      const String& table_name,
-      RowSinkFn output);
+      const String& table_name);
 
   //void onInputsReady() override;
 
@@ -30,7 +29,6 @@ public:
 protected:
   Transaction* txn_;
   String table_name_;
-  RowSinkFn output_;
 };
 
 class DescribeTableFactory : public TaskFactory {
@@ -40,7 +38,7 @@ public:
 
   RefPtr<Task> build(
       Transaction* txn,
-      RowSinkFn output) const override;
+      HashMap<TaskID, ScopedPtr<ResultCursor>> input) const override;
 
 protected:
   String table_name_;

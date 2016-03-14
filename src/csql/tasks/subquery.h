@@ -21,7 +21,7 @@ public:
       Transaction* txn,
       Vector<ValueExpression> select_expressions,
       Option<ValueExpression> where_expr,
-      RowSinkFn output);
+      HashMap<TaskID, ScopedPtr<ResultCursor>> input);
 
   int nextRow(SValue* out, int out_len) override;
 
@@ -34,7 +34,7 @@ protected:
   Transaction* txn_;
   Vector<ValueExpression> select_exprs_;
   Option<ValueExpression> where_expr_;
-  RowSinkFn output_;
+  ScopedPtr<ResultCursorList> input_;
 };
 
 class SubqueryFactory : public TaskFactory {
@@ -46,7 +46,7 @@ public:
 
   RefPtr<Task> build(
       Transaction* txn,
-      RowSinkFn output) const override;
+      HashMap<TaskID, ScopedPtr<ResultCursor>> input) const override;
 
 protected:
   Vector<RefPtr<SelectListNode>> select_exprs_;

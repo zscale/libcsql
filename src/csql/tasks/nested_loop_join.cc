@@ -20,7 +20,7 @@ NestedLoopJoin::NestedLoopJoin(
     Vector<ValueExpression> select_expressions,
     Option<ValueExpression> join_cond_expr,
     Option<ValueExpression> where_expr,
-    RowSinkFn output) :
+    HashMap<TaskID, ScopedPtr<ResultCursor>> input) :
     txn_(txn),
     join_type_(join_type),
     base_tbl_ids_(base_tbl_ids),
@@ -28,8 +28,7 @@ NestedLoopJoin::NestedLoopJoin(
     input_map_(input_map),
     select_exprs_(std::move(select_expressions)),
     join_cond_expr_(std::move(join_cond_expr)),
-    where_expr_(std::move(where_expr)),
-    output_(output) {}
+    where_expr_(std::move(where_expr)) {}
 
 static const size_t kMaxInMemoryRows = 1000000;
 
@@ -132,9 +131,9 @@ void NestedLoopJoin::executeCartesianJoin() {
             &outbuf[i]);
       }
 
-      if (!output_(outbuf.data(), outbuf.size()))  {
-        return;
-      }
+      //if (!input_(outbuf.data(), outbuf.size()))  {
+      //  return;
+      //}
     }
   }
 }
@@ -198,9 +197,9 @@ void NestedLoopJoin::executeInnerJoin() {
             &outbuf[i]);
       }
 
-      if (!output_(outbuf.data(), outbuf.size()))  {
-        return;
-      }
+      //if (!input_(outbuf.data(), outbuf.size()))  {
+      //  return;
+      //}
     }
   }
 }
@@ -267,9 +266,9 @@ void NestedLoopJoin::executeOuterJoin() {
             &outbuf[i]);
       }
 
-      if (!output_(outbuf.data(), outbuf.size()))  {
-        return;
-      }
+      //if (!input_(outbuf.data(), outbuf.size()))  {
+      //  return;
+      //}
     }
 
     if (!match) {
@@ -304,9 +303,9 @@ void NestedLoopJoin::executeOuterJoin() {
             &outbuf[i]);
       }
 
-      if (!output_(outbuf.data(), outbuf.size()))  {
-        return;
-      }
+      //if (!input_(outbuf.data(), outbuf.size()))  {
+      //  return;
+      //}
     }
   }
 }
@@ -329,7 +328,7 @@ NestedLoopJoinFactory::NestedLoopJoinFactory(
 
 RefPtr<Task> NestedLoopJoinFactory::build(
     Transaction* txn,
-    RowSinkFn output) const {
+    HashMap<TaskID, ScopedPtr<ResultCursor>> input) const {
   auto qbuilder = txn->getRuntime()->queryBuilder();
 
   Vector<ValueExpression> select_expressions;
@@ -359,7 +358,7 @@ RefPtr<Task> NestedLoopJoinFactory::build(
       std::move(select_expressions),
       std::move(join_cond_expr),
       std::move(where_expr),
-      output);
+      std::move(input));
 }
 
 }

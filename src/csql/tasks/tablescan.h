@@ -35,8 +35,7 @@ public:
   TableScan(
       Transaction* txn,
       RefPtr<SequentialScanNode> stmt,
-      ScopedPtr<TableIterator> iter,
-      RowSinkFn output);
+      ScopedPtr<TableIterator> iter);
 
   //void onInputsReady() override;
 
@@ -48,7 +47,6 @@ protected:
   ScopedPtr<TableIterator> iter_;
   Vector<ValueExpression> select_exprs_;
   Option<ValueExpression> where_expr_;
-  RowSinkFn output_;
 };
 
 } // namespace csql

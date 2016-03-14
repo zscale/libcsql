@@ -78,6 +78,7 @@ add_library(chartsql STATIC
     runtime/charts/linechartbuilder.cc
     runtime/charts/pointchartbuilder.cc
     runtime/charts/seriesadapter.cc
+    result_cursor.cc
     schedulers/local_scheduler.cc
     tasks/Task.cc
     tasks/TaskFactory.cc

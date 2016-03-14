@@ -27,7 +27,7 @@ public:
       Vector<ValueExpression> select_expressions,
       Option<ValueExpression> join_cond_expr,
       Option<ValueExpression> where_expr,
-      RowSinkFn output);
+      HashMap<TaskID, ScopedPtr<ResultCursor>> input);
 
   //bool onInputRow(
   //    const TaskID& input_id,
@@ -53,7 +53,7 @@ protected:
   Vector<ValueExpression> select_exprs_;
   Option<ValueExpression> join_cond_expr_;
   Option<ValueExpression> where_expr_;
-  RowSinkFn output_;
+  HashMap<TaskID, ScopedPtr<ResultCursor>> input_;
   List<Vector<SValue>> base_tbl_;
   List<Vector<SValue>> joined_tbl_;
 };
@@ -72,7 +72,7 @@ public:
 
   RefPtr<Task> build(
       Transaction* txn,
-      RowSinkFn output) const override;
+      HashMap<TaskID, ScopedPtr<ResultCursor>> input) const override;
 
 protected:
   JoinType join_type_;

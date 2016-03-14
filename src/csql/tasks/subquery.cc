@@ -16,11 +16,11 @@ Subquery::Subquery(
     Transaction* txn,
     Vector<ValueExpression> select_expressions,
     Option<ValueExpression> where_expr,
-    RowSinkFn output) :
+    HashMap<TaskID, ScopedPtr<ResultCursor>> input) :
     txn_(txn),
     select_exprs_(std::move(select_expressions)),
     where_expr_(std::move(where_expr)),
-    output_(output) {}
+    input_(new ResultCursorList(std::move(input))) {}
 
 int Subquery::nextRow(SValue* out, int out_len) {
   return -1;
@@ -43,7 +43,7 @@ int Subquery::nextRow(SValue* out, int out_len) {
 //    VM::evaluate(txn_, select_exprs_[i].program(), row_len, row, &out_row[i]);
 //  }
 //
-//  return output_(out_row.data(), out_row.size());
+//  return input_(out_row.data(), out_row.size());
 //}
 
 SubqueryFactory::SubqueryFactory(
@@ -54,7 +54,7 @@ SubqueryFactory::SubqueryFactory(
 
 RefPtr<Task> SubqueryFactory::build(
     Transaction* txn,
-    RowSinkFn output) const {
+    HashMap<TaskID, ScopedPtr<ResultCursor>> input) const {
   Vector<ValueExpression> select_expressions;
   Option<ValueExpression> where_expr;
 
@@ -74,7 +74,7 @@ RefPtr<Task> SubqueryFactory::build(
       txn,
       std::move(select_expressions),
       std::move(where_expr),
-      output);
+      std::move(input));
 }
 
 }

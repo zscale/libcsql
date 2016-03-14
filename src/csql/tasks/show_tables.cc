@@ -13,10 +13,8 @@
 namespace csql {
 
 ShowTables::ShowTables(
-    Transaction* txn,
-    RowSinkFn output) :
-    txn_(txn),
-    output_(output) {}
+    Transaction* txn) :
+    txn_(txn) {}
 
 int ShowTables::nextRow(SValue* out, int out_len) {
   return -1;
@@ -35,14 +33,14 @@ int ShowTables::nextRow(SValue* out, int out_len) {
 //      row.emplace_back(table.description.get());
 //    }
 //
-//    output_(row.data(), row.size());
+//    input_(row.data(), row.size());
 //  });
 //}
 
 RefPtr<Task> ShowTablesFactory::build(
     Transaction* txn,
-    RowSinkFn output) const {
-  return new ShowTables(txn, output);
+    HashMap<TaskID, ScopedPtr<ResultCursor>> input) const {
+  return new ShowTables(txn);
 }
 
 }

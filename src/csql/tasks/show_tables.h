@@ -18,7 +18,7 @@ namespace csql {
 class ShowTables : public Task {
 public:
 
-  ShowTables(Transaction* txn, RowSinkFn output);
+  ShowTables(Transaction* txn);
 
   //void onInputsReady() override;
 
@@ -26,7 +26,6 @@ public:
 
 protected:
   Transaction* txn_;
-  RowSinkFn output_;
 };
 
 class ShowTablesFactory : public TaskFactory {
@@ -34,7 +33,7 @@ public:
 
   RefPtr<Task> build(
       Transaction* txn,
-      RowSinkFn output) const override;
+      HashMap<TaskID, ScopedPtr<ResultCursor>> input) const override;
 
 };
 

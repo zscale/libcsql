@@ -14,11 +14,9 @@ namespace csql {
 
 DescribeTable::DescribeTable(
     Transaction* txn,
-    const String& table_name,
-    RowSinkFn output) :
+    const String& table_name) :
     txn_(txn),
-    table_name_(table_name),
-    output_(output) {}
+    table_name_(table_name) {}
 
 int DescribeTable::nextRow(SValue* out, int out_len) {
   return -1;
@@ -36,7 +34,7 @@ int DescribeTable::nextRow(SValue* out, int out_len) {
 //    row.emplace_back(col.type);
 //    row.emplace_back(col.is_nullable ? "YES" : "NO");
 //    row.emplace_back();
-//    output_(row.data(), row.size());
+//    input_(row.data(), row.size());
 //  }
 //}
 
@@ -46,8 +44,8 @@ DescribeTableFactory::DescribeTableFactory(
 
 RefPtr<Task> DescribeTableFactory::build(
     Transaction* txn,
-    RowSinkFn output) const {
-  return new DescribeTable(txn, table_name_, output);
+    HashMap<TaskID, ScopedPtr<ResultCursor>> input) const {
+  return new DescribeTable(txn, table_name_);
 }
 
 }

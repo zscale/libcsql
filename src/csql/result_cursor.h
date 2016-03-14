@@ -16,6 +16,7 @@
 #include <csql/runtime/Statement.h>
 #include <csql/runtime/rowsink.h>
 #include <csql/tasks/TaskID.h>
+#include <csql/tasks/Task.h>
 
 using namespace stx;
 
@@ -54,6 +55,29 @@ public:
     callback();
   }
 
+};
+
+class ResultCursorList : public ResultCursor {
+public:
+
+  ResultCursorList(Vector<ScopedPtr<ResultCursor>> cursors);
+  ResultCursorList(HashMap<TaskID, ScopedPtr<ResultCursor>> cursors);
+
+  bool next(SValue* row, int row_len) override;
+
+protected:
+  Vector<ScopedPtr<ResultCursor>> cursors_;
+};
+
+class TaskResultCursor : public ResultCursor {
+public:
+
+  TaskResultCursor(RefPtr<Task> task);
+
+  bool next(SValue* row, int row_len) override;
+
+protected:
+  RefPtr<Task> task_;
 };
 
 }

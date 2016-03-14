@@ -18,11 +18,9 @@ namespace csql {
 TableScan::TableScan(
     Transaction* txn,
     RefPtr<SequentialScanNode> stmt,
-    ScopedPtr<TableIterator> iter,
-    RowSinkFn output) :
+    ScopedPtr<TableIterator> iter) :
     txn_(txn),
-    iter_(std::move(iter)),
-    output_(output) {
+    iter_(std::move(iter)) {
   auto qbuilder = txn->getRuntime()->queryBuilder();
 
   for (const auto& slnode : stmt->selectList()) {

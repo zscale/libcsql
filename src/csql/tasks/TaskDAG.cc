@@ -40,7 +40,8 @@ TaskID TaskDAG::addTask(RefPtr<TaskDAGNode> task) {
   tasks_.emplace(task_id, task);
   task_status_.emplace(task_id, task_status);
   for (const auto& dep : task_dependecies) {
-    task_deps_[dep.task_id].emplace(task_id);
+    task_deps_[task_id].emplace(dep.task_id);
+    task_deps_reverse_[dep.task_id].emplace(task_id);
   }
 
   return task_id;
@@ -120,9 +121,18 @@ void TaskDAG::setTaskStatusCompleted(const TaskID& task_id) {
   }
 }
 
-Set<TaskID> TaskDAG::getOutputTasksFor(const TaskID& task_id) const {
+Set<TaskID> TaskDAG::getInputTasksFor(const TaskID& task_id) const {
   const auto& iter = task_deps_.find(task_id);
   if (iter == task_deps_.end()) {
+    return Set<TaskID>();
+  } else {
+    return iter->second;
+  }
+}
+
+Set<TaskID> TaskDAG::getOutputTasksFor(const TaskID& task_id) const {
+  const auto& iter = task_deps_reverse_.find(task_id);
+  if (iter == task_deps_reverse_.end()) {
     return Set<TaskID>();
   } else {
     return iter->second;

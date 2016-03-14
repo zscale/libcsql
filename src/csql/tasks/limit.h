@@ -20,7 +20,7 @@ public:
   Limit(
       size_t limit,
       size_t offset,
-      RowSinkFn output);
+      HashMap<TaskID, ScopedPtr<ResultCursor>> input);
 
   int nextRow(SValue* out, int out_len) override;
 
@@ -32,7 +32,7 @@ public:
 protected:
   size_t limit_;
   size_t offset_;
-  RowSinkFn output_;
+  ScopedPtr<ResultCursorList> input_;
   size_t counter_;
 };
 
@@ -43,7 +43,7 @@ public:
 
   RefPtr<Task> build(
       Transaction* txn,
-      RowSinkFn output) const override;
+      HashMap<TaskID, ScopedPtr<ResultCursor>> input) const override;
 
 protected:
   size_t limit_;

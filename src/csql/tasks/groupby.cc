@@ -17,11 +17,11 @@ GroupBy::GroupBy(
     Transaction* txn,
     Vector<ValueExpression> select_expressions,
     Vector<ValueExpression> group_expressions,
-    RowSinkFn output) :
+    HashMap<TaskID, ScopedPtr<ResultCursor>> input) :
     txn_(txn),
     select_exprs_(std::move(select_expressions)),
     group_exprs_(std::move(group_expressions)),
-    output_(output) {}
+    input_(new ResultCursorList(std::move(input))) {}
 
 int GroupBy::nextRow(SValue* out, int out_len) {
   return -1;
@@ -58,7 +58,7 @@ int GroupBy::nextRow(SValue* out, int out_len) {
 //        VM::result(txn_, select_exprs_[i].program(), &group.second[i], &out_row[i]);
 //      }
 //
-//      if (!output_(out_row.data(), out_row.size())) {
+//      if (!input_(out_row.data(), out_row.size())) {
 //        break;
 //      }
 //    }
@@ -102,7 +102,7 @@ GroupByFactory::GroupByFactory(
 
 RefPtr<Task> GroupByFactory::build(
     Transaction* txn,
-    RowSinkFn output) const {
+    HashMap<TaskID, ScopedPtr<ResultCursor>> input) const {
   Vector<ValueExpression> select_expressions;
   Vector<ValueExpression> group_expressions;
 
@@ -122,7 +122,7 @@ RefPtr<Task> GroupByFactory::build(
       txn,
       std::move(select_expressions),
       std::move(group_expressions),
-      output);
+      std::move(input));
 }
 
 } // namespace csql
