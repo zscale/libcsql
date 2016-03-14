@@ -53,7 +53,7 @@ void QueryPlan::execute(size_t stmt_idx, ResultList* result_list) {
 
   result_list->addHeader(result_columns);
   Vector<SValue> tmp(result_columns.size());
-  while (result_cursor->next(tmp.data(), tmp.size()) > 0) {
+  while (result_cursor->next(tmp.data(), tmp.size())) {
     result_list->addRow(tmp.data(), tmp.size());
   }
 }

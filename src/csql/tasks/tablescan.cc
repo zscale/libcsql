@@ -49,7 +49,7 @@ TableScan::TableScan(
 }
 
 bool TableScan::nextRow(SValue* out, int out_len) {
-  return -1;
+  return false;
 }
 
 //void TableScan::onInputsReady() {

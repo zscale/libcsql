@@ -18,21 +18,16 @@ Select::Select(
     select_exprs_(std::move(select_expressions)),
     pos_(0) {}
 
-//void Select::onInputsReady() {
-//  Vector<SValue> out_row(select_exprs_.size(), SValue{});
-//
-//  for (int i = 0; i < select_exprs_.size(); ++i) {
-//    VM::evaluate(txn_, select_exprs_[i].program(), 0, nullptr,  &out_row[i]);
-//  }
-//
-//  input_(out_row.data(), out_row.size());
-//}
-
 bool Select::nextRow(SValue* out, int out_len) {
   if (pos_ == 0) {
-    return -1;
+    for (int i = 0; i < select_exprs_.size() && i < out_len; ++i) {
+      VM::evaluate(txn_, select_exprs_[i].program(), 0, nullptr,  &out[i]);
+    }
+
+    ++pos_;
+    return true;
   } else {
-    return -1;
+    return false;
   }
 }
 

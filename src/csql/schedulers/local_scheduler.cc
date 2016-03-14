@@ -38,7 +38,11 @@ ScopedPtr<ResultCursor> LocalScheduler::execute(Set<TaskID> tasks) {
     cursors.emplace_back(buildInstance(task_id));
   }
 
-  return mkScoped(new ResultCursorList(std::move(cursors)));
+  if (cursors.size() == 1) {
+    return std::move(cursors[0]);
+  } else {
+    return mkScoped(new ResultCursorList(std::move(cursors)));
+  }
 }
 
 ScopedPtr<ResultCursor> LocalScheduler::buildInstance(const TaskID& task_id) {
