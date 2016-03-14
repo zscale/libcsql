@@ -7,7 +7,7 @@
  * copy of the GNU General Public License along with this program. If not, see
  * <http://www.gnu.org/licenses/>.
  */
-#include <csql/runtime/schedulers/LocalScheduler.h>
+#include <csql/schedulers/local_scheduler.h>
 
 using namespace stx;
 
@@ -43,11 +43,11 @@ void LocalScheduler::execute() {
     }
 
     for (const auto& runnable_id : runnables) {
-      instances_[runnable_id]->onInputsReady();
-      for (const auto& cb : callbacks_->on_complete[runnable_id]) {
-        cb(runnable_id);
-      }
-      tasks_->setTaskStatusCompleted(runnable_id);
+      ////instances_[runnable_id]->onInputsReady();
+      //for (const auto& cb : callbacks_->on_complete[runnable_id]) {
+      //  cb(runnable_id);
+      //}
+      //tasks_->setTaskStatusCompleted(runnable_id);
     }
   }
 
@@ -66,13 +66,13 @@ RefPtr<Task> LocalScheduler::buildInstance(const TaskID& task_id) {
 
   for (const auto& dep_id : tasks_->getOutputTasksFor(task_id)) {
     auto dep_instance = buildInstance(dep_id);
-    task_outputs.emplace_back(
-        std::bind(
-            &Task::onInputRow,
-            dep_instance.get(),
-            task_id,
-            std::placeholders::_1,
-            std::placeholders::_2));
+    //task_outputs.emplace_back(
+    //    std::bind(
+    //        &Task::onInputRow,
+    //        dep_instance.get(),
+    //        task_id,
+    //        std::placeholders::_1,
+    //        std::placeholders::_2));
   }
 
   if (callbacks_->on_row.count(task_id) > 0) {

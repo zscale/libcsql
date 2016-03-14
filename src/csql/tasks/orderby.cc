@@ -29,6 +29,9 @@ OrderBy::OrderBy(
   }
 }
 
+int OrderBy::nextRow(SValue* out, int out_len) {
+  return -1;
+}
 // FIXPAUL this should mergesort while inserting...
 //bool OrderBy::onInputRow(
 //    const TaskID& input_id,

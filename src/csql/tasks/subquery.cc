@@ -22,25 +22,29 @@ Subquery::Subquery(
     where_expr_(std::move(where_expr)),
     output_(output) {}
 
-bool Subquery::onInputRow(
-    const TaskID& input_id,
-    const SValue* row,
-    int row_len) {
-  if (!where_expr_.isEmpty()) {
-    SValue pred;
-    VM::evaluate(txn_, where_expr_.get().program(), row_len, row, &pred);
-    if (!pred.getBool()) {
-      return true;
-    }
-  }
-
-  Vector<SValue> out_row(select_exprs_.size(), SValue{});
-  for (int i = 0; i < select_exprs_.size(); ++i) {
-    VM::evaluate(txn_, select_exprs_[i].program(), row_len, row, &out_row[i]);
-  }
-
-  return output_(out_row.data(), out_row.size());
+int Subquery::nextRow(SValue* out, int out_len) {
+  return -1;
 }
+
+//bool Subquery::onInputRow(
+//    const TaskID& input_id,
+//    const SValue* row,
+//    int row_len) {
+//  if (!where_expr_.isEmpty()) {
+//    SValue pred;
+//    VM::evaluate(txn_, where_expr_.get().program(), row_len, row, &pred);
+//    if (!pred.getBool()) {
+//      return true;
+//    }
+//  }
+//
+//  Vector<SValue> out_row(select_exprs_.size(), SValue{});
+//  for (int i = 0; i < select_exprs_.size(); ++i) {
+//    VM::evaluate(txn_, select_exprs_[i].program(), row_len, row, &out_row[i]);
+//  }
+//
+//  return output_(out_row.data(), out_row.size());
+//}
 
 SubqueryFactory::SubqueryFactory(
     Vector<RefPtr<SelectListNode>> select_exprs,

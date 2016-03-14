@@ -24,7 +24,7 @@ public:
 
   int nextRow(SValue* out, int out_len) override;
 
-  void onInputsReady() override;
+  //void onInputsReady() override;
 
 protected:
   Transaction* txn_;

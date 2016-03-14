@@ -10,8 +10,7 @@
 #include <csql/runtime/runtime.h>
 #include <csql/tasks/groupby.h>
 #include <csql/qtree/QueryTreeUtil.h>
-#include <csql/runtime/schedulers/LocalScheduler.h>
-#include <csql/schedulers/cluster_scheduler.h>
+#include <csql/schedulers/local_scheduler.h>
 #include <csql/defaults.h>
 
 namespace csql {
@@ -73,8 +72,7 @@ ScopedPtr<QueryPlan> Runtime::buildQueryPlan(
   }
 
   auto qplan = mkScoped(new QueryPlan(txn, statements));
-  //qplan->setScheduler(LocalScheduler::getFactory());
-  qplan->setScheduler(ClusterScheduler::getFactory());
+  qplan->setScheduler(LocalScheduler::getFactory());
   return std::move(qplan);
 }
 

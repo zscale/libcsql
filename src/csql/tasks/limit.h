@@ -24,10 +24,10 @@ public:
 
   int nextRow(SValue* out, int out_len) override;
 
-  bool onInputRow(
-      const TaskID& input_id,
-      const SValue* row,
-      int row_len) override;
+  //bool onInputRow(
+  //    const TaskID& input_id,
+  //    const SValue* row,
+  //    int row_len) override;
 
 protected:
   size_t limit_;

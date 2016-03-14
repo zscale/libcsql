@@ -19,14 +19,18 @@ Select::Select(
     select_exprs_(std::move(select_expressions)),
     output_(output) {}
 
-void Select::onInputsReady() {
-  Vector<SValue> out_row(select_exprs_.size(), SValue{});
+//void Select::onInputsReady() {
+//  Vector<SValue> out_row(select_exprs_.size(), SValue{});
+//
+//  for (int i = 0; i < select_exprs_.size(); ++i) {
+//    VM::evaluate(txn_, select_exprs_[i].program(), 0, nullptr,  &out_row[i]);
+//  }
+//
+//  output_(out_row.data(), out_row.size());
+//}
 
-  for (int i = 0; i < select_exprs_.size(); ++i) {
-    VM::evaluate(txn_, select_exprs_[i].program(), 0, nullptr,  &out_row[i]);
-  }
-
-  output_(out_row.data(), out_row.size());
+int Select::nextRow(SValue* out, int out_len) {
+  return -1;
 }
 
 SelectFactory::SelectFactory(

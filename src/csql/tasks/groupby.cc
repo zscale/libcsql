@@ -23,49 +23,52 @@ GroupBy::GroupBy(
     group_exprs_(std::move(group_expressions)),
     output_(output) {}
 
-bool GroupBy::onInputRow(
-      const TaskID& input_id,
-      const SValue* row,
-      int row_len) {
-  Vector<SValue> gkey(group_exprs_.size(), SValue{});
-  for (size_t i = 0; i < group_exprs_.size(); ++i) {
-    VM::evaluate(txn_, group_exprs_[i].program(), row_len, row, &gkey[i]);
-  }
-
-  auto group_key = SValue::makeUniqueKey(gkey.data(), gkey.size());
-  auto& group = groups_[group_key];
-  if (group.size() == 0) {
-    for (const auto& e : select_exprs_) {
-      group.emplace_back(VM::allocInstance(txn_, e.program(), &scratch_));
-    }
-  }
-
-  for (size_t i = 0; i < select_exprs_.size(); ++i) {
-    VM::accumulate(txn_, select_exprs_[i].program(), &group[i], row_len, row);
-  }
-
-  return true;
+int GroupBy::nextRow(SValue* out, int out_len) {
+  return -1;
 }
-
-void GroupBy::onInputsReady() {
-  try {
-    Vector<SValue> out_row(select_exprs_.size(), SValue{});
-    for (auto& group : groups_) {
-      for (size_t i = 0; i < select_exprs_.size(); ++i) {
-        VM::result(txn_, select_exprs_[i].program(), &group.second[i], &out_row[i]);
-      }
-
-      if (!output_(out_row.data(), out_row.size())) {
-        break;
-      }
-    }
-  } catch (...) {
-    freeResult();
-    throw;
-  }
-
-  freeResult();
-}
+//bool GroupBy::onInputRow(
+//      const TaskID& input_id,
+//      const SValue* row,
+//      int row_len) {
+//  Vector<SValue> gkey(group_exprs_.size(), SValue{});
+//  for (size_t i = 0; i < group_exprs_.size(); ++i) {
+//    VM::evaluate(txn_, group_exprs_[i].program(), row_len, row, &gkey[i]);
+//  }
+//
+//  auto group_key = SValue::makeUniqueKey(gkey.data(), gkey.size());
+//  auto& group = groups_[group_key];
+//  if (group.size() == 0) {
+//    for (const auto& e : select_exprs_) {
+//      group.emplace_back(VM::allocInstance(txn_, e.program(), &scratch_));
+//    }
+//  }
+//
+//  for (size_t i = 0; i < select_exprs_.size(); ++i) {
+//    VM::accumulate(txn_, select_exprs_[i].program(), &group[i], row_len, row);
+//  }
+//
+//  return true;
+//}
+//
+//void GroupBy::onInputsReady() {
+//  try {
+//    Vector<SValue> out_row(select_exprs_.size(), SValue{});
+//    for (auto& group : groups_) {
+//      for (size_t i = 0; i < select_exprs_.size(); ++i) {
+//        VM::result(txn_, select_exprs_[i].program(), &group.second[i], &out_row[i]);
+//      }
+//
+//      if (!output_(out_row.data(), out_row.size())) {
+//        break;
+//      }
+//    }
+//  } catch (...) {
+//    freeResult();
+//    throw;
+//  }
+//
+//  freeResult();
+//}
 
 void GroupBy::freeResult() {
   for (auto& group : groups_) {

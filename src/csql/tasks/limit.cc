@@ -20,19 +20,22 @@ Limit::Limit(
     output_(output),
     counter_(0) {}
 
-bool Limit::onInputRow(
-    const TaskID& input_id,
-    const SValue* row,
-    int row_len) {
-  if (counter_++ < offset_) {
-    return true;
-  }
-
-  if (counter_ > (offset_ + limit_)) {
-    return false;
-  }
-
-  return output_(row, row_len);
+//bool Limit::onInputRow(
+//    const TaskID& input_id,
+//    const SValue* row,
+//    int row_len) {
+//  if (counter_++ < offset_) {
+//    return true;
+//  }
+//
+//  if (counter_ > (offset_ + limit_)) {
+//    return false;
+//  }
+//
+//  return output_(row, row_len);
+//}
+int Limit::nextRow(SValue* out, int out_len) {
+  return -1;
 }
 
 LimitFactory::LimitFactory(

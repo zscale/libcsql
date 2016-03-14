@@ -43,7 +43,7 @@ public:
   virtual Vector<String> columnNames() const;
   virtual size_t numColumns() const;
 
-  void onInputsReady() override;
+  //void onInputsReady() override;
 
   void open();
 

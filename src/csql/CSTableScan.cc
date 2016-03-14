@@ -119,21 +119,25 @@ void CSTableScan::open() {
   }
 }
 
-void CSTableScan::onInputsReady() {
-  logTrace("sql", "Scanning cstable: $0", cstable_filename_);
-
-  if (!opened_) {
-    open();
-  }
-
-  if (columns_.empty()) {
-    scanWithoutColumns();
-  } else {
-    scan();
-  }
-
-  //txn_->incrNumSubtasksCompleted(1);
+int CSTableScan::nextRow(SValue* out, int out_len) {
+  return -1;
 }
+
+//void CSTableScan::onInputsReady() {
+//  logTrace("sql", "Scanning cstable: $0", cstable_filename_);
+//
+//  if (!opened_) {
+//    open();
+//  }
+//
+//  if (columns_.empty()) {
+//    scanWithoutColumns();
+//  } else {
+//    scan();
+//  }
+//
+//  //txn_->incrNumSubtasksCompleted(1);
+//}
 
 void CSTableScan::scan() {
   uint64_t select_level = 0;

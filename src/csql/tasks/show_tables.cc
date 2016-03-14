@@ -18,22 +18,26 @@ ShowTables::ShowTables(
     txn_(txn),
     output_(output) {}
 
-void ShowTables::onInputsReady() {
-  auto table_provider = txn_->getTableProvider();
-
-  table_provider->listTables([this] (const TableInfo& table) {
-    Vector<SValue> row;
-    row.emplace_back(table.table_name);
-
-    if (table.description.isEmpty()) {
-      row.emplace_back();
-    } else {
-      row.emplace_back(table.description.get());
-    }
-
-    output_(row.data(), row.size());
-  });
+int ShowTables::nextRow(SValue* out, int out_len) {
+  return -1;
 }
+
+//void ShowTables::onInputsReady() {
+//  auto table_provider = txn_->getTableProvider();
+//
+//  table_provider->listTables([this] (const TableInfo& table) {
+//    Vector<SValue> row;
+//    row.emplace_back(table.table_name);
+//
+//    if (table.description.isEmpty()) {
+//      row.emplace_back();
+//    } else {
+//      row.emplace_back(table.description.get());
+//    }
+//
+//    output_(row.data(), row.size());
+//  });
+//}
 
 RefPtr<Task> ShowTablesFactory::build(
     Transaction* txn,

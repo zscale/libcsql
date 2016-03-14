@@ -20,7 +20,7 @@ public:
 
   ShowTables(Transaction* txn, RowSinkFn output);
 
-  void onInputsReady() override;
+  //void onInputsReady() override;
 
   int nextRow(SValue* out, int out_len) override;
 

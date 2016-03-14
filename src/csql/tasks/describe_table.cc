@@ -24,21 +24,21 @@ int DescribeTable::nextRow(SValue* out, int out_len) {
   return -1;
 }
 
-void DescribeTable::onInputsReady() {
-  const auto& table_info = txn_->getTableProvider()->describe(table_name_);
-  if (table_info.isEmpty()) {
-    RAISEF(kRuntimeError, "table not found: '$0'", table_name_);
-  }
-
-  for (const auto& col : table_info.get().columns) {
-    Vector<SValue> row;
-    row.emplace_back(col.column_name);
-    row.emplace_back(col.type);
-    row.emplace_back(col.is_nullable ? "YES" : "NO");
-    row.emplace_back();
-    output_(row.data(), row.size());
-  }
-}
+//void DescribeTable::onInputsReady() {
+//  const auto& table_info = txn_->getTableProvider()->describe(table_name_);
+//  if (table_info.isEmpty()) {
+//    RAISEF(kRuntimeError, "table not found: '$0'", table_name_);
+//  }
+//
+//  for (const auto& col : table_info.get().columns) {
+//    Vector<SValue> row;
+//    row.emplace_back(col.column_name);
+//    row.emplace_back(col.type);
+//    row.emplace_back(col.is_nullable ? "YES" : "NO");
+//    row.emplace_back();
+//    output_(row.data(), row.size());
+//  }
+//}
 
 DescribeTableFactory::DescribeTableFactory(
     const String& table_name) :

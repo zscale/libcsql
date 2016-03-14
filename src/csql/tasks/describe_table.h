@@ -23,7 +23,7 @@ public:
       const String& table_name,
       RowSinkFn output);
 
-  void onInputsReady() override;
+  //void onInputsReady() override;
 
   int nextRow(SValue* out, int out_len) override;
 

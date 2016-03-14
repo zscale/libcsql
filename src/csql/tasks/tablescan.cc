@@ -50,37 +50,41 @@ TableScan::TableScan(
   }
 }
 
-void TableScan::onInputsReady() {
-  Vector<SValue> inbuf(iter_->numColumns());
-  Vector<SValue> outbuf(select_exprs_.size());
-  while (iter_->nextRow(inbuf.data())) {
-    if (!where_expr_.isEmpty()) {
-      SValue pred;
-      VM::evaluate(
-          txn_,
-          where_expr_.get().program(),
-          inbuf.size(),
-          inbuf.data(),
-          &pred);
-
-      if (!pred.getBool()) {
-        continue;
-      }
-    }
-
-    for (int i = 0; i < select_exprs_.size(); ++i) {
-      VM::evaluate(
-          txn_,
-          select_exprs_[i].program(),
-          inbuf.size(),
-          inbuf.data(),
-          &outbuf[i]);
-    }
-
-    if (!output_(outbuf.data(), outbuf.size())) {
-      return;
-    }
-  }
+int TableScan::nextRow(SValue* out, int out_len) {
+  return -1;
 }
+
+//void TableScan::onInputsReady() {
+//  Vector<SValue> inbuf(iter_->numColumns());
+//  Vector<SValue> outbuf(select_exprs_.size());
+//  while (iter_->nextRow(inbuf.data())) {
+//    if (!where_expr_.isEmpty()) {
+//      SValue pred;
+//      VM::evaluate(
+//          txn_,
+//          where_expr_.get().program(),
+//          inbuf.size(),
+//          inbuf.data(),
+//          &pred);
+//
+//      if (!pred.getBool()) {
+//        continue;
+//      }
+//    }
+//
+//    for (int i = 0; i < select_exprs_.size(); ++i) {
+//      VM::evaluate(
+//          txn_,
+//          select_exprs_[i].program(),
+//          inbuf.size(),
+//          inbuf.data(),
+//          &outbuf[i]);
+//    }
+//
+//    if (!output_(outbuf.data(), outbuf.size())) {
+//      return;
+//    }
+//  }
+//}
 
 }

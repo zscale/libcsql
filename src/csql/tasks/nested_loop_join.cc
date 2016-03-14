@@ -33,55 +33,59 @@ NestedLoopJoin::NestedLoopJoin(
 
 static const size_t kMaxInMemoryRows = 1000000;
 
-bool NestedLoopJoin::onInputRow(
-    const TaskID& input_id,
-    const SValue* row,
-    int row_len) {
-  if (base_tbl_ids_.count(input_id) > 0) {
-    base_tbl_.emplace_back(row, row + row_len);
-    if (base_tbl_.size() >= kMaxInMemoryRows) {
-      RAISE(
-          kRuntimeError,
-          "Nested Loop JOIN intermediate result set is too large, try using an"
-          " equi-join instead.");
-    }
-    return true;
-  }
-
-  if (joined_tbl_ids_.count(input_id) > 0) {
-    joined_tbl_.emplace_back(row, row + row_len);
-    if (joined_tbl_.size() >= kMaxInMemoryRows) {
-      RAISE(
-          kRuntimeError,
-          "Nested Loop JOIN intermediate result set is too large, try using an"
-          " equi-join instead.");
-    }
-    return true;
-  }
-
-  RAISE(kIllegalStateError);
+int NestedLoopJoin::nextRow(SValue* out, int out_len) {
+  return -1;
 }
 
-void NestedLoopJoin::onInputsReady() {
-  switch (join_type_) {
-    case JoinType::OUTER:
-      executeOuterJoin();
-      break;
-    case JoinType::INNER:
-      if (join_cond_expr_.isEmpty()) {
-        /* fallthrough */
-      } else {
-        executeInnerJoin();
-        break;
-      }
-    case JoinType::CARTESIAN:
-      executeCartesianJoin();
-      break;
-  }
-
-  base_tbl_.clear();
-  joined_tbl_.clear();
-}
+//bool NestedLoopJoin::onInputRow(
+//    const TaskID& input_id,
+//    const SValue* row,
+//    int row_len) {
+//  if (base_tbl_ids_.count(input_id) > 0) {
+//    base_tbl_.emplace_back(row, row + row_len);
+//    if (base_tbl_.size() >= kMaxInMemoryRows) {
+//      RAISE(
+//          kRuntimeError,
+//          "Nested Loop JOIN intermediate result set is too large, try using an"
+//          " equi-join instead.");
+//    }
+//    return true;
+//  }
+//
+//  if (joined_tbl_ids_.count(input_id) > 0) {
+//    joined_tbl_.emplace_back(row, row + row_len);
+//    if (joined_tbl_.size() >= kMaxInMemoryRows) {
+//      RAISE(
+//          kRuntimeError,
+//          "Nested Loop JOIN intermediate result set is too large, try using an"
+//          " equi-join instead.");
+//    }
+//    return true;
+//  }
+//
+//  RAISE(kIllegalStateError);
+//}
+//
+//void NestedLoopJoin::onInputsReady() {
+//  switch (join_type_) {
+//    case JoinType::OUTER:
+//      executeOuterJoin();
+//      break;
+//    case JoinType::INNER:
+//      if (join_cond_expr_.isEmpty()) {
+//        /* fallthrough */
+//      } else {
+//        executeInnerJoin();
+//        break;
+//      }
+//    case JoinType::CARTESIAN:
+//      executeCartesianJoin();
+//      break;
+//  }
+//
+//  base_tbl_.clear();
+//  joined_tbl_.clear();
+//}
 
 void NestedLoopJoin::executeCartesianJoin() {
   Vector<SValue> outbuf(select_exprs_.size(), SValue{});
